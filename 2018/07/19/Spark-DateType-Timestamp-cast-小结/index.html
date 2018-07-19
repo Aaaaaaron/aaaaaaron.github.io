@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next pisces use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT" />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="前言在平时的 Spark 处理中常常会有把一个如 2012-12-12 这样的 date 类型转换成一个 long 的 Unix time 然后进行计算的需求.下面是一段示例代码: 123456789101112val schema = StructType(  Array(    StructField(&amp;quot;id&amp;quot;, IntegerType, nullable = true),">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark DateType&#x2F;Timestamp cast 小结">
+<meta property="og:url" content="https://tttmelody.github.io/2018/07/19/Spark-DateType-Timestamp-cast-小结/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="前言在平时的 Spark 处理中常常会有把一个如 2012-12-12 这样的 date 类型转换成一个 long 的 Unix time 然后进行计算的需求.下面是一段示例代码: 123456789101112val schema = StructType(  Array(    StructField(&amp;quot;id&amp;quot;, IntegerType, nullable = true),">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-07-19T10:33:09.197Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark DateType&#x2F;Timestamp cast 小结">
+<meta name="twitter:description" content="前言在平时的 Spark 处理中常常会有把一个如 2012-12-12 这样的 date 类型转换成一个 long 的 Unix time 然后进行计算的需求.下面是一段示例代码: 123456789101112val schema = StructType(  Array(    StructField(&amp;quot;id&amp;quot;, IntegerType, nullable = true),">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Pisces',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"post","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://tttmelody.github.io/2018/07/19/Spark-DateType-Timestamp-cast-小结/"/>
+
+
+
+
+
+  <title>Spark DateType/Timestamp cast 小结 | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/07/19/Spark-DateType-Timestamp-cast-小结/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Aron">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spark DateType/Timestamp cast 小结</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-19T16:47:39+08:00">
+                2018-07-19
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+          
+
+          
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在平时的 Spark 处理中常常会有把一个如 <code>2012-12-12</code> 这样的 date 类型转换成一个 long 的 Unix time 然后进行计算的需求.下面是一段示例代码:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">val schema = StructType(</span><br><span class="line">  Array(</span><br><span class="line">    StructField(&quot;id&quot;, IntegerType, nullable = true),</span><br><span class="line">    StructField(&quot;birth&quot;, DateType, nullable = true),</span><br><span class="line">    StructField(&quot;time&quot;, TimestampType, nullable = true)</span><br><span class="line">  ))</span><br><span class="line"></span><br><span class="line">val data = Seq(</span><br><span class="line">  Row(1, Date.valueOf(&quot;2012-12-12&quot;), Timestamp.valueOf(&quot;2016-09-30 03:03:00&quot;)),</span><br><span class="line">  Row(2, Date.valueOf(&quot;2016-12-14&quot;), Timestamp.valueOf(&quot;2016-12-14 03:03:00&quot;)))</span><br><span class="line"></span><br><span class="line">val df = spark.createDataFrame(spark.sparkContext.parallelize(data),schema)</span><br></pre></td></tr></table></figure>
+<h1 id="问题-amp-解决"><a href="#问题-amp-解决" class="headerlink" title="问题 &amp; 解决"></a>问题 &amp; 解决</h1><p>首先很直观的是直接把DateType cast 成 LongType, 如下:</p>
+<p><code>df.select(df.col(&quot;birth&quot;).cast(LongType))</code></p>
+<p>但是这样出来都是 null, 这是为什么? 答案就在 <code>org.apache.spark.sql.catalyst.expressions.Cast</code> 中, 先看 canCast 方法, 可以看到 DateType 其实是可以转成 NumericType 的, 然后再看下面castToLong的方法, 可以看到<code>case DateType =&gt; buildCast[Int](_, d =&gt; null)</code>居然直接是个 null, 看提交记录其实这边有过反复, 然后为了和 hive 统一, 所以返回最后还是返回 null 了.</p>
+<p>虽然 DateType 不能直接 castToLong, 但是TimestampType可以, 所以这里的解决方案就是先把 DateType cast 成 TimestampType. 但是这里又会有一个非常坑爹的问题: <strong>时区问题</strong>.</p>
+<p>首先明确一个问题, 就是这个放到了 spark 中的 2012-12-12 到底 UTC 还是我们当前时区? 答案是如果没有经过特殊配置, 这个2012-12-12代表的是 <strong>当前时区的 2012-12-12 00:00:00.</strong>, 对应 UTC 其实是: 2012-12-11 16:00:00, 少了8小时. 这里还顺便说明了Spark 入库 Date 数据的时候是带着时区的.</p>
+<p>然后再看DateType cast toTimestampType  的代码, 可以看到<code>buildCast[Int](_, d =&gt; DateTimeUtils.daysToMillis(d, timeZone) * 1000)</code>, 这里是带着时区的, 但是spark sql默认会用当前机器的时区. 但是大家一般底层数据比如这个2016-09-30, 都是代表的 UTC 时间, 在用 Spark 处理数据的时候, 这个时间还是 UTC 时间, 只有通过 JDBC 出去的时间才会变成带目标时区的结果. 经过摸索, 这里有两种解决方案:</p>
+<ol>
+<li>配置 Spark 的默认时区<code>config(&quot;spark.sql.session.timeZone&quot;, &quot;UTC&quot;)</code>, 最直观. 这样直接写 <code>df.select(df.col(&quot;birth&quot;).cast(TimestampType).cast(LongType))</code> 就可以了.</li>
+<li>不配置 conf, 正面刚: <code>df.select(from_utc_timestamp(to_utc_timestamp(df.col(&quot;birth&quot;), TimeZone.getTimeZone(&quot;UTC&quot;).getID), TimeZone.getDefault.getID).cast(LongType))</code>, 可以看到各种 cast, 这是区别:</li>
+</ol>
+<ul>
+<li>没有配置 UTC: <code>from_utc_timestamp(to_utc_timestamp(lit(&quot;2012-12-11 16:00:00&quot;), TimeZone.getTimeZone(&quot;UTC&quot;).getID), TimeZone.getDefault.getID)</code></li>
+<li>配置了 UTC: <code>from_utc_timestamp(to_utc_timestamp(lit(&quot;2012-12-12 00:00:00&quot;), TimeZone.getTimeZone(&quot;UTC&quot;).getID), TimeZone.getDefault.getID)</code> 多了8小时</li>
+</ul>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Returns true iff we can cast `from` type to `to` type.</span><br><span class="line"> */</span><br><span class="line">def canCast(from: DataType, to: DataType): Boolean = (from, to) match &#123;</span><br><span class="line">  case (fromType, toType) if fromType == toType =&gt; true</span><br><span class="line"></span><br><span class="line">  case (NullType, _) =&gt; true</span><br><span class="line"></span><br><span class="line">  case (_, StringType) =&gt; true</span><br><span class="line"></span><br><span class="line">  case (StringType, BinaryType) =&gt; true</span><br><span class="line"></span><br><span class="line">  case (StringType, BooleanType) =&gt; true</span><br><span class="line">  case (DateType, BooleanType) =&gt; true</span><br><span class="line">  case (TimestampType, BooleanType) =&gt; true</span><br><span class="line">  case (_: NumericType, BooleanType) =&gt; true</span><br><span class="line"></span><br><span class="line">  case (StringType, TimestampType) =&gt; true</span><br><span class="line">  case (BooleanType, TimestampType) =&gt; true</span><br><span class="line">  case (DateType, TimestampType) =&gt; true</span><br><span class="line">  case (_: NumericType, TimestampType) =&gt; true</span><br><span class="line"></span><br><span class="line">  case (StringType, DateType) =&gt; true</span><br><span class="line">  case (TimestampType, DateType) =&gt; true</span><br><span class="line"></span><br><span class="line">  case (StringType, CalendarIntervalType) =&gt; true</span><br><span class="line"></span><br><span class="line">  case (StringType, _: NumericType) =&gt; true</span><br><span class="line">  case (BooleanType, _: NumericType) =&gt; true</span><br><span class="line">  case (DateType, _: NumericType) =&gt; true</span><br><span class="line">  case (TimestampType, _: NumericType) =&gt; true</span><br><span class="line">  case (_: NumericType, _: NumericType) =&gt; true</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line">private[this] def castToLong(from: DataType): Any =&gt; Any = from match &#123;</span><br><span class="line">  case StringType =&gt;</span><br><span class="line">    val result = new LongWrapper()</span><br><span class="line">    buildCast[UTF8String](_, s =&gt; if (s.toLong(result)) result.value else null)</span><br><span class="line">  case BooleanType =&gt;</span><br><span class="line">    buildCast[Boolean](_, b =&gt; if (b) 1L else 0L)</span><br><span class="line">  case DateType =&gt;</span><br><span class="line">    buildCast[Int](_, d =&gt; null)</span><br><span class="line">  case TimestampType =&gt;</span><br><span class="line">    buildCast[Long](_, t =&gt; timestampToLong(t))</span><br><span class="line">  case x: NumericType =&gt;</span><br><span class="line">    b =&gt; x.numeric.asInstanceOf[Numeric[Any]].toLong(b)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">// TimestampConverter</span><br><span class="line">private[this] def castToTimestamp(from: DataType): Any =&gt; Any = from match &#123;</span><br><span class="line">  ...</span><br><span class="line">  case DateType =&gt;</span><br><span class="line">    buildCast[Int](_, d =&gt; DateTimeUtils.daysToMillis(d, timeZone) * 1000)</span><br><span class="line">  // TimestampWritable.decimalToTimestamp</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">/**</span><br><span class="line"> * Given a timestamp, which corresponds to a certain time of day in the given timezone, returns</span><br><span class="line"> * another timestamp that corresponds to the same time of day in UTC.</span><br><span class="line"> * @group datetime_funcs</span><br><span class="line"> * @since 1.5.0</span><br><span class="line"> */</span><br><span class="line">def to_utc_timestamp(ts: Column, tz: String): Column = withExpr &#123;</span><br><span class="line">  ToUTCTimestamp(ts.expr, Literal(tz))</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">/**</span><br><span class="line"> * Given a timestamp, which corresponds to a certain time of day in UTC, returns another timestamp</span><br><span class="line"> * that corresponds to the same time of day in the given timezone.</span><br><span class="line"> * @group datetime_funcs</span><br><span class="line"> * @since 1.5.0</span><br><span class="line"> */</span><br><span class="line">def from_utc_timestamp(ts: Column, tz: String): Column = withExpr &#123;</span><br><span class="line">  FromUTCTimestamp(ts.expr, Literal(tz))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="Deep-dive"><a href="#Deep-dive" class="headerlink" title="Deep dive"></a>Deep dive</h1><p>配置源码解读:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">val SESSION_LOCAL_TIMEZONE = buildConf(&quot;spark.sql.session.timeZone&quot;).stringConf.createWithDefaultFunction(() =&gt; TimeZone.getDefault.getID)</span><br></pre></td></tr></table></figure></p>
+<p><code>def sessionLocalTimeZone: String = getConf(SQLConf.SESSION_LOCAL_TIMEZONE)</code></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Replace [[TimeZoneAwareExpression]] without timezone id by its copy with session local</span></span><br><span class="line"><span class="comment"> * time zone.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">ResolveTimeZone</span>(<span class="params">conf: <span class="type">SQLConf</span></span>) <span class="keyword">extends</span> <span class="title">Rule</span>[<span class="type">LogicalPlan</span>] </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">val</span> transformTimeZoneExprs: <span class="type">PartialFunction</span>[<span class="type">Expression</span>, <span class="type">Expression</span>] = &#123;</span><br><span class="line">    <span class="keyword">case</span> e: <span class="type">TimeZoneAwareExpression</span> <span class="keyword">if</span> e.timeZoneId.isEmpty =&gt;</span><br><span class="line">      e.withTimeZone(conf.sessionLocalTimeZone)</span><br><span class="line">    <span class="comment">// Casts could be added in the subquery plan through the rule TypeCoercion while coercing</span></span><br><span class="line">    <span class="comment">// the types between the value expression and list query expression of IN expression.</span></span><br><span class="line">    <span class="comment">// We need to subject the subquery plan through ResolveTimeZone again to setup timezone</span></span><br><span class="line">    <span class="comment">// information for time zone aware expressions.</span></span><br><span class="line">    <span class="keyword">case</span> e: <span class="type">ListQuery</span> =&gt; e.withNewPlan(apply(e.plan))</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">apply</span></span>(plan: <span class="type">LogicalPlan</span>): <span class="type">LogicalPlan</span> =</span><br><span class="line">    plan.transformAllExpressions(transformTimeZoneExprs)</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">resolveTimeZones</span></span>(e: <span class="type">Expression</span>): <span class="type">Expression</span> = e.transform(transformTimeZoneExprs)</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Mix-in trait for constructing valid [[Cast]] expressions.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">CastSupport</span> </span>&#123;</span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Configuration used to create a valid cast expression.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">conf</span></span>: <span class="type">SQLConf</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Create a Cast expression with the session local time zone.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">cast</span></span>(child: <span class="type">Expression</span>, dataType: <span class="type">DataType</span>): <span class="type">Cast</span> = &#123;</span><br><span class="line">    <span class="type">Cast</span>(child, dataType, <span class="type">Option</span>(conf.sessionLocalTimeZone))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>org.apache.spark.sql.catalyst.analysis.Analyzer#batches 可以看到有<code>ResolveTimeZone</code><br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">lazy val batches: Seq[Batch] = Seq(</span><br><span class="line"></span><br><span class="line">  Batch(&quot;Resolution&quot;, fixedPoint,</span><br><span class="line">    ResolveTableValuedFunctions ::</span><br><span class="line">    ResolveRelations ::</span><br><span class="line">    ResolveReferences ::</span><br><span class="line">    ...</span><br><span class="line">    ResolveTimeZone(conf) ::</span><br><span class="line">    ResolvedUuidExpressions ::</span><br><span class="line">    TypeCoercion.typeCoercionRules(conf) ++</span><br><span class="line">    extendedResolutionRules : _*),</span><br><span class="line">  Batch(&quot;Post-Hoc Resolution&quot;, Once, postHocResolutionRules: _*),</span><br><span class="line">  Batch(&quot;View&quot;, Once,</span><br><span class="line">    AliasViewChild(conf)),</span><br><span class="line">  Batch(&quot;Nondeterministic&quot;, Once,</span><br><span class="line">    PullOutNondeterministic),</span><br><span class="line">  Batch(&quot;UDF&quot;, Once,</span><br><span class="line">    HandleNullInputsForUDF),</span><br><span class="line">  Batch(&quot;FixNullability&quot;, Once,</span><br><span class="line">    FixNullability),</span><br><span class="line">  Batch(&quot;Subquery&quot;, Once,</span><br><span class="line">    UpdateOuterReferences),</span><br><span class="line">  Batch(&quot;Cleanup&quot;, fixedPoint,</span><br><span class="line">    CleanupAliases)</span><br><span class="line">)</span><br></pre></td></tr></table></figure></p>
+<hr>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line">test(&quot;ColumnBatch&quot;) &#123;</span><br><span class="line">  val schema = StructType(</span><br><span class="line">    Array(</span><br><span class="line">      StructField(&quot;id&quot;, IntegerType, nullable = true),</span><br><span class="line">      StructField(&quot;birth&quot;, DateType, nullable = true),</span><br><span class="line">      StructField(&quot;time&quot;, TimestampType, nullable = true)</span><br><span class="line">    ))</span><br><span class="line"></span><br><span class="line">  val columnarBatch = ColumnarBatch.allocate(schema, MemoryMode.ON_HEAP, 1024)</span><br><span class="line">  val c0 = columnarBatch.column(0)</span><br><span class="line">  val c1 = columnarBatch.column(1)</span><br><span class="line">  val c2 = columnarBatch.column(2)</span><br><span class="line"></span><br><span class="line">  c0.putInt(0, 0)</span><br><span class="line">  // 1355241600, /3600/24 s to days</span><br><span class="line">  c1.putInt(0, 1355241600 / 3600 / 24)</span><br><span class="line">  // microsecond</span><br><span class="line">  c2.putLong(0, 1355285532000000L)</span><br><span class="line"></span><br><span class="line">  val internal0 = columnarBatch.getRow(0)</span><br><span class="line"></span><br><span class="line">  //a way converting internal row to unsafe row.</span><br><span class="line">  //val convert = UnsafeProjection.create(schema)</span><br><span class="line">  //val internal = convert.apply(internal0)</span><br><span class="line"></span><br><span class="line">  val enc = RowEncoder.apply(schema).resolveAndBind()</span><br><span class="line">  val row = enc.fromRow(internal0)</span><br><span class="line">  val df = spark.createDataFrame(Lists.newArrayList(row), schema)</span><br><span class="line"></span><br><span class="line">  TimeZone.setDefault(TimeZone.getTimeZone(&quot;UTC&quot;))</span><br><span class="line">  val tsStr0 = df.select(col(&quot;time&quot;)).head().getTimestamp(0).toString</span><br><span class="line">  val ts0 = df.select(col(&quot;time&quot;).cast(LongType)).head().getLong(0)</span><br><span class="line">  TimeZone.setDefault(TimeZone.getTimeZone(&quot;GMT+8&quot;))</span><br><span class="line">  val tsStr1 = df.select(col(&quot;time&quot;)).head().getTimestamp(0).toString</span><br><span class="line">  val ts1 = df.select(col(&quot;time&quot;).cast(LongType)).head().getLong(0)</span><br><span class="line">  assert(true, &quot;2012-12-12 04:12:12.0&quot;.equals(tsStr0))</span><br><span class="line">  assert(true, &quot;2012-12-12 12:12:12.0&quot;.equals(tsStr1))</span><br><span class="line">  assert(true, ts0 == ts1)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/07/19/Learning-Spark-by-keywords/" rel="prev" title="Learning Spark by keywords">
+                Learning Spark by keywords <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg"
+                alt="Aron" />
+            
+              <p class="site-author-name" itemprop="name">Aron</p>
+              <p class="site-description motion-element" itemprop="description">Kyligence/245915794@qq.com</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">11</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#问题-amp-解决"><span class="nav-number">2.</span> <span class="nav-text">问题 &amp; 解决</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Deep-dive"><span class="nav-number">3.</span> <span class="nav-text">Deep dive</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Aron</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Pisces</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+
+  <script type="text/javascript" src="/js/src/affix.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/schemes/pisces.js?v=5.1.4"></script>
+
+
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
