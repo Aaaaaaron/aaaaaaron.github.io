@@ -79,17 +79,17 @@
 
 
 
-<meta name="description" content="Kyligence">
+<meta name="description" content="Shell !$ : 代表上条命令的最后一个参数. ssh-copy-id -i ~/.ssh/id_rsa.pub root@host: 快速与root@host建立免密连接 lsof -i :7070 | awk &amp;#39;NR==2 {print $2}&amp;#39; | xargs kill -9 : 杀死占用端口为7070的进程 for i in {1..10}; do ll | wc -l">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux 初养成">
 <meta property="og:url" content="https://tttmelody.github.io/2018/07/19/Linux-初养成/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="Kyligence">
+<meta property="og:description" content="Shell !$ : 代表上条命令的最后一个参数. ssh-copy-id -i ~/.ssh/id_rsa.pub root@host: 快速与root@host建立免密连接 lsof -i :7070 | awk &amp;#39;NR==2 {print $2}&amp;#39; | xargs kill -9 : 杀死占用端口为7070的进程 for i in {1..10}; do ll | wc -l">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-07-19T10:13:02.667Z">
+<meta property="og:updated_time" content="2018-07-22T08:33:42.417Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux 初养成">
-<meta name="twitter:description" content="Kyligence">
+<meta name="twitter:description" content="Shell !$ : 代表上条命令的最后一个参数. ssh-copy-id -i ~/.ssh/id_rsa.pub root@host: 快速与root@host建立免密连接 lsof -i :7070 | awk &amp;#39;NR==2 {print $2}&amp;#39; | xargs kill -9 : 杀死占用端口为7070的进程 for i in {1..10}; do ll | wc -l">
 
 
 
@@ -332,7 +332,56 @@
       
 
       
-        
+        <h1 id="Shell"><a href="#Shell" class="headerlink" title="Shell"></a>Shell</h1><ol>
+<li><code>!$</code> : 代表上条命令的最后一个参数.</li>
+<li><code>ssh-copy-id -i ~/.ssh/id_rsa.pub root@host</code>: 快速与root@host建立免密连接</li>
+<li><code>lsof -i :7070 | awk &#39;NR==2 {print $2}&#39; | xargs kill -9</code> : 杀死占用端口为7070的进程</li>
+<li><code>for i in {1..10}; do ll | wc -l; sleep 2; done</code> : 打印当前系统中句柄的打开数量</li>
+<li><code>ll | awk &#39;{print $9}&#39;</code> : 只取文件名</li>
+<li><code>find * | grep .DS_Store |xargs rm -rf</code> : 删除所有 .DS_Store</li>
+<li><code>ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime</code> : 切换时区</li>
+<li><code>pbcopy &lt; ~/.ssh/id_rsa.pub</code> : 将公钥内容复制到剪切板</li>
+<li><code>du -hsx * | sort -rh | head -n</code> : 打印当前目录下占磁盘空间最多的n个文件</li>
+<li><code>/var/log</code> : 各个组件的 log, /var/log/messages 内核日志在这里.</li>
+<li><p>CPU占用最多的前10个进程：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ps auxw|head -1;ps auxw|sort -rn -k3|head -10</span><br><span class="line">top （然后按下M，注意大写）</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>内存消耗最多的前10个进程</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ps auxw|head -1;ps auxw|sort -rn -k4|head -10</span><br><span class="line">top （然后按下P，注意大写）</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>虚拟内存使用最多的前10个进程<br><code>ps auxw|head -1;ps auxw|sort -rn -k5|head -10</code></p>
+</li>
+<li><p>配置 Linux 自启动 :<br>a. 把命令加到 <code>/etc/rc.local</code><br>b. 将脚本放到目录 /etc/profile.d/ 下，系统启动后就会自动执行该目录下的所有shell脚本<br>c. cp启动文件到 /etc/init.d/或者/etc/rc.d/init.d/（前者是后者的软连接）, <code>chkconfig --add cloudera-scm-agent</code>, <code>chkconfig cloudera-scm-agent on</code>, <code>chkconfig --list cloudera-scm-agent</code></p>
+</li>
+<li><p>关闭防火墙 : <code>service iptables status</code>, <code>service iptables stop</code>, <code>chkconfig iptables off</code>, <code>service iptables status</code></p>
+</li>
+<li><p>卸载 rpm 包 :</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rpm -qa|grep -i java</span><br><span class="line">rpm -e --nodeps xxx yyy zzz</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>du -sh, du -h –max-depth=1, df -h</p>
+</li>
+<li><p><code>find / -type f -name &quot;*.log&quot; | xargs grep &quot;ERROR&quot;</code> : 统计所有的log文件中，包含Error字符的行</p>
+</li>
+<li><p><code>ps -efL | grep [PID] | wc -l</code> : 查看某个进程创建的线程数</p>
+</li>
+<li><p>nohub</p>
+</li>
+<li><p>mount</p>
+</li>
+<li><p><code>find .-name *iso &gt;/tmp/res.txt &amp;</code>, 加&amp;放到后台执行, <code>bg</code> 可以查看后台运行的任务, <code>fg  %进程id</code> 放到前台执行</p>
+</li>
+</ol>
+<h2 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h2><ol>
+<li>jstat -gc [pid] : 查看gc情况</li>
+<li>jmap -histo [pid] : 按照对象内存大小排序, 注意会导致full gc</li>
+<li>jstack -l pid : 用于查看线程是否存在死锁</li>
+</ol>
+<h1 id="装机必备"><a href="#装机必备" class="headerlink" title="装机必备"></a>装机必备</h1><h3 id="git"><a href="#git" class="headerlink" title="git"></a>git</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install git-core</span><br></pre></td></tr></table></figure>
+<h3 id="zsh"><a href="#zsh" class="headerlink" title="zsh"></a>zsh</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">yum install zsh</span><br><span class="line">git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh (sh -c &quot;$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)&quot;</span><br><span class="line">)</span><br><span class="line">git clone git://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions</span><br></pre></td></tr></table></figure>
+<h3 id="htop"><a href="#htop" class="headerlink" title="htop"></a>htop</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wget http://pkgs.repoforge.org/htop/htop-1.0.2-1.el6.rf.x86_64.rpm</span><br><span class="line">yum install -y epel-release</span><br><span class="line">yum install -y htop</span><br></pre></td></tr></table></figure>
+<h3 id="设置文件打开数目和用户最大进程数"><a href="#设置文件打开数目和用户最大进程数" class="headerlink" title="设置文件打开数目和用户最大进程数"></a>设置文件打开数目和用户最大进程数</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">查看文件打开数目</span><br><span class="line">ulimit -a</span><br><span class="line">查看用户最大进程数</span><br><span class="line">ulimit -u</span><br><span class="line">设置用户最大进程数</span><br><span class="line">vim /etc/security/limits.conf</span><br><span class="line"></span><br><span class="line">结尾添加以下内容</span><br><span class="line">*       soft    nofile          32768</span><br><span class="line">*       hard    nofile          1048576</span><br><span class="line">*       soft    nproc           65536</span><br><span class="line">*       hard    nproc           unlimited</span><br><span class="line">*       soft    memlock         unlimited</span><br><span class="line">*       hard    memlock         unlimited</span><br></pre></td></tr></table></figure>
+<h3 id="percol"><a href="#percol" class="headerlink" title="percol"></a>percol</h3><p>brew install percol</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">function exists &#123; which $1 &amp;&gt; /dev/null &#125;</span><br><span class="line"></span><br><span class="line">if exists percol; then</span><br><span class="line">    function percol_select_history() &#123;</span><br><span class="line">        local tac</span><br><span class="line">        exists gtac &amp;&amp; tac=&quot;gtac&quot; || &#123; exists tac &amp;&amp; tac=&quot;tac&quot; || &#123; tac=&quot;tail -r&quot; &#125; &#125;</span><br><span class="line">        BUFFER=$(fc -l -n 1 | eval $tac | percol --query &quot;$LBUFFER&quot;)</span><br><span class="line">        CURSOR=$#BUFFER         # move cursor</span><br><span class="line">        zle -R -c               # refresh</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    zle -N percol_select_history</span><br><span class="line">    bindkey &apos;^R&apos; percol_select_history</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
       
     </div>
     
@@ -420,8 +469,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -476,6 +534,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Shell"><span class="nav-number">1.</span> <span class="nav-text">Shell</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Java"><span class="nav-number">1.1.</span> <span class="nav-text">Java</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#装机必备"><span class="nav-number">2.</span> <span class="nav-text">装机必备</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#git"><span class="nav-number">2.0.1.</span> <span class="nav-text">git</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#zsh"><span class="nav-number">2.0.2.</span> <span class="nav-text">zsh</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#htop"><span class="nav-number">2.0.3.</span> <span class="nav-text">htop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#设置文件打开数目和用户最大进程数"><span class="nav-number">2.0.4.</span> <span class="nav-text">设置文件打开数目和用户最大进程数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#percol"><span class="nav-number">2.0.5.</span> <span class="nav-text">percol</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
