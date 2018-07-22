@@ -89,7 +89,7 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://databricks.com/wp-content/uploads/2016/06/Catalyst-Optimizer-diagram.png">
 <meta property="og:image" content="https://tttmelody.github.io/2018/07/19/image/project.png">
-<meta property="og:updated_time" content="2018-07-22T13:52:28.231Z">
+<meta property="og:updated_time" content="2018-07-22T14:21:55.616Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spark Catalyst Deep Dive">
 <meta name="twitter:description" content="Spark Catalyst 的实现分析转载自:Spark Catalyst 的实现分析  Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他">
@@ -373,7 +373,7 @@
 </ul>
 </li>
 </ul>
-<h2 id="Expression-大体归类"><a href="#Expression-大体归类" class="headerlink" title="Expression 大体归类"></a>Expression 大体归类</h2><table>
+<h3 id="Expression-大体归类"><a href="#Expression-大体归类" class="headerlink" title="Expression 大体归类"></a>Expression 大体归类</h3><table>
 <thead>
 <tr>
 <th>Name</th>
@@ -505,17 +505,17 @@
 </tbody>
 </table>
 <h3 id="2-1-Attribute-详解"><a href="#2-1-Attribute-详解" class="headerlink" title="2.1 Attribute 详解"></a>2.1 Attribute 详解</h3><p>Attribute 直译为属性，在 SQL 中，可以简单理解为输入的 Table 中的字段，Attribute 通过 Name 字段来进行命名。SQL 语句通过 Parse 生成 AST 以后，SQL 语句中的每个字段都会解析为 UnresolvedAttribute，它是属于 Attribute 的一个子类，比如<code>SELECT a</code>中的<code>a</code>就表示为<code>UnresolvedAttribute(&quot;a&quot;)</code>，还有一个特殊的 UnresolvedAttribute，既为 SQL 语句中的<code>＊</code>，它表示为<code>Star</code>，属于 UnresolvedAttribute 类型的子类。</p>
-<p>Analy 需要对 AST 进行进一步的加工，其中有一个很重要的操作就是把整个 AST 中所有 Unresolved 的 Attribute 都转变为 resolved 状态，比如根据输入 Table 将 Star 进行 expand 操作，对应的<code>Rule</code>名称为<code>ResolveReferences</code>，具体实现细节这里就不展开。</p>
+<p>Analyser 需要对 AST 进行进一步的加工，其中有一个很重要的操作就是把整个 AST 中所有 Unresolved 的 Attribute 都转变为 resolved 状态，比如根据输入 Table 将 <code>Star</code> 进行 expand 操作，对应的<code>Rule</code>名称为<code>ResolveReferences</code>，具体实现细节这里就不展开。</p>
 <p>对于 resolve 操作除了将 Star 进行展开以外，它的主要功能就是关联 SQL 语句所有位置用到的 Attribute，即在 Attribute 的 name 基础上，指定一个 ID 进行唯一标示，如果一个 Attribute 在两处被多处被引用，ID 即为同一个 (怎么实现的？Attribute Resolve 操作时从底到顶来遍历整改 AST，每一步都是根据底部已经 resloved 的 Attribute 来给顶部的 Attribute 赋值，从而保证如果两个 Attribute 是指向同一个，它们的 ID 肯定是一样的；对于处于叶子节点 Attribute 是优先进行 resolve 的，比如<code>Rule:ResolveRelations</code>对处于底部的 Relation 进行 ResolveRelatition)。可以这么理解，做这些事情都是为了优化，物理存储的 Table 可能有很多 Attribute，而通过 resolve 操作，就指定整个计算过程中需要使用到 Attribute，即可以只从物理存储中读取相应字段，上层各种 Expression 对这些字段都转变为引用，因此 resolve 以后的 Attribute 不是叫做<code>resolvedAttribute</code>,而是叫做<code>AttributeReference</code>。</p>
-<p>对于一个中间节点的 Expression，如果它对一个 Attribute 有引用，比如求一个字段值的长度<code>length(a)</code>，这里<code>a</code>经过了 UnresolvedAttribute 到 AttributeReference 的转化，但是针对一个输入的 Row，进行<code>length</code>Expression 计算时，还是无法从<code>AttributeReference</code>中读取相应在 Row 中的值，为什么？虽然<code>AttributeReference</code>也是 Expression，但是它是 Unevaluable，为了获取属性在输入 Row 中对应的值，需要对<code>AttributeReference</code>再进行一次<code>BindReferences</code>的转化，生成<code>BoundReference</code>，这个操作本质就是将 Expression 和一个输入 Scheme 进行关联，Scheme 由一组<code>AttributeReference</code>，它们之间是有顺序的，通过获取 AttributeReference 在<code>AttributeReference</code>组中的 Index，并生成 BoundReference，在对 BoundReference 进行 eval 时候，即可以使用该 index 获取它在相应 Row 中的值。</p>
+<p>对于一个中间节点的 Expression，如果它对一个 Attribute 有引用，比如求一个字段值的长度<code>length(a)</code>，这里<code>a</code>经过了 UnresolvedAttribute 到 AttributeReference 的转化，但是针对一个输入的 Row，进行<code>length</code>Expression 计算时，还是无法从<code>AttributeReference</code>中读取相应在 Row 中的值，为什么？虽然<code>AttributeReference</code>也是 Expression，但是它是 Unevaluable，为了获取属性在输入 Row 中对应的值，需要对<code>AttributeReference</code>再进行一次<code>BindReferences</code>的转化，生成<code>BoundReference</code>，这个操作本质就是将 Expression 和一个输入 Scheme 进行关联，Scheme 有一组<code>AttributeReference</code>，它们之间是有顺序的，通过获取 AttributeReference 在<code>AttributeReference</code>组中的 Index，并生成 BoundReference，在对 BoundReference 进行 eval 时候，即可以使用该 index 获取它在相应 Row 中的值。</p>
 <p>下面是 SQL 语句中 Attribute 经过的多次转化的过程：</p>
-<pre><code>SQL---parser----&gt;UnresolvedAttribute----Analyser---&gt;resolvedAttribute ----Bind----&gt;BoundReference
-</code></pre><h3 id="2-2-Expression-Codegen"><a href="#2-2-Expression-Codegen" class="headerlink" title="2.2 Expression Codegen"></a>2.2 Expression Codegen</h3><p>Spark Sql 是支持 Expression 层面代码生成，首先第一个疑问是我们知道 Expression 有 eval 方法来暴露 Expression 的功能，为什么还要搞一个 Codegen 呢？原因大体上有两个，一是提高性能，二是支持一些不能通过 eval 来表达的功能。这里主要解释了第一个，即提高性能，ps：我还没有去详细的测试这一块对性能影响大小，只是从感官上做一个结论：</p>
+<p>SQL—parser—-&gt;UnresolvedAttribute—-Analyser—&gt;AttributeReference(resolved) —-Bind—-&gt;BoundReference</p>
+<h3 id="2-2-Expression-Codegen"><a href="#2-2-Expression-Codegen" class="headerlink" title="2.2 Expression Codegen"></a>2.2 Expression Codegen</h3><p>Spark Sql 是支持 Expression 层面代码生成，首先第一个疑问是我们知道 Expression 有 eval 方法来暴露 Expression 的功能，为什么还要搞一个 Codegen 呢？原因大体上有两个，一是提高性能，二是支持一些不能通过 eval 来表达的功能。这里主要解释了第一个，即提高性能，ps：我还没有去详细的测试这一块对性能影响大小，只是从感官上做一个结论：</p>
 <p>基于 eval，Expression 执行过程中应该是这样的 e1.eval(e2.eval(e3.eval(e4.eval(…))))，随着 Expression 的复杂度上升，这个执行深度应该会很大，而且每一个操作之间是基于参数和返回进行传递，在操作系统系统层面是存在开销的；其次如果一个 Expression 计算结果会被多次利用，它的结果是没有办法被二次利用。</p>
 <p>那么代码生成是这么解决这个问题的呢？</p>
 <p>对于一个完整的 SQL 的执行，其中所有 Expression 只是对应一个最终执行代码的一个片段，注意是代码片段，而不是函数，更加不是一个类，每个代码片段由 ExprCode 来表示</p>
-<pre><code>case class ExprCode(var code: String, var isNull: String, var value: String)
-</code></pre><p>code 为代码片段的计算代码，和 eval 函数功能一样，这个片段核心功能是对一个 row 进行处理，并把处理结果的值写到一个变量中，这个变量名称即为 value 表示，isNull 为 false 或者 true 字符串来表示这个代码片段生成的 value 对应的值是否为 Null。</p>
+<p><code>case class ExprCode(var code: String, var isNull: String, var value: String)</code></p>
+<p>code 为代码片段的计算代码，和 eval 函数功能一样，这个片段核心功能是对一个 row 进行处理，并把处理结果的值写到一个变量中，这个变量名称即为 value 表示，isNull 为 false 或者 true 字符串来表示这个代码片段生成的 value 对应的值是否为 Null。</p>
 <pre><code>如果由 3 个 Expression，分别为
 exp1:ExprCode(code1，isnull1，value1)
 exp2:ExprCode(code2，isNull2，value2)
@@ -550,82 +550,56 @@ funtion(row) {
 </thead>
 <tbody>
 <tr>
-<td></td>
 <td><code>Project</code>(projectList: Seq[NamedExpression], child: LogicalPlan)</td>
 <td>SELECT 语句输出操作，其中 projectList 为输出对象，每一个都为一个 Expression，它们可能是 Star，或者很复杂的 Expression</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Filter</code>(condition: Expression, child: LogicalPlan)</td>
 <td>根据 condition 来对 Child 输入的 Rows 进行过滤</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Join</code>(left: LogicalPlan,right: LogicalPlan,joinType: JoinType,condition: Option[Expression])</td>
 <td>left 和 right 的输出结果进行 join 操作</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Intersect</code>(left: LogicalPlan, right: LogicalPlan)</td>
 <td>left 和 right 两个 Plan 输出的 rows 进行取交集运算。</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Except</code>(left: LogicalPlan, right: LogicalPlan)</td>
 <td>在 left 计算结果中剔除掉 right 中的计算结果</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Union</code>(children: Seq[LogicalPlan])</td>
 <td>将一组 Childs 的计算结果进行 Union 联合</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Sort</code>(order: Seq[SortOrder],global: Boolean, child: LogicalPlan)</td>
 <td>对 child 的输出进行 sort 排序</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Repartition</code>(numPartitions: Int, shuffle: Boolean, child: LogicalPlan)</td>
 <td>对 child 输出的数据进行重新分区操作</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>InsertIntoTable</code>(table: LogicalPlan,child: LogicalPlan,…)</td>
 <td>将 child 输出的 rows 输出到 table 中</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Distinct</code>(child: LogicalPlan)</td>
 <td>对 child 输出的 rows 取重操作</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>GlobalLimit</code>(limitExpr: Expression, child: LogicalPlan)</td>
 <td>对 Child 输出的数据进行 Limit 限制</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Sample</code>(child: LogicalPlan,….)</td>
 <td>根据一些参数，从 child 输出的 Rows 进行一定比例的取样</td>
-<td></td>
 </tr>
 <tr>
-<td></td>
 <td><code>Aggregate</code>(groupingExpressions: Seq[Expression],aggregateExpressions: Seq[NamedExpression],child: LogicalPlan)</td>
 <td>对 child 输出 row 进行 aggregate 操作，比如 groupby 之类的操作</td>
-<td></td>
 </tr>
 </tbody>
 </table>
@@ -633,41 +607,41 @@ funtion(row) {
 <table>
 <thead>
 <tr>
-<th style="text-align:left">Name</th>
+<th>Name</th>
 <th>功能描述</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td style="text-align:left"><code>DataBase</code>操作类</td>
+<td><code>DataBase</code>操作类</td>
 <td>支持 ShowDatabase 以及 UseDatabase 以及 Create 等操作</td>
 </tr>
 <tr>
-<td style="text-align:left"><code>Table</code>操作类</td>
+<td><code>Table</code>操作类</td>
 <td>多达 13 种，比如 Create，Show，Alter 等</td>
 </tr>
 <tr>
-<td style="text-align:left"><code>View</code>操作类</td>
+<td><code>View</code>操作类</td>
 <td>CreateViewCommand 支持 View 的创建</td>
 </tr>
 <tr>
-<td style="text-align:left"><code>Partition</code>操作类</td>
+<td><code>Partition</code>操作类</td>
 <td>支持 Partition 新增删除等操作</td>
 </tr>
 <tr>
-<td style="text-align:left"><code>Resources</code>操作类</td>
+<td><code>Resources</code>操作类</td>
 <td>比如 AddJar 之类的资源操作</td>
 </tr>
 <tr>
-<td style="text-align:left"><code>Functions</code>操作类</td>
+<td><code>Functions</code>操作类</td>
 <td>支持新增函数，删除函数等操作</td>
 </tr>
 <tr>
-<td style="text-align:left"><code>Cache</code>操作类</td>
+<td><code>Cache</code>操作类</td>
 <td>支持对 Table 进行 cache 和 uncache 操作</td>
 </tr>
 <tr>
-<td style="text-align:left"><code>Set</code>操作</td>
+<td><code>Set</code>操作</td>
 <td>通过 SetCommand 执行对参数进行临时修改</td>
 </tr>
 </tbody>
@@ -857,7 +831,7 @@ funtion(row) {
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Spark-Catalyst-的实现分析"><span class="nav-number">1.</span> <span class="nav-text">Spark Catalyst 的实现分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Row"><span class="nav-number">1.1.</span> <span class="nav-text">1. Row</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Expression"><span class="nav-number">1.2.</span> <span class="nav-text">2. Expression</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Expression-大体归类"><span class="nav-number">1.3.</span> <span class="nav-text">Expression 大体归类</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-Attribute-详解"><span class="nav-number">1.3.1.</span> <span class="nav-text">2.1 Attribute 详解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-Expression-Codegen"><span class="nav-number">1.3.2.</span> <span class="nav-text">2.2 Expression Codegen</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-LogicalPlan"><span class="nav-number">1.4.</span> <span class="nav-text">3. LogicalPlan</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Expression-和-Plan-的-Tree-支持的操作"><span class="nav-number">1.5.</span> <span class="nav-text">4. Expression 和 Plan 的 Tree 支持的操作</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Spark-Catalyst-的实现分析"><span class="nav-number">1.</span> <span class="nav-text">Spark Catalyst 的实现分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Row"><span class="nav-number">1.1.</span> <span class="nav-text">1. Row</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Expression"><span class="nav-number">1.2.</span> <span class="nav-text">2. Expression</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Expression-大体归类"><span class="nav-number">1.2.1.</span> <span class="nav-text">Expression 大体归类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-Attribute-详解"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.1 Attribute 详解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-Expression-Codegen"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.2 Expression Codegen</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-LogicalPlan"><span class="nav-number">1.3.</span> <span class="nav-text">3. LogicalPlan</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Expression-和-Plan-的-Tree-支持的操作"><span class="nav-number">1.4.</span> <span class="nav-text">4. Expression 和 Plan 的 Tree 支持的操作</span></a></li></ol></li></ol></div>
             
 
           </div>
