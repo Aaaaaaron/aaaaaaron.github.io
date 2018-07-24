@@ -79,20 +79,20 @@
 
 
 
-<meta name="description" content="Spark Catalyst 的实现分析转载自:Spark Catalyst 的实现分析  Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他">
+<meta name="description" content="Spark Catalyst 的实现分析转载自:Spark Catalyst 的实现分析 Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他">
 <meta name="keywords" content="Spark">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spark Catalyst Deep Dive">
 <meta property="og:url" content="https://tttmelody.github.io/2018/07/19/Spark-Catalyst-Deep-Dive/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="Spark Catalyst 的实现分析转载自:Spark Catalyst 的实现分析  Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他">
+<meta property="og:description" content="Spark Catalyst 的实现分析转载自:Spark Catalyst 的实现分析 Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://databricks.com/wp-content/uploads/2016/06/Catalyst-Optimizer-diagram.png">
 <meta property="og:image" content="https://tttmelody.github.io/2018/07/19/image/project.png">
-<meta property="og:updated_time" content="2018-07-22T14:21:55.616Z">
+<meta property="og:updated_time" content="2018-07-24T09:11:39.980Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spark Catalyst Deep Dive">
-<meta name="twitter:description" content="Spark Catalyst 的实现分析转载自:Spark Catalyst 的实现分析  Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他">
+<meta name="twitter:description" content="Spark Catalyst 的实现分析转载自:Spark Catalyst 的实现分析 Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他">
 <meta name="twitter:image" content="https://databricks.com/wp-content/uploads/2016/06/Catalyst-Optimizer-diagram.png">
 
 
@@ -336,7 +336,7 @@
       
 
       
-        <h1 id="Spark-Catalyst-的实现分析"><a href="#Spark-Catalyst-的实现分析" class="headerlink" title="Spark Catalyst 的实现分析"></a>Spark Catalyst 的实现分析</h1><p><strong>转载自:</strong><a href="https://github.com/ColZer/DigAndBuried/blob/master/spark/spark-catalyst.md#spark-catalyst%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90" target="_blank" rel="noopener">Spark Catalyst 的实现分析 </a></p>
+        <h1 id="Spark-Catalyst-的实现分析"><a href="#Spark-Catalyst-的实现分析" class="headerlink" title="Spark Catalyst 的实现分析"></a>Spark Catalyst 的实现分析</h1><p><strong>转载自:</strong><a href="https://github.com/ColZer/DigAndBuried/blob/master/spark/spark-catalyst.md#spark-catalyst%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90" target="_blank" rel="noopener">Spark Catalyst 的实现分析</a></p>
 <p>Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他 SQL 引擎的工作原理也基本一致，比如 Hive 之类的。</p>
 <p><img src="https://databricks.com/wp-content/uploads/2016/06/Catalyst-Optimizer-diagram.png" alt=""></p>
 <p>本文核心也是介绍 Catalyst 内部的实现，但是不是按照这张图的步骤来介绍 Catalyst 的实现原理，而是按照 SQL 给人最直接几个概念，比如 Row，Expression，Plan 来逐步介绍它们的内部实现。</p>
@@ -785,7 +785,7 @@ funtion(row) {
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">16</span>
+                  <span class="site-state-item-count">17</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
