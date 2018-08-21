@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://tttmelody.github.io/2018/08/21/Parquet-in-Spark/</loc>
+    
+    <lastmod>2018-08-21T07:32:45.643Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://tttmelody.github.io/2018/08/12/Spark-Strategy-DataSource/</loc>
     
-    <lastmod>2018-08-20T01:45:43.938Z</lastmod>
+    <lastmod>2018-08-20T01:49:21.844Z</lastmod>
     
   </url>
   
