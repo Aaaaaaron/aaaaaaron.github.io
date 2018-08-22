@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head>
+  <meta charset="UTF-8"/>
+<meta http-equiv="X-UA-Compatible" content="IE=edge" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform" />
+<meta http-equiv="Cache-Control" content="no-siteapp" />
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Parquet," />
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="Parquet encoding definitionsThis file contains the specification of all supported encodings. Plain: (PLAIN = 0)Supported Types: all This is the plain encoding that must be supported for types.  It is">
+<meta name="keywords" content="Parquet">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Parquet encoding definitions(official)">
+<meta property="og:url" content="https://tttmelody.github.io/2018/08/22/Parquet-encoding-definitions-official/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="Parquet encoding definitionsThis file contains the specification of all supported encodings. Plain: (PLAIN = 0)Supported Types: all This is the plain encoding that must be supported for types.  It is">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-08-22T12:50:17.796Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Parquet encoding definitions(official)">
+<meta name="twitter:description" content="Parquet encoding definitionsThis file contains the specification of all supported encodings. Plain: (PLAIN = 0)Supported Types: all This is the plain encoding that must be supported for types.  It is">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://tttmelody.github.io/2018/08/22/Parquet-encoding-definitions-official/"/>
+
+
+
+
+
+  <title>Parquet encoding definitions(official) | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+  
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/"  class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-home">
+          <a href="/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+            
+            首页
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-categories">
+          <a href="/categories/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+            
+            分类
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/08/22/Parquet-encoding-definitions-official/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Aron">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Parquet encoding definitions(official)</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-22T20:49:53+08:00">
+                2018-08-22
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/22/Parquet-encoding-definitions-official/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/08/22/Parquet-encoding-definitions-official/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/08/22/Parquet-encoding-definitions-official/" class="leancloud_visitors" data-flag-title="Parquet encoding definitions(official)">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <!--
+  - Licensed to the Apache Software Foundation (ASF) under one
+  - or more contributor license agreements.  See the NOTICE file
+  - distributed with this work for additional information
+  - regarding copyright ownership.  The ASF licenses this file
+  - to you under the Apache License, Version 2.0 (the
+  - "License"); you may not use this file except in compliance
+  - with the License.  You may obtain a copy of the License at
+  -
+  -   http://www.apache.org/licenses/LICENSE-2.0
+  -
+  - Unless required by applicable law or agreed to in writing,
+  - software distributed under the License is distributed on an
+  - "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
+  - KIND, either express or implied.  See the License for the
+  - specific language governing permissions and limitations
+  - under the License.
+  -->
+<h1 id="Parquet-encoding-definitions"><a href="#Parquet-encoding-definitions" class="headerlink" title="Parquet encoding definitions"></a>Parquet encoding definitions</h1><p>This file contains the specification of all supported encodings.</p>
+<h3 id="Plain-PLAIN-0"><a href="#Plain-PLAIN-0" class="headerlink" title="Plain: (PLAIN = 0)"></a><a name="PLAIN"></a>Plain: (PLAIN = 0)</h3><p>Supported Types: all</p>
+<p>This is the plain encoding that must be supported for types.  It is<br>intended to be the simplest encoding.  Values are encoded back to back.</p>
+<p>The plain encoding is used whenever a more efficient encoding can not be used. It<br>stores the data in the following format:</p>
+<ul>
+<li>BOOLEAN: <a href="#RLE">Bit Packed</a>, LSB first</li>
+<li>INT32: 4 bytes little endian</li>
+<li>INT64: 8 bytes little endian</li>
+<li>INT96: 12 bytes little endian (deprecated)</li>
+<li>FLOAT: 4 bytes IEEE little endian</li>
+<li>DOUBLE: 8 bytes IEEE little endian</li>
+<li>BYTE_ARRAY: length in 4 bytes little endian followed by the bytes contained in the array</li>
+<li>FIXED_LEN_BYTE_ARRAY: the bytes contained in the array</li>
+</ul>
+<p>For native types, this outputs the data as little endian. Floating<br>    point types are encoded in IEEE.</p>
+<p>For the byte array type, it encodes the length as a 4 byte little<br>endian, followed by the bytes.</p>
+<h3 id="Dictionary-Encoding-PLAIN-DICTIONARY-2-and-RLE-DICTIONARY-8"><a href="#Dictionary-Encoding-PLAIN-DICTIONARY-2-and-RLE-DICTIONARY-8" class="headerlink" title="Dictionary Encoding (PLAIN_DICTIONARY = 2 and RLE_DICTIONARY = 8)"></a>Dictionary Encoding (PLAIN_DICTIONARY = 2 and RLE_DICTIONARY = 8)</h3><p>The dictionary encoding builds a dictionary of values encountered in a given column. The<br>dictionary will be stored in a dictionary page per column chunk. The values are stored as integers<br>using the <a href="#RLE">RLE/Bit-Packing Hybrid</a> encoding. If the dictionary grows too big, whether in size<br>or number of distinct values, the encoding will fall back to the plain encoding. The dictionary page is<br>written first, before the data pages of the column chunk.</p>
+<p>Dictionary page format: the entries in the dictionary - in dictionary order - using the <a href="#PLAIN">plain</a> encoding.</p>
+<p>Data page format: the bit width used to encode the entry ids stored as 1 byte (max bit width = 32),<br>followed by the values encoded using RLE/Bit packed described above (with the given bit width).</p>
+<p>Using the PLAIN_DICTIONARY enum value is deprecated in the Parquet 2.0 specification. Prefer using RLE_DICTIONARY<br>in a data page and PLAIN in a dictionary page for Parquet 2.0+ files.</p>
+<h3 id="Run-Length-Encoding-Bit-Packing-Hybrid-RLE-3"><a href="#Run-Length-Encoding-Bit-Packing-Hybrid-RLE-3" class="headerlink" title="Run Length Encoding / Bit-Packing Hybrid (RLE = 3)"></a><a name="RLE"></a>Run Length Encoding / Bit-Packing Hybrid (RLE = 3)</h3><p>This encoding uses a combination of bit-packing and run length encoding to more efficiently store repeated values.</p>
+<p>The grammar for this encoding looks like this, given a fixed bit-width known in advance:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">rle-bit-packed-hybrid: &lt;length&gt; &lt;encoded-data&gt;</span><br><span class="line">length := length of the &lt;encoded-data&gt; in bytes stored as 4 bytes little endian (unsigned int32)</span><br><span class="line">encoded-data := &lt;run&gt;*</span><br><span class="line">run := &lt;bit-packed-run&gt; | &lt;rle-run&gt;</span><br><span class="line">bit-packed-run := &lt;bit-packed-header&gt; &lt;bit-packed-values&gt;</span><br><span class="line">bit-packed-header := varint-encode(&lt;bit-pack-scaled-run-len&gt; &lt;&lt; 1 | 1)</span><br><span class="line">// we always bit-pack a multiple of 8 values at a time, so we only store the number of values / 8</span><br><span class="line">bit-pack-scaled-run-len := (bit-packed-run-len) / 8</span><br><span class="line">bit-packed-run-len := *see 3 below*</span><br><span class="line">bit-packed-values := *see 1 below*</span><br><span class="line">rle-run := &lt;rle-header&gt; &lt;repeated-value&gt;</span><br><span class="line">rle-header := varint-encode( (rle-run-len) &lt;&lt; 1)</span><br><span class="line">rle-run-len := *see 3 below*</span><br><span class="line">repeated-value := value that is repeated, using a fixed-width of round-up-to-next-byte(bit-width)</span><br></pre></td></tr></table></figure></p>
+<ol>
+<li><p>The bit-packing here is done in a different order than the one in the <a href="#BITPACKED">deprecated bit-packing</a> encoding.<br>The values are packed from the least significant bit of each byte to the most significant bit,<br>though the order of the bits in each value remains in the usual order of most significant to least<br>significant. For example, to pack the same values as the example in the deprecated encoding above:</p>
+<p>The numbers 1 through 7 using bit width 3:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dec value: 0   1   2   3   4   5   6   7</span><br><span class="line">bit value: 000 001 010 011 100 101 110 111</span><br><span class="line">bit label: ABC DEF GHI JKL MNO PQR STU VWX</span><br></pre></td></tr></table></figure>
+<p>would be encoded like this where spaces mark byte boundaries (3 bytes):</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">bit value: 10001000 11000110 11111010</span><br><span class="line">bit label: HIDEFABC RMNOJKLG VWXSTUPQ</span><br></pre></td></tr></table></figure>
+<p>The reason for this packing order is to have fewer word-boundaries on little-endian hardware<br>when deserializing more than one byte at at time. This is because 4 bytes can be read into a<br>32 bit register (or 8 bytes into a 64 bit register) and values can be unpacked just by<br>shifting and ORing with a mask. (to make this optimization work on a big-endian machine,<br>you would have to use the ordering used in the <a href="#BITPACKED">deprecated bit-packing</a> encoding)</p>
+</li>
+<li><p>varint-encode() is ULEB-128 encoding, see <a href="https://en.wikipedia.org/wiki/LEB128" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/LEB128</a></p>
+</li>
+<li><p>bit-packed-run-len and rle-run-len must be in the range [1, 2<sup>31</sup> - 1].<br>This means that a Parquet implementation can always store the run length in a signed<br>32-bit integer. This length restriction was not part of the Parquet 2.5.0 and earlier<br>specifications, but longer runs were not readable by the most common Parquet<br>implementations so, in practice, were not safe for Parquet writers to emit.</p>
+</li>
+</ol>
+<p>Note that the RLE encoding method is only supported for the following types of<br>data:</p>
+<ul>
+<li>Repetition and definition levels</li>
+<li>Dictionary indices</li>
+<li>Boolean values in data pages, as an alternative to PLAIN encoding</li>
+</ul>
+<h3 id="Bit-packed-Deprecated-BIT-PACKED-4"><a href="#Bit-packed-Deprecated-BIT-PACKED-4" class="headerlink" title="Bit-packed (Deprecated) (BIT_PACKED = 4)"></a><a name="BITPACKED"></a>Bit-packed (Deprecated) (BIT_PACKED = 4)</h3><p>This is a bit-packed only encoding, which is deprecated and will be replaced by the <a href="#RLE">RLE/bit-packing</a> hybrid encoding.<br>Each value is encoded back to back using a fixed width.<br>There is no padding between values (except for the last byte) which is padded with 0s.<br>For example, if the max repetition level was 3 (2 bits) and the max definition level as 3<br>(2 bits), to encode 30 values, we would have 30 * 2 = 60 bits = 8 bytes.</p>
+<p>This implementation is deprecated because the <a href="#RLE">RLE/bit-packing</a> hybrid is a superset of this implementation.<br>For compatibility reasons, this implementation packs values from the most significant bit to the least significant bit,<br>which is not the same as the <a href="#RLE">RLE/bit-packing</a> hybrid.</p>
+<p>For example, the numbers 1 through 7 using bit width 3:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">dec value: 0   1   2   3   4   5   6   7</span><br><span class="line">bit value: 000 001 010 011 100 101 110 111</span><br><span class="line">bit label: ABC DEF GHI JKL MNO PQR STU VWX</span><br></pre></td></tr></table></figure></p>
+<p>would be encoded like this where spaces mark byte boundaries (3 bytes):<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">bit value: 00000101 00111001 01110111</span><br><span class="line">bit label: ABCDEFGH IJKLMNOP QRSTUVWX</span><br></pre></td></tr></table></figure></p>
+<p>Note that the BIT_PACKED encoding method is only supported for encoding<br>repetition and definition levels.</p>
+<h3 id="Delta-Encoding-DELTA-BINARY-PACKED-5"><a href="#Delta-Encoding-DELTA-BINARY-PACKED-5" class="headerlink" title="Delta Encoding (DELTA_BINARY_PACKED = 5)"></a><a name="DELTAENC"></a>Delta Encoding (DELTA_BINARY_PACKED = 5)</h3><p>Supported Types: INT32, INT64</p>
+<p>This encoding is adapted from the Binary packing described in <a href="http://arxiv.org/pdf/1209.2137v5.pdf" target="_blank" rel="noopener">“Decoding billions of integers per second through vectorization”</a> by D. Lemire and L. Boytsov</p>
+<p>Delta encoding consists of a header followed by blocks of delta encoded values binary packed. Each block is made of miniblocks, each of them binary packed with its own bit width. When there are not enough values to encode a full block we pad with zeros (added to the frame of reference).<br>The header is defined as follows:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;block size in values&gt; &lt;number of miniblocks in a block&gt; &lt;total value count&gt; &lt;first value&gt;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>the block size is a multiple of 128 stored as VLQ int</li>
+<li>the miniblock count per block is a diviser of the block size stored as VLQ int the number of values in the miniblock is a multiple of 32.</li>
+<li>the total value count is stored as a VLQ int</li>
+<li>the first value is stored as a zigzag VLQ int</li>
+</ul>
+<p>Each block contains<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;min delta&gt; &lt;list of bitwidths of miniblocks&gt; &lt;miniblocks&gt;</span><br></pre></td></tr></table></figure></p>
+<ul>
+<li>the min delta is a VLQ int (we compute a minimum as we need positive integers for bit packing)</li>
+<li>the bitwidth of each block is stored as a byte</li>
+<li>each miniblock is a list of bit packed ints according to the bit width stored at the begining of the block</li>
+</ul>
+<p>Having multiple blocks allows us to escape values and restart from a new base value.</p>
+<p>To encode each delta block, we will:</p>
+<ol>
+<li><p>Compute the deltas</p>
+</li>
+<li><p>Encode the first value as zigzag VLQ int</p>
+</li>
+<li><p>For each block, compute the frame of reference(minimum of the deltas) for the deltas. This guarantees<br>all deltas are positive.</p>
+</li>
+<li><p>encode the frame of reference delta as VLQ int followed by the delta values (minus the minimum) encoded as bit packed per miniblock.</p>
+</li>
+</ol>
+<p>Steps 2 and 3 are skipped if the number of values in the block is 1.</p>
+<h4 id="Example-1"><a href="#Example-1" class="headerlink" title="Example 1"></a>Example 1</h4><p>1, 2, 3, 4, 5</p>
+<p>After step 1), we compute the deltas as:</p>
+<p>1, 1, 1, 1</p>
+<p>The minimum delta is 1 and after step 2, the deltas become</p>
+<p>0, 0, 0, 0</p>
+<p>The final encoded data is:</p>
+<p> header:<br>8 (block size), 1 (miniblock count), 5 (value count), 1 (first value)</p>
+<p> block<br>1 (minimum delta), 0 (bitwidth), (no data needed for bitwidth 0)</p>
+<h4 id="Example-2"><a href="#Example-2" class="headerlink" title="Example 2"></a>Example 2</h4><p>7, 5, 3, 1, 2, 3, 4, 5, the deltas would be</p>
+<p>-2, -2, -2, 1, 1, 1, 1</p>
+<p>The minimum is -2, so the relative deltas are:</p>
+<p>0, 0, 0, 3, 3, 3, 3</p>
+<p>The encoded data is</p>
+<p> header:<br>8 (block size), 1 (miniblock count), 8 (value count), 7 (first value)</p>
+<p> block<br>-2 (minimum delta), 2 (bitwidth), 00000011111111b (0,0,0,3,3,3,3 packed on 2 bits)</p>
+<h4 id="Characteristics"><a href="#Characteristics" class="headerlink" title="Characteristics"></a>Characteristics</h4><p>This encoding is similar to the <a href="#RLE">RLE/bit-packing</a> encoding. However the <a href="#RLE">RLE/bit-packing</a> encoding is specifically used when the range of ints is small over the entire page, as is true of repetition and definition levels. It uses a single bit width for the whole page.<br>The delta encoding algorithm described above stores a bit width per mini block and is less sensitive to variations in the size of encoded integers. It is also somewhat doing RLE encoding as a block containing all the same values will be bit packed to a zero bit width thus being only a header.</p>
+<h3 id="Delta-length-byte-array-DELTA-LENGTH-BYTE-ARRAY-6"><a href="#Delta-length-byte-array-DELTA-LENGTH-BYTE-ARRAY-6" class="headerlink" title="Delta-length byte array: (DELTA_LENGTH_BYTE_ARRAY = 6)"></a>Delta-length byte array: (DELTA_LENGTH_BYTE_ARRAY = 6)</h3><p>Supported Types: BYTE_ARRAY</p>
+<p>This encoding is always preferred over PLAIN for byte array columns.</p>
+<p>For this encoding, we will take all the byte array lengths and encode them using delta<br>encoding (DELTA_BINARY_PACKED). The byte array data follows all of the length data just<br>concatenated back to back. The expected savings is from the cost of encoding the lengths<br>and possibly better compression in the data (it is no longer interleaved with the lengths).</p>
+<p>The data stream looks like:</p>
+<p><delta encoded="" lengths=""> <byte array="" data=""></byte></delta></p>
+<p>For example, if the data was “Hello”, “World”, “Foobar”, “ABCDEF”:</p>
+<p>The encoded data would be DeltaEncoding(5, 5, 6, 6) “HelloWorldFoobarABCDEF”</p>
+<h3 id="Delta-Strings-DELTA-BYTE-ARRAY-7"><a href="#Delta-Strings-DELTA-BYTE-ARRAY-7" class="headerlink" title="Delta Strings: (DELTA_BYTE_ARRAY = 7)"></a>Delta Strings: (DELTA_BYTE_ARRAY = 7)</h3><p>Supported Types: BYTE_ARRAY</p>
+<p>This is also known as incremental encoding or front compression: for each element in a<br>sequence of strings, store the prefix length of the previous entry plus the suffix.</p>
+<p>For a longer description, see <a href="https://en.wikipedia.org/wiki/Incremental_encoding" target="_blank" rel="noopener">https://en.wikipedia.org/wiki/Incremental_encoding</a>.</p>
+<p>This is stored as a sequence of delta-encoded prefix lengths (DELTA_BINARY_PACKED), followed by<br>the suffixes encoded as delta length byte arrays (DELTA_LENGTH_BYTE_ARRAY).</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Parquet/" rel="tag"># Parquet</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/08/21/Parquet-in-Spark/" rel="next" title="Parquet in Spark">
+                <i class="fa fa-chevron-left"></i> Parquet in Spark
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image"
+                src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg"
+                alt="Aron" />
+            
+              <p class="site-author-name" itemprop="name">Aron</p>
+              <p class="site-description motion-element" itemprop="description">Kyligence</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">20</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">4</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Parquet-encoding-definitions"><span class="nav-number">1.</span> <span class="nav-text">Parquet encoding definitions</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Plain-PLAIN-0"><span class="nav-number">1.0.1.</span> <span class="nav-text">Plain: (PLAIN = 0)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Dictionary-Encoding-PLAIN-DICTIONARY-2-and-RLE-DICTIONARY-8"><span class="nav-number">1.0.2.</span> <span class="nav-text">Dictionary Encoding (PLAIN_DICTIONARY = 2 and RLE_DICTIONARY = 8)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Run-Length-Encoding-Bit-Packing-Hybrid-RLE-3"><span class="nav-number">1.0.3.</span> <span class="nav-text">Run Length Encoding / Bit-Packing Hybrid (RLE = 3)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Bit-packed-Deprecated-BIT-PACKED-4"><span class="nav-number">1.0.4.</span> <span class="nav-text">Bit-packed (Deprecated) (BIT_PACKED = 4)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Delta-Encoding-DELTA-BINARY-PACKED-5"><span class="nav-number">1.0.5.</span> <span class="nav-text">Delta Encoding (DELTA_BINARY_PACKED = 5)</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#Example-1"><span class="nav-number">1.0.5.1.</span> <span class="nav-text">Example 1</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Example-2"><span class="nav-number">1.0.5.2.</span> <span class="nav-text">Example 2</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#Characteristics"><span class="nav-number">1.0.5.3.</span> <span class="nav-text">Characteristics</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Delta-length-byte-array-DELTA-LENGTH-BYTE-ARRAY-6"><span class="nav-number">1.0.6.</span> <span class="nav-text">Delta-length byte array: (DELTA_LENGTH_BYTE_ARRAY = 6)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Delta-Strings-DELTA-BYTE-ARRAY-7"><span class="nav-number">1.0.7.</span> <span class="nav-text">Delta Strings: (DELTA_BYTE_ARRAY = 7)</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Aron</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'xUIDY0rxakumlhKmQqajlnUc-gzGzoHsz',
+        appKey: 'lrqs8UwcvY6z1has9clbxJWL',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("mUXETWIxo42z09pHif0vNGo2-gzGzoHsz", "Sv2QHSHPjuj5DVnTOmO5VQIj");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
