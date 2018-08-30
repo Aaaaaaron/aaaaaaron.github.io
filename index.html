@@ -265,6 +265,146 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/08/30/Spark-mapPartitions/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Aron">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/08/30/Spark-mapPartitions/" itemprop="url">Spark:mapPartitions</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-08-30T22:56:55+08:00">
+                2018-08-30
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/08/30/Spark-mapPartitions/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/08/30/Spark-mapPartitions/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/08/30/Spark-mapPartitions/" class="leancloud_visitors" data-flag-title="Spark:mapPartitions">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -415,11 +555,23 @@
 <h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><ol>
 <li>需要拆分页面的时候, 要更新父页面对两个子页面的引用. 因为数据库随时可能崩溃. 解决方案: WAL(redo log), 这个日志被用来使 B 树恢复到一致的状态.</li>
 <li>如果多个线程要同时访问 B 树, 则需要仔细的并发控制(latches).</li>
+<li>B 树索引必须至少两次写入每一段数据:一次写入预先写入日志, 一次写入树页面本身（也许再次分页）. 即使在该页面中只有几个字节发生了变化, 也需要一次编写整个页面的开销. 有些存储引擎甚至会覆盖同一个页面两次, 以免在电源故障的情况下导致页面部分更新.</li>
 </ol>
 <h3 id="优化"><a href="#优化" class="headerlink" title="优化"></a>优化</h3><ol>
 <li>一些数据库(如 LMDB)使用写时复制方案, 而不是覆盖页面并维护 WAL 进行崩溃恢复.修改的页面被写入到不同的位置, 并且树中的父页面的新版本被创建, 指向新的位置. 这种方法对于并发控制也很有用.</li>
 <li>可以通过不存储整个 key 来节省空间. key 只需要提供足够的信息来充当 key range 的边界. 一个 page 有更多的 key, 运行树有更高的分支因子, 减少层数.</li>
-<li>通常, page 可以放置在磁盘上的任何位置, 如果查询需要按照排序顺序扫描大部分关键字范围, 那么每个页面的布局可能会非常不方便, 因为每个读取的页面都可能需要磁盘查找. 因此许多 B 树实现尝试叶子页面按顺序出现在磁盘上, 但是随着树的增长,维持这个顺序是很困难的</li>
+<li>通常, page 可以放置在磁盘上的任何位置, 如果查询需要按照排序顺序扫描大部分关键字范围, 那么每个页面的布局可能会非常不方便, 因为每个读取的页面都可能需要磁盘查找. 因此许多 B 树实现尝试叶子页面按顺序出现在磁盘上, 但是随着树的增长,维持这个顺序是很困难的. 由于 LSM 树在合并过程中一次又一次地重写存储的大部分, 所以它们更容易使顺序键在磁盘上彼此靠近.</li>
+<li>添加额外的指针, eg:每个叶子页面可以在左边和右边具有对其兄弟页面的引用, 这样就能顺序扫描 key 而不跳回父页面.</li>
+</ol>
+<h3 id="LSM-Tree-VS-B-Tree"><a href="#LSM-Tree-VS-B-Tree" class="headerlink" title="LSM Tree VS B Tree"></a>LSM Tree VS B Tree</h3><h4 id="LSM"><a href="#LSM" class="headerlink" title="LSM"></a>LSM</h4><ol>
+<li>LSM 写快, B 读快. LSM 顺序地写入紧凑的 SSTable 文件而不是必须覆盖树中的几个页面.</li>
+<li>LSM 树可以被压缩得更好, B 树存储引擎会由于分割而留下一些未使用的磁盘空间.</li>
+<li>在许多 SSD 上, 固件内部使用日志结构化算法, 将随机写入转变为顺序写入底层存储芯片. 但是较低的写入放大率和减少的碎片对 SSD 仍然有利: 更紧凑地表示数据可在可用的 I/O 带宽内提供更多的读取和写入请求.</li>
+</ol>
+<h4 id="B-Tree"><a href="#B-Tree" class="headerlink" title="B Tree"></a>B Tree</h4><ol>
+<li>日志结构存储的缺点是压缩过程有时会干扰正在进行的读写操作, 很容易发生请求需要等待而磁盘完成昂贵的压缩操作. 对吞吐量和平均响应时间的影响通常很小, 但是在更高百分比的情况下（参阅 “描述性能”）, 对日志结构化存储引擎的查询响应时间有时会相当长, 而 B 树的行为则相对更具可预测性.</li>
+<li>压缩的另一个问题出现在高写入吞吐量: 磁盘的有限写入带宽需要在初始写入(记录和刷新内存表到磁盘)和在后台运行的压缩线程之间共享. 写入空数据库时, 可以使用全磁盘带宽进行初始写入, 但数据库越大, 压缩所需的磁盘带宽就越多. 如果写入吞吐量很高, 并且压缩没有仔细配置, 压缩跟不上写入速率. 在这种情况下, 磁盘上未合并段的数量不断增加, 直到磁盘空间用完, 读取速度也会减慢, 因为它们需要检查更多段文件. 通常情况下, 即使压缩无法跟上, 基于 SSTable 的存储引擎也不会限制传入写入的速率, 所以需要进行明确的监控来检测这种情况</li>
+<li>B 树的一个优点是每个键只存在于索引中的一个位置, 而日志结构化的存储引擎可能在不同的段中有相同键的多个副本. 这个方面使得 B 树在想要提供强大的事务语义的数据库中很有吸引力. 在许多关系数据库中, 事务隔离是通过在键范围上使用锁来实现的, 在 B 树索引中, 这些锁可以直接连接到它.</li>
 </ol>
 
           
@@ -1782,146 +1934,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/07/19/Spark-ColumnarBatch-ColumnVector-glance/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Aron">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiatao Tao's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/07/19/Spark-ColumnarBatch-ColumnVector-glance/" itemprop="url">Spark ColumnarBatch/ColumnVector glance</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-19T18:35:01+08:00">
-                2018-07-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/07/19/Spark-ColumnarBatch-ColumnVector-glance/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/07/19/Spark-ColumnarBatch-ColumnVector-glance/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-             <span id="/2018/07/19/Spark-ColumnarBatch-ColumnVector-glance/" class="leancloud_visitors" data-flag-title="Spark ColumnarBatch/ColumnVector glance">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1976,7 +1988,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">21</span>
+                  <span class="site-state-item-count">22</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
