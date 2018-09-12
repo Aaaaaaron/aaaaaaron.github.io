@@ -2,16 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://tttmelody.github.io/2018/08/30/Spark-mapPartitions/</loc>
+    <loc>https://tttmelody.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/</loc>
     
-    <lastmod>2018-08-30T14:56:55.145Z</lastmod>
+    <lastmod>2018-09-12T09:03:14.851Z</lastmod>
     
   </url>
   
   <url>
     <loc>https://tttmelody.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/</loc>
     
-    <lastmod>2018-08-26T11:54:02.128Z</lastmod>
+    <lastmod>2018-09-01T14:50:34.096Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/08/30/Spark-mapPartitions/</loc>
+    
+    <lastmod>2018-08-30T14:56:55.145Z</lastmod>
     
   </url>
   

@@ -265,6 +265,146 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Aron">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/09/12/Storage-different-strategies-about-high-cardinal-string/" itemprop="url">Storage:different strategies about high cardinal string</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-09-12T17:03:14+08:00">
+                2018-09-12
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/09/12/Storage-different-strategies-about-high-cardinal-string/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/09/12/Storage-different-strategies-about-high-cardinal-string/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/09/12/Storage-different-strategies-about-high-cardinal-string/" class="leancloud_visitors" data-flag-title="Storage:different strategies about high cardinal string">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/08/30/Spark-mapPartitions/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -573,6 +713,8 @@
 <li>压缩的另一个问题出现在高写入吞吐量: 磁盘的有限写入带宽需要在初始写入(记录和刷新内存表到磁盘)和在后台运行的压缩线程之间共享. 写入空数据库时, 可以使用全磁盘带宽进行初始写入, 但数据库越大, 压缩所需的磁盘带宽就越多. 如果写入吞吐量很高, 并且压缩没有仔细配置, 压缩跟不上写入速率. 在这种情况下, 磁盘上未合并段的数量不断增加, 直到磁盘空间用完, 读取速度也会减慢, 因为它们需要检查更多段文件. 通常情况下, 即使压缩无法跟上, 基于 SSTable 的存储引擎也不会限制传入写入的速率, 所以需要进行明确的监控来检测这种情况</li>
 <li>B 树的一个优点是每个键只存在于索引中的一个位置, 而日志结构化的存储引擎可能在不同的段中有相同键的多个副本. 这个方面使得 B 树在想要提供强大的事务语义的数据库中很有吸引力. 在许多关系数据库中, 事务隔离是通过在键范围上使用锁来实现的, 在 B 树索引中, 这些锁可以直接连接到它.</li>
 </ol>
+<h1 id="列存储"><a href="#列存储" class="headerlink" title="列存储"></a>列存储</h1><p>如果一列的值, count 很大, 但是基数不大, 可以使用 bit map. 可以很高效的压缩.<br><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-9-1/37827590.jpg" alt=""></p>
+<h2 id="vectorized-process"><a href="#vectorized-process" class="headerlink" title="vectorized process"></a>vectorized process</h2><p>除了减少需要从磁盘加载的数据量以外, 面向列的存储布局也可以有效利用 CPU 周期. 例如 query engine 可以把一块(chunk) 的  compressed column data(为了单位信息密度更大) 放到 CPU 的 L1 cache. 前面说的按位与/或可以直接 apply 到这些 chunk 上.</p>
 
           
         
@@ -1794,146 +1936,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/07/19/Golang/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Aron">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiatao Tao's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/07/19/Golang/" itemprop="url">Golang</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-19T20:42:28+08:00">
-                2018-07-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/07/19/Golang/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/07/19/Golang/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-             <span id="/2018/07/19/Golang/" class="leancloud_visitors" data-flag-title="Golang">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1988,7 +1990,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">22</span>
+                  <span class="site-state-item-count">23</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
