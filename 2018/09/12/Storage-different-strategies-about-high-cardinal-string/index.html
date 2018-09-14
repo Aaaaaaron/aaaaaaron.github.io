@@ -79,17 +79,17 @@
 
 
 
-<meta name="description" content="Kyligence">
+<meta name="description" content="ClickhouseClickHouse doesn’t have the concept of encodings. Strings can contain an arbitrary set of bytes, which are stored and output as-is. If you need to store texts, we recommend using UTF-8 encod">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Storage:different strategies about high cardinal string">
 <meta property="og:url" content="https://tttmelody.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="Kyligence">
+<meta property="og:description" content="ClickhouseClickHouse doesn’t have the concept of encodings. Strings can contain an arbitrary set of bytes, which are stored and output as-is. If you need to store texts, we recommend using UTF-8 encod">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-09-12T09:03:14.851Z">
+<meta property="og:updated_time" content="2018-09-12T14:19:37.440Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Storage:different strategies about high cardinal string">
-<meta name="twitter:description" content="Kyligence">
+<meta name="twitter:description" content="ClickhouseClickHouse doesn’t have the concept of encodings. Strings can contain an arbitrary set of bytes, which are stored and output as-is. If you need to store texts, we recommend using UTF-8 encod">
 
 
 
@@ -353,7 +353,8 @@
       
 
       
-        
+        <h1 id="Clickhouse"><a href="#Clickhouse" class="headerlink" title="Clickhouse"></a>Clickhouse</h1><p>ClickHouse doesn’t have the concept of encodings. Strings can contain an arbitrary set of bytes, which are stored and output as-is. If you need to store texts, we recommend using UTF-8 encoding. At the very least, if your terminal uses UTF-8 (as recommended), you can read and write your values without making conversions. Similarly, certain functions for working with strings have separate variations that work under the assumption that the string contains a set of bytes representing a UTF-8 encoded text. For example, the ‘length’ function calculates the string length in bytes, while the ‘lengthUTF8’ function calculates the string length in Unicode code points, assuming that the value is UTF-8 encoded.</p>
+<h1 id="Druid"><a href="#Druid" class="headerlink" title="Druid"></a>Druid</h1><h1 id="IndexR"><a href="#IndexR" class="headerlink" title="IndexR"></a>IndexR</h1><h1 id="Carbondata"><a href="#Carbondata" class="headerlink" title="Carbondata"></a>Carbondata</h1>
       
     </div>
     
@@ -386,6 +387,10 @@
           <span class="post-nav-divider"></span>
 
           <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/09/14/Maven-shade/" rel="prev" title="Maven shade">
+                Maven shade <i class="fa fa-chevron-right"></i>
+              </a>
             
           </div>
         </div>
@@ -440,8 +445,17 @@
       
 
       
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
 
-      <section class="site-overview-wrap sidebar-panel sidebar-panel-active">
+      <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
           <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
             
@@ -460,7 +474,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">23</span>
+                  <span class="site-state-item-count">24</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
@@ -496,6 +510,22 @@
         </div>
       </section>
 
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Clickhouse"><span class="nav-number">1.</span> <span class="nav-text">Clickhouse</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Druid"><span class="nav-number">2.</span> <span class="nav-text">Druid</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#IndexR"><span class="nav-number">3.</span> <span class="nav-text">IndexR</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Carbondata"><span class="nav-number">4.</span> <span class="nav-text">Carbondata</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
       
 
       
