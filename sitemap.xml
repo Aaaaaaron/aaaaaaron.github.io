@@ -2,16 +2,30 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://tttmelody.github.io/2018/09/14/Maven-shade/</loc>
+    <loc>https://tttmelody.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/</loc>
     
-    <lastmod>2018-09-14T04:02:39.311Z</lastmod>
+    <lastmod>2018-10-06T12:57:41.808Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/10/01/Druid-%E5%85%A5%E9%97%A8-benchmark/</loc>
+    
+    <lastmod>2018-10-01T03:54:38.400Z</lastmod>
     
   </url>
   
   <url>
     <loc>https://tttmelody.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/</loc>
     
-    <lastmod>2018-09-12T14:19:37.440Z</lastmod>
+    <lastmod>2018-09-17T12:54:12.408Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/09/14/Maven-shade/</loc>
+    
+    <lastmod>2018-09-14T04:02:39.311Z</lastmod>
     
   </url>
   

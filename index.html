@@ -265,6 +265,396 @@
   
   
   <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/10/06/Druid-Storage-原理/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Aron">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/10/06/Druid-Storage-原理/" itemprop="url">Druid Storage 原理</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-10-06T20:49:18+08:00">
+                2018-10-06
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/10/06/Druid-Storage-原理/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/10/06/Druid-Storage-原理/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/10/06/Druid-Storage-原理/" class="leancloud_visitors" data-flag-title="Druid Storage 原理">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>转载自<a href="https://blog.bcmeng.com/post/druid-storage.html" target="_blank" rel="noopener">编程小梦</a>, 该博主一系列文章质量都非常高</p>
+<h3 id="What-is-Druid"><a href="#What-is-Druid" class="headerlink" title="What is Druid"></a>What is Druid</h3><p>Druid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：</p>
+<ol>
+<li>列式存储</li>
+<li>倒排索引 （基于 Bitmap 实现）</li>
+<li>分布式的 Shared-Nothing 架构 （高可用，易扩展是 Druid 的设计目标）</li>
+<li>实时摄入 （数据被 Druid 实时摄入后便可以立即查询）</li>
+</ol>
+<h3 id="Why-Druid"><a href="#Why-Druid" class="headerlink" title="Why Druid"></a>Why Druid</h3><p>为了能够提取利用大数据的商业价值，我们必然需要对数据进行分析，尤其是多维分析， 但是在几年前，整个业界并没有一款很好的 OLAP 工具，各种多维分析的方式如下图所示：</p>
+<p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/55283969.jpg" alt="屏幕快照 2017-10-31 下午8.27.50.png-1080.8kB"></p>
+<p>其中直接基于 Hive，MR，Spark 的方式查询速度一般十分慢，并发低；而传统的关系型数据库无法支撑大规模数据；以 HBase 为代表的 NoSQL 数据库也无法提供高效的过滤，聚合能力。正因为现有工具有着各种各样的痛点，Druid 应运而生，以下几点自然是其设计目标：</p>
+<ol>
+<li>快速查询</li>
+<li>可以支撑大规模数据集</li>
+<li>高效的过滤和聚合</li>
+<li>实时摄入</li>
+</ol>
+<h3 id="Druid-架构"><a href="#Druid-架构" class="headerlink" title="Druid 架构"></a>Druid 架构</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/98456054.jpg" alt="image.png-181kB"></p>
+<p>Druid 的整体架构如上图所示，其中主要有 3 条路线：</p>
+<ol>
+<li><p>实时摄入的过程： 实时数据会首先按行摄入 Real-time Nodes，Real-time Nodes 会先将每行的数据加入到 1 个 map 中，等达到一定的行数或者大小限制时，Real-time Nodes 就会将内存中的 map 持久化到磁盘中，Real-time Nodes 会按照 segmentGranularity 将一定时间段内的小文件 merge 为一个大文件，生成 Segment，然后将 Segment 上传到 Deep Storage（HDFS，S3）中，Coordinator 知道有 Segment 生成后，会通知相应的 Historical Node 下载对应的 Segment，并负责该 Segment 的查询。</p>
+</li>
+<li><p>离线摄入的过程： 离线摄入的过程比较简单，就是直接通过 MR job 生成 Segment，剩下的逻辑和实时摄入相同：</p>
+</li>
+<li><p>用户查询过程： 用户的查询都是直接发送到 Broker Node，Broker Node 会将查询分发到 Real-time 节点和 Historical 节点，然后将结果合并后返回给用户。</p>
+</li>
+</ol>
+<p>各节点的主要职责如下：</p>
+<h4 id="Historical-Nodes"><a href="#Historical-Nodes" class="headerlink" title="Historical Nodes"></a>Historical Nodes</h4><p>Historical 节点是整个 Druid 集群的骨干，主要负责加载不可变的 segment，并负责 Segment 的查询（注意，Segment 必须加载到 Historical 的内存中才可以提供查询）。Historical 节点是无状态的，所以可以轻易的横向扩展和快速恢复。Historical 节点 load 和 un-load segment 是依赖 ZK 的，但是即使 ZK 挂掉，Historical 依然可以对已经加载的 Segment 提供查询，只是不能再 load 新 segment，drop 旧 segment。</p>
+<h4 id="Broker-Nodes"><a href="#Broker-Nodes" class="headerlink" title="Broker Nodes"></a>Broker Nodes</h4><p>Broker 节点是 Druid 查询的入口，主要负责查询的分发和 Merge。 之外，Broker 还会对不可变的 Segment 的查询结果进行 LRU 缓存。</p>
+<h4 id="Coordinator-Nodes"><a href="#Coordinator-Nodes" class="headerlink" title="Coordinator Nodes"></a>Coordinator Nodes</h4><p>Coordinator 节点主要负责 Segment 的管理。Coordinator 节点会通知 Historical 节点加载新 Segment，删除旧 Segment，复制 Segment，以及 Segment 间的复杂均衡。</p>
+<p>Coordinator 节点依赖 ZK 确定 Historical 的存活和集群 Segment 的分布。</p>
+<h4 id="Real-time-Node"><a href="#Real-time-Node" class="headerlink" title="Real-time Node"></a>Real-time Node</h4><p>实时节点主要负责数据的实时摄入，实时数据的查询，将实时数据转为 Segment，将 Segment Hand off 给 Historical 节点。</p>
+<h4 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a>Zookeeper</h4><p>Druid 依赖 ZK 实现服务发现，数据拓扑的感知，以及 Coordinator 的选主。</p>
+<h4 id="Metadata-Storage"><a href="#Metadata-Storage" class="headerlink" title="Metadata Storage"></a>Metadata Storage</h4><p>Metadata storage（Mysql） 主要用来存储 Segment 和配置的元数据。当有新 Segment 生成时，就会将 Segment 的元信息写入 metadata store, Coordinator 节点会监控 Metadata store 从而知道何时 load 新 Segment，何时 drop 旧 Segment。注意，查询时不会涉及 Metadata store。</p>
+<h4 id="Deep-Storage"><a href="#Deep-Storage" class="headerlink" title="Deep Storage"></a>Deep Storage</h4><p>Deep storage (S3 and HDFS) 是作为 Segment 的永久备份，查询时同样不会涉及 Deep storage。</p>
+<h3 id="Column"><a href="#Column" class="headerlink" title="Column"></a>Column</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/34009295.jpg" alt="屏幕快照 2017-10-27 下午3.45.05.png-278kB"></p>
+<p>Druid 中的列主要分为 3 类：时间列，维度列，指标列。Druid 在数据摄入和查询时都依赖时间列，这也是合理的，因为多维分析一般都带有时间维度。维度和指标是 OLAP 系统中常见的概念，维度主要是事件的属性，在查询时一般用来 filtering 和 group by，指标是用来聚合和计算的，一般是数值类型，像 count,sum，min，max 等。</p>
+<p>Druid 中的维度列支持 String，Long，Float，不过只有 String 类型支持倒排索引；指标列支持 Long，Float，Complex， 其中 Complex 指标包含 HyperUnique，Cardinality，Histogram，Sketch 等复杂指标。强类型的好处是可以更好的对每 1 列进行编码和压缩， 也可以保证数据索引的高效性和查询性能。</p>
+<h3 id="Segment"><a href="#Segment" class="headerlink" title="Segment"></a>Segment</h3><p>前面提到过，Druid 中会按时间段生成不可变的带倒排索引的列式文件，这个文件就称之为 Segment，Segment 是 Druid 中数据存储、复制、均衡、以及计算的基本单元， Segment 由 dataSource_beginTime_endTime_version_shardNumber 唯一标识，1 个 segment 一般包含 5–10 million 行记录，大小一般在 300~700mb。</p>
+<h3 id="Segment-的存储格式"><a href="#Segment-的存储格式" class="headerlink" title="Segment 的存储格式"></a>Segment 的存储格式</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/29577015.jpg" alt="image.png-90kB">Druid segment 的存储格式如上图所示，包含 3 部分：</p>
+<ul>
+<li>version 文件</li>
+<li>meta 文件</li>
+<li>数据文件</li>
+</ul>
+<p>其中 meta 文件主要包含每 1 列的文件名和文件的偏移量。（注，druid 为了减少文件描述符，将 1 个 segment 的所有列都合并到 1 个大的 smoosh 中，由于 druid 访问 segment 文件的时候采用 MMap 的方式，所以单个 smoosh 文件的大小不能超过 2G，如果超过 2G，就会写到下一个 smoosh 文件）。</p>
+<p>在 smoosh 文件中，数据是按列存储中，包含时间列，维度列和指标列，其中每 1 列会包含 2 部分：ColumnDescriptor 和 binary 数据。其中 ColumnDescriptor 主要保存每 1 列的数据类型和 Serde 的方式。</p>
+<p>smoosh 文件中还有 index.drd 文件和 metadata.drd 文件，其中 index.drd 主要包含该 segment 有哪些列，哪些维度，该 Segment 的时间范围以及使用哪种 bitmap；metadata.drd 主要包含是否需要聚合，指标的聚合函数，查询粒度，时间戳字段的配置等。</p>
+<h3 id="指标列的存储格式"><a href="#指标列的存储格式" class="headerlink" title="指标列的存储格式"></a>指标列的存储格式</h3><p>我们先来看指标列的存储格式：</p>
+<p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/8107893.jpg" alt="image.png-35.9kB"></p>
+<p>指标列的存储格式如上图所示：</p>
+<ul>
+<li>version</li>
+<li>value 个数</li>
+<li>每个 block 的 value 的个数（druid 对 Long 和 Float 类型会按 block 进行压缩，block 的大小是 64K）</li>
+<li>压缩类型 （druid 目前主要有 LZ4 和 LZF 俩种压缩算法）</li>
+<li>编码类型 （druid 对 Long 类型支持差分编码和 Table 编码两种方式，Table 编码就是将 long 值映射到 int，当指标列的基数小于 256 时，druid 会选择 Table 编码，否则会选择差分编码）</li>
+<li>编码的 header （以差分编码为例，header 中会记录版本号，base value，每个 value 用几个 bit 表示）</li>
+<li>每个 block 的 header （主要记录版本号，是否允许反向查找，value 的数量，列名长度和列名）</li>
+<li>每 1 列具体的值</li>
+</ul>
+<h4 id="Long-型指标"><a href="#Long-型指标" class="headerlink" title="Long 型指标"></a>Long 型指标</h4><p>Druid 中对 Long 型指标会先进行编码，然后按 block 进行压缩。编码算法包含差分编码和 table 编码，压缩算法包含 LZ4 和 LZF。</p>
+<h4 id="Float-型指标"><a href="#Float-型指标" class="headerlink" title="Float 型指标"></a>Float 型指标</h4><p>Druid 对于 Float 类型的指标不会进行编码，只会按 block 进行压缩。</p>
+<h4 id="Complex-型指标"><a href="#Complex-型指标" class="headerlink" title="Complex 型指标"></a>Complex 型指标</h4><p>Druid 对于 HyperUnique，Cardinality，Histogram，Sketch 等复杂指标不会进行编码和压缩处理，每种复杂指标的 Serde 方式由每种指标自己的 ComplexMetricSerde 实现类实现。</p>
+<h3 id="String-维度的存储格式"><a href="#String-维度的存储格式" class="headerlink" title="String 维度的存储格式"></a>String 维度的存储格式</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/79137485.jpg" alt="image.png-81.2kB"></p>
+<p>String 维度的存储格式如上图所示，前面提到过，时间列，维度列，指标列由两部分组成：ColumnDescriptor 和 binary 数据。 String 维度的 binary 数据主要由 3 部分组成：dict，字典编码后的 id 数组，用于倒排索引的 bitmap。</p>
+<p>以上图中的 D2 维度列为例，总共有 4 行，前 3 行的值是 meituan，第 4 行的值是 dianing。Druid 中 dict 的实现十分简单，就是一个 hashmap。图中 dict 的内容就是将 meituan 编码为 0，dianping 编码为 1。 Id 数组的内容就是用编码后的 ID 替换掉原始值，所以就是 [1,1,1,0]。第 3 部分的倒排索引就是用 bitmap 表示某个值是否出现在某行中，如果出现了，bitmap 对应的位置就会置为 1，如图：meituan 在前 3 行中都有出现，所以倒排索引 1：[1,1,1,0] 就表示 meituan 在前 3 行中出现。</p>
+<p>显然，倒排索引的大小是列的基数 * 总的行数，如果没有处理的话结果必然会很大。不过好在如果维度列如果基数很高的话，bitmap 就会比较稀疏，而稀疏的 bitmap 可以进行高效的压缩。</p>
+<h3 id="Segment-生成过程"><a href="#Segment-生成过程" class="headerlink" title="Segment 生成过程"></a>Segment 生成过程</h3><ol>
+<li>Add Row to Map</li>
+<li>Begin persist to disk</li>
+<li>Write version file</li>
+<li>Merge and write dimension dict</li>
+<li>Write time column</li>
+<li>Write metric column</li>
+<li>Write dimension column</li>
+<li>Write index.drd</li>
+<li>Merge and write bitmaps</li>
+<li>Write metadata.drd</li>
+</ol>
+<h3 id="Segment-load-过程"><a href="#Segment-load-过程" class="headerlink" title="Segment load 过程"></a>Segment load 过程</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/34569900.jpg" alt="meta.png-44.3kB"></p>
+<ol>
+<li>Read version</li>
+<li>Load segment to MappedByteBuffer</li>
+<li>Get column offset from meta</li>
+<li>Deserialize each column from ByteBuffer</li>
+</ol>
+<h3 id="Segment-Query-过程"><a href="#Segment-Query-过程" class="headerlink" title="Segment Query 过程"></a>Segment Query 过程</h3><p>Druid 查询的最小单位是 Segment，Segment 在查询之前必须先 load 到内存，load 过程如上一步所述。如果没有索引的话，我们的查询过程就只能 Scan 的，遇到符合条件的行选择出来，但是所有查询都进行全表 Scan 肯定是不可行的，所以我们需要索引来快速过滤不需要的行。Druid 的 Segmenet 查询过程如下：</p>
+<ol>
+<li>构造 1 个 Cursor 进行迭代</li>
+<li>查询之前构造出 Fliter</li>
+<li>根据 Index 匹配 Fliter，得到满足条件的 Row 的 Offset</li>
+<li>根据每列的 ColumnSelector 去指定 Row 读取需要的列。</li>
+</ol>
+<h3 id="Druid-的编码和压缩"><a href="#Druid-的编码和压缩" class="headerlink" title="Druid 的编码和压缩"></a>Druid 的编码和压缩</h3><p>前面已经提到了，Druid 对 Long 型的指标进行了差分编码和 Table 编码，Long 型和 Float 型的指标进行了 LZ4 或者 LZF 压缩。</p>
+<p>其实编码和压缩本质上是一个东西，一切熵增的编码都是压缩。 在计算机领域，我们一般把针对特定类型的编码称之为编码，针对任意类型的通用编码称之为压缩。</p>
+<p>编码和压缩的本质就是让每一个 bit 尽可能带有更多的信息。</p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/10/01/Druid-入门-benchmark/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Aron">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">
+                
+                <a class="post-title-link" href="/2018/10/01/Druid-入门-benchmark/" itemprop="url">Druid 入门&benchmark</a></h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-10-01T10:36:00+08:00">
+                2018-10-01
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/10/01/Druid-入门-benchmark/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/10/01/Druid-入门-benchmark/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/10/01/Druid-入门-benchmark/" class="leancloud_visitors" data-flag-title="Druid 入门&benchmark">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        
+          
+            <p>coordinator:管理集群状态, 8081<br>broker:查询节点, 8082<br>historical:历史节点, 管理历史数据, 8083<br>overlord: 统治节点, 管理数据写入, 8090<br>middleManager: 中间管理者, 负责写数据<br>pivot: ui, 9095</p>
+<p>可以分为三种节点:</p>
+<ol>
+<li>Master, 包含 overlord 和 coordinator, 负责数据写入和容错.</li>
+<li>Data, 数据节点, 包含 historical, middleManager, 负责数据写入和历史数据加载</li>
+<li>Query, broker, 查询数据.</li>
+</ol>
+<p>1,3尽量选多核大内存, 2选磁盘大的机子. 机子资源少时, 可以把 master 和 query 放到一起, 在家 historical 加速热点数据查询.</p>
+<hr>
+<p>overloard:<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">-server</span><br><span class="line">-Xms4g</span><br><span class="line">-Xmx4g</span><br><span class="line">-XX:NewSize=256m</span><br><span class="line">-XX:MaxNewSize=256m</span><br><span class="line">-XX:+UserConcMarkSweepGC</span><br><span class="line">-XX:+PrintGCDetails</span><br><span class="line">-XX:+PrintGCTimeStamps</span><br><span class="line">-Duser.timezone=UTC+0800</span><br><span class="line">-Dfile.encoding=UTF-8</span><br><span class="line">-Djava.io.tmpdir=var/tmp</span><br><span class="line">-Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</span><br><span class="line"></span><br><span class="line">druid.service=druid/overlord</span><br><span class="line">druid.host=10.1.30.101</span><br><span class="line">druid.port=8090</span><br><span class="line">druid.indexer.queue.startDelay=PT30S</span><br><span class="line">druid.indexer.runner.type=remote</span><br><span class="line">druid.indexer.storage.type=metadata</span><br></pre></td></tr></table></figure></p>
+<p>broker<br>有个 query cache 的 要注意.<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"> 1 -server</span><br><span class="line"> 2 -Xms24g</span><br><span class="line"> 3 -Xmx24g</span><br><span class="line"> 4 -XX:NewSize=6g</span><br><span class="line"> 5 -XX:MaxNewSize=6g</span><br><span class="line"> 6 -XX:MaxDirectMemorySize=32g</span><br><span class="line"> 7 -XX:+UserConcMarkSweepGC</span><br><span class="line"> 8 -XX:+PrintGCDetails</span><br><span class="line"> 9 -XX:+PrintGCTimeStamps</span><br><span class="line">10 -Duser.timezone=UTC+0800</span><br><span class="line">11 -Dfile.encoding=UTF-8</span><br><span class="line">12 -Djava.io.tmpdir=var/tmp</span><br><span class="line">13 -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</span><br><span class="line"></span><br><span class="line"> 1 druid.service=druid/broker</span><br><span class="line"> 2 druid.host=10.1.30.102</span><br><span class="line"> 3 druid.port=8082</span><br><span class="line"> 4</span><br><span class="line"> 5 # HTTP server threads</span><br><span class="line"> 6 druid.broker.http.numConnections=20</span><br><span class="line"> 7 druid.broker.http.readTimeout=PT5M</span><br><span class="line"> 8 druid.server.http.numThreads=50</span><br><span class="line"> 9</span><br><span class="line">10 # Processing threads and buffers</span><br><span class="line">11 druid.processing.buffer.sizeBytes=2147483647</span><br><span class="line">12 druid.processing.numMergeBuffers=2</span><br><span class="line">13 druid.processing.numThreads=15</span><br><span class="line">14 druid.processing.tmpDir=var/druid/processing</span><br><span class="line">15</span><br><span class="line">16 # Query cache disabled -- push down caching and merging instead</span><br><span class="line">17 druid.broker.cache.useCache=false</span><br><span class="line">18 druid.broker.cache.populateCache=false</span><br><span class="line">19 # druid.cache.sizeInBytes=6000000000</span><br><span class="line">20</span><br><span class="line">21 # Query config</span><br><span class="line">22 druid.broker.balancer.type=connectionCount</span><br><span class="line">23</span><br><span class="line">24 # SQL</span><br><span class="line">25 druid.sql.enable=true</span><br></pre></td></tr></table></figure></p>
+<p>historical<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"> 1 -server</span><br><span class="line"> 2 -Xms12g</span><br><span class="line"> 3 -Xmx12g</span><br><span class="line"> 4 -XX:NewSize=4g</span><br><span class="line"> 5 -XX:MaxNewSize=4g</span><br><span class="line"> 6 -XX:MaxDirectMemorySize=10g</span><br><span class="line"> 7 -XX:+UserConcMarkSweepGC</span><br><span class="line"> 8 -XX:+PrintGCDetails</span><br><span class="line"> 9 -XX:+PrintGCTimeStamps</span><br><span class="line">10 -Duser.timezone=UTC+0800</span><br><span class="line">11 -XX:MaxDirectMemorySize=8g</span><br><span class="line">12 -Dfile.encoding=UTF-8</span><br><span class="line">13 -Djava.io.tmpdir=var/tmp</span><br><span class="line">14 -Djava.util.logging.manager=org.apache.logging.log4j.jul.LogManager</span><br><span class="line"></span><br><span class="line"> 1 druid.service=druid/historical</span><br><span class="line"> 2 druid.host=10.1.30.103</span><br><span class="line"> 3 druid.port=8083</span><br><span class="line"> 4</span><br><span class="line"> 5 # HTTP server threads</span><br><span class="line"> 6 druid.server.http.numThreads=50</span><br><span class="line"> 7</span><br><span class="line"> 8 # Processing threads and buffers</span><br><span class="line"> 9 druid.processing.buffer.sizeBytes=1073741824</span><br><span class="line">10 druid.processing.numMergeBuffers=2</span><br><span class="line">11 druid.processing.numThreads=15</span><br><span class="line">12 druid.processing.tmpDir=var/druid/processing</span><br><span class="line">13</span><br><span class="line">14 # Segment storage</span><br><span class="line">15 druid.segmentCache.locations=[&#123;&quot;path&quot;:&quot;var/druid/segment-cache&quot;,&quot;maxSize&quot;\:130000000000&#125;]</span><br><span class="line">16 druid.server.maxSize=130000000000</span><br><span class="line">17</span><br><span class="line">18 # Query cache (note change)</span><br><span class="line">19 druid.historical.cache.useCache=false</span><br><span class="line">20 druid.historical.cache.populateCache=false</span><br><span class="line">21 druid.cache.type=caffeine</span><br><span class="line">22 druid.cache.sizeInBytes=2000000000</span><br></pre></td></tr></table></figure></p>
+
+          
+        
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+
+      
+
+      
+      
+        <div class="post-eof"></div>
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+    
+      
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/09/14/Maven-shade/">
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
@@ -501,8 +891,14 @@
       
         
           
-            <h1 id="Clickhouse"><a href="#Clickhouse" class="headerlink" title="Clickhouse"></a>Clickhouse</h1><p>ClickHouse doesn’t have the concept of encodings. Strings can contain an arbitrary set of bytes, which are stored and output as-is. If you need to store texts, we recommend using UTF-8 encoding. At the very least, if your terminal uses UTF-8 (as recommended), you can read and write your values without making conversions. Similarly, certain functions for working with strings have separate variations that work under the assumption that the string contains a set of bytes representing a UTF-8 encoded text. For example, the ‘length’ function calculates the string length in bytes, while the ‘lengthUTF8’ function calculates the string length in Unicode code points, assuming that the value is UTF-8 encoded.</p>
-<h1 id="Druid"><a href="#Druid" class="headerlink" title="Druid"></a>Druid</h1><h1 id="IndexR"><a href="#IndexR" class="headerlink" title="IndexR"></a>IndexR</h1><h1 id="Carbondata"><a href="#Carbondata" class="headerlink" title="Carbondata"></a>Carbondata</h1>
+            <h1 id="Keywords"><a href="#Keywords" class="headerlink" title="Keywords"></a>Keywords</h1><p>run length encoding:对数据稀疏的列有较好的压缩率和访问速度</p>
+<p>字典</p>
+<h1 id="Clickhouse"><a href="#Clickhouse" class="headerlink" title="Clickhouse"></a>Clickhouse</h1><p>ClickHouse doesn’t have the concept of encodings. Strings can contain an arbitrary set of bytes, which are stored and output as-is. If you need to store texts, we recommend using UTF-8 encoding. At the very least, if your terminal uses UTF-8 (as recommended), you can read and write your values without making conversions. Similarly, certain functions for working with strings have separate variations that work under the assumption that the string contains a set of bytes representing a UTF-8 encoded text. For example, the ‘length’ function calculates the string length in bytes, while the ‘lengthUTF8’ function calculates the string length in Unicode code points, assuming that the value is UTF-8 encoded.</p>
+<h1 id="Druid"><a href="#Druid" class="headerlink" title="Druid"></a>Druid</h1><p>使用字典:</p>
+<p>字典是 mmap 进来的, 见:<code>org.apache.druid.segment.serde.ColumnPartSerde.Deserializer#read</code><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">final</span> GenericIndexed&lt;String&gt; rDictionary = GenericIndexed.read(</span><br><span class="line">    buffer,</span><br><span class="line">    GenericIndexed.STRING_STRATEGY,</span><br><span class="line">    builder.getFileMapper()</span><br><span class="line">);</span><br><span class="line"></span><br><span class="line">DictionaryEncodedColumnSupplier dictionaryEncodedColumnSupplier = <span class="keyword">new</span> DictionaryEncodedColumnSupplier(</span><br><span class="line">    rDictionary,</span><br><span class="line">    rSingleValuedColumn,</span><br><span class="line">    rMultiValuedColumn,</span><br><span class="line">    columnConfig.columnCacheSizeBytes()</span><br><span class="line">);</span><br></pre></td></tr></table></figure></p>
+<p>其中<code>GenericIndexed.read</code>具体:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> &lt;T&gt; <span class="function">GenericIndexed&lt;T&gt; <span class="title">createGenericIndexedVersionTwo</span><span class="params">(</span></span></span><br><span class="line"><span class="function"><span class="params">    ByteBuffer byteBuffer,</span></span></span><br><span class="line"><span class="function"><span class="params">    ObjectStrategy&lt;T&gt; strategy,</span></span></span><br><span class="line"><span class="function"><span class="params">    SmooshedFileMapper fileMapper</span></span></span><br><span class="line"><span class="function"><span class="params">)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">  <span class="keyword">if</span> (fileMapper == <span class="keyword">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> IAE(<span class="string">"SmooshedFileMapper can not be null for version 2."</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">boolean</span> allowReverseLookup = byteBuffer.get() == REVERSE_LOOKUP_ALLOWED;</span><br><span class="line">  <span class="keyword">int</span> logBaseTwoOfElementsPerValueFile = byteBuffer.getInt();</span><br><span class="line">  <span class="keyword">int</span> numElements = byteBuffer.getInt();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">try</span> &#123;</span><br><span class="line">    String columnName = SERIALIZER_UTILS.readString(byteBuffer);</span><br><span class="line">    <span class="keyword">int</span> elementsPerValueFile = <span class="number">1</span> &lt;&lt; logBaseTwoOfElementsPerValueFile;</span><br><span class="line">    <span class="keyword">int</span> numberOfFilesRequired = getNumberOfFilesRequired(elementsPerValueFile, numElements);</span><br><span class="line">    ByteBuffer[] valueBuffersToUse = <span class="keyword">new</span> ByteBuffer[numberOfFilesRequired];</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; numberOfFilesRequired; i++) &#123;</span><br><span class="line">      <span class="comment">// SmooshedFileMapper.mapFile() contract guarantees that the valueBuffer's limit equals to capacity.</span></span><br><span class="line">      ByteBuffer valueBuffer = fileMapper.mapFile(GenericIndexedWriter.generateValueFileName(columnName, i));</span><br><span class="line">      valueBuffersToUse[i] = valueBuffer.asReadOnlyBuffer();</span><br><span class="line">    &#125;</span><br><span class="line">    ByteBuffer headerBuffer = fileMapper.mapFile(GenericIndexedWriter.generateHeaderFileName(columnName));</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> GenericIndexed&lt;&gt;(</span><br><span class="line">        valueBuffersToUse,</span><br><span class="line">        headerBuffer,</span><br><span class="line">        strategy,</span><br><span class="line">        allowReverseLookup,</span><br><span class="line">        logBaseTwoOfElementsPerValueFile,</span><br><span class="line">        numElements</span><br><span class="line">    );</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"File mapping failed."</span>, e);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>字典的具体表示是:<code>CachingIndexed&lt;String&gt; cachedLookups</code>, get 的时候先 get 从 cache 拿, 然后没有的话再从 mmap 中拿.<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">CachingIndexed</span>&lt;<span class="title">T</span>&gt; <span class="keyword">implements</span> <span class="title">Indexed</span>&lt;<span class="title">T</span>&gt;, <span class="title">Closeable</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> INITIAL_CACHE_CAPACITY = <span class="number">16384</span>;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> Logger log = <span class="keyword">new</span> Logger(CachingIndexed.class);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> GenericIndexed&lt;T&gt;.BufferIndexed delegate;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> SizedLRUMap&lt;Integer, T&gt; cachedValues;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Creates a CachingIndexed wrapping the given GenericIndexed with a value lookup cache</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * CachingIndexed objects are not thread safe and should only be used by a single thread at a time.</span></span><br><span class="line"><span class="comment">   * CachingIndexed objects must be closed to release any underlying cache resources.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> delegate the GenericIndexed to wrap with a lookup cache.</span></span><br><span class="line"><span class="comment">   * <span class="doctag">@param</span> lookupCacheSize maximum size in bytes of the lookup cache if greater than zero</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="title">CachingIndexed</span><span class="params">(GenericIndexed&lt;T&gt; delegate, <span class="keyword">final</span> <span class="keyword">int</span> lookupCacheSize)</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.delegate = delegate.singleThreaded();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (lookupCacheSize &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      log.debug(<span class="string">"Allocating column cache of max size[%d]"</span>, lookupCacheSize);</span><br><span class="line">      cachedValues = <span class="keyword">new</span> SizedLRUMap&lt;&gt;(INITIAL_CACHE_CAPACITY, lookupCacheSize);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      cachedValues = <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="keyword">public</span> Class&lt;? extends T&gt; getClazz()</span><br><span class="line">  &#123;</span><br><span class="line">    <span class="keyword">return</span> delegate.getClazz();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">size</span><span class="params">()</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> delegate.size();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> T <span class="title">get</span><span class="params">(<span class="keyword">int</span> index)</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (cachedValues != <span class="keyword">null</span>) &#123;</span><br><span class="line">      <span class="keyword">final</span> T cached = cachedValues.getValue(index);</span><br><span class="line">      <span class="keyword">if</span> (cached != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> cached;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="keyword">final</span> T value = delegate.get(index);</span><br><span class="line">      cachedValues.put(index, value, delegate.getLastValueSize());</span><br><span class="line">      <span class="keyword">return</span> value;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> delegate.get(index);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">indexOf</span><span class="params">(T value)</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> delegate.indexOf(value);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> Iterator&lt;T&gt; <span class="title">iterator</span><span class="params">()</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> delegate.iterator();</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (cachedValues != <span class="keyword">null</span>) &#123;</span><br><span class="line">      log.debug(<span class="string">"Closing column cache"</span>);</span><br><span class="line">      cachedValues.clear();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">inspectRuntimeShape</span><span class="params">(RuntimeShapeInspector inspector)</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    inspector.visit(<span class="string">"cachedValues"</span>, cachedValues != <span class="keyword">null</span>);</span><br><span class="line">    inspector.visit(<span class="string">"delegate"</span>, delegate);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">SizedLRUMap</span>&lt;<span class="title">K</span>, <span class="title">V</span>&gt; <span class="keyword">extends</span> <span class="title">LinkedHashMap</span>&lt;<span class="title">K</span>, <span class="title">Pair</span>&lt;<span class="title">Integer</span>, <span class="title">V</span>&gt;&gt;</span></span><br><span class="line"><span class="class">  </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">int</span> maxBytes;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> numBytes = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">SizedLRUMap</span><span class="params">(<span class="keyword">int</span> initialCapacity, <span class="keyword">int</span> maxBytes)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">      <span class="keyword">super</span>(initialCapacity, <span class="number">0.75f</span>, <span class="keyword">true</span>);</span><br><span class="line">      <span class="keyword">this</span>.maxBytes = maxBytes;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">protected</span> <span class="keyword">boolean</span> <span class="title">removeEldestEntry</span><span class="params">(Map.Entry&lt;K, Pair&lt;Integer, V&gt;&gt; eldest)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">      <span class="keyword">if</span> (numBytes &gt; maxBytes) &#123;</span><br><span class="line">        numBytes -= eldest.getValue().lhs;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">put</span><span class="params">(K key, V value, <span class="keyword">int</span> size)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">      <span class="keyword">final</span> <span class="keyword">int</span> totalSize = size + <span class="number">48</span>; <span class="comment">// add approximate object overhead</span></span><br><span class="line">      numBytes += totalSize;</span><br><span class="line">      <span class="keyword">super</span>.put(key, <span class="keyword">new</span> Pair&lt;&gt;(totalSize, value));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> V <span class="title">getValue</span><span class="params">(Object key)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">      <span class="keyword">final</span> Pair&lt;Integer, V&gt; sizeValuePair = <span class="keyword">super</span>.get(key);</span><br><span class="line">      <span class="keyword">return</span> sizeValuePair == <span class="keyword">null</span> ? <span class="keyword">null</span> : sizeValuePair.rhs;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h1 id="IndexR"><a href="#IndexR" class="headerlink" title="IndexR"></a>IndexR</h1><h1 id="Carbondata"><a href="#Carbondata" class="headerlink" title="Carbondata"></a>Carbondata</h1>
           
         
       
@@ -1661,286 +2057,6 @@
 
 
     
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/07/19/Linux-IO-模型/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Aron">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiatao Tao's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/07/19/Linux-IO-模型/" itemprop="url">Linux IO 模型</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-19T20:44:23+08:00">
-                2018-07-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/07/19/Linux-IO-模型/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/07/19/Linux-IO-模型/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-             <span id="/2018/07/19/Linux-IO-模型/" class="leancloud_visitors" data-flag-title="Linux IO 模型">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
-      
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://tttmelody.github.io/2018/07/19/Elixir/">
-
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Aron">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-    </span>
-
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiatao Tao's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">
-                
-                <a class="post-title-link" href="/2018/07/19/Elixir/" itemprop="url">Elixir</a></h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-19T20:44:00+08:00">
-                2018-07-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/07/19/Elixir/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/07/19/Elixir/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-             <span id="/2018/07/19/Elixir/" class="leancloud_visitors" data-flag-title="Elixir">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        
-          
-            
-          
-        
-      
-    </div>
-    
-    
-    
-
-    
-
-    
-
-    
-
-    <footer class="post-footer">
-      
-
-      
-
-      
-
-      
-      
-        <div class="post-eof"></div>
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-    
   </section>
 
   
@@ -1995,7 +2111,7 @@
               
                 <a href="/archives/">
               
-                  <span class="site-state-item-count">24</span>
+                  <span class="site-state-item-count">26</span>
                   <span class="site-state-item-name">日志</span>
                 </a>
               </div>
