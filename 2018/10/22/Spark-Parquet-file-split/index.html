@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT" />
+  <meta name="keywords" content="Spark," />
 
 
 
@@ -80,13 +80,14 @@
 
 
 <meta name="description" content="在实际使用 spark + parquet 的时候, 遇到一个问题:我们只有一个 parquet 文件, 但是有四个 tasks, 但是只有一个 task 处理了全部的数据.这就牵涉到对于 parquet, spark 是如何来进行切分 partitions, 以及每个 partition 要处理哪部分数据 先说结论, spark 中, parquet 是 splitable 的, 代码见Parq">
+<meta name="keywords" content="Spark">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spark Parquet file split">
 <meta property="og:url" content="https://tttmelody.github.io/2018/10/22/Spark-Parquet-file-split/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
 <meta property="og:description" content="在实际使用 spark + parquet 的时候, 遇到一个问题:我们只有一个 parquet 文件, 但是有四个 tasks, 但是只有一个 task 处理了全部的数据.这就牵涉到对于 parquet, spark 是如何来进行切分 partitions, 以及每个 partition 要处理哪部分数据 先说结论, spark 中, parquet 是 splitable 的, 代码见Parq">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-10-22T15:18:01.815Z">
+<meta property="og:updated_time" content="2018-10-22T15:18:50.501Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spark Parquet file split">
 <meta name="twitter:description" content="在实际使用 spark + parquet 的时候, 遇到一个问题:我们只有一个 parquet 文件, 但是有四个 tasks, 但是只有一个 task 处理了全部的数据.这就牵涉到对于 parquet, spark 是如何来进行切分 partitions, 以及每个 partition 要处理哪部分数据 先说结论, spark 中, parquet 是 splitable 的, 代码见Parq">
@@ -389,6 +390,12 @@
     
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Spark/" rel="tag"># Spark</a>
+          
+        </div>
       
 
       
