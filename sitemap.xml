@@ -2,16 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://tttmelody.github.io/2018/10/16/Spark-map-vs-mapPartitions/</loc>
+    <loc>https://tttmelody.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
     
-    <lastmod>2018-10-16T06:51:40.389Z</lastmod>
+    <lastmod>2018-10-22T15:05:05.826Z</lastmod>
     
   </url>
   
   <url>
     <loc>https://tttmelody.github.io/2018/10/13/Learning-Scala/</loc>
     
-    <lastmod>2018-10-14T08:40:36.837Z</lastmod>
+    <lastmod>2018-10-17T14:02:38.653Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/10/16/Spark-map-vs-mapPartitions/</loc>
+    
+    <lastmod>2018-10-16T12:29:26.788Z</lastmod>
     
   </url>
   
