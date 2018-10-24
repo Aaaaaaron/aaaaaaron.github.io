@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://tttmelody.github.io/2018/09/14/Maven-shade/</loc>
+    
+    <lastmod>2018-10-24T03:27:21.527Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://tttmelody.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
     
     <lastmod>2018-10-23T03:27:56.852Z</lastmod>
@@ -40,13 +47,6 @@
     <loc>https://tttmelody.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/</loc>
     
     <lastmod>2018-09-17T12:54:12.408Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://tttmelody.github.io/2018/09/14/Maven-shade/</loc>
-    
-    <lastmod>2018-09-14T04:02:39.311Z</lastmod>
     
   </url>
   
