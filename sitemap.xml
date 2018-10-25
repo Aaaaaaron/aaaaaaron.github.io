@@ -2,6 +2,69 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://tttmelody.github.io/2018/10/24/%E5%AF%BB%E6%89%BE-spark-executor-%E6%97%A5%E5%BF%97/</loc>
+    
+    <lastmod>2018-10-25T15:01:06.437Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/</loc>
+    
+    <lastmod>2018-10-25T15:01:01.117Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/07/19/Spark-Tungsten-Deep-Dive/</loc>
+    
+    <lastmod>2018-10-25T15:00:48.640Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/08/12/Spark-Strategy-DataSource/</loc>
+    
+    <lastmod>2018-10-25T15:00:44.183Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/07/19/Spark-SQL-WholeStageCodeGen-Deep-Dive/</loc>
+    
+    <lastmod>2018-10-25T15:00:39.391Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/07/19/Spark-SQL-Relation-Deep-Dive/</loc>
+    
+    <lastmod>2018-10-25T15:00:34.168Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
+    
+    <lastmod>2018-10-25T15:00:28.239Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/08/30/Spark-mapPartitions/</loc>
+    
+    <lastmod>2018-10-25T15:00:12.770Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://tttmelody.github.io/2018/10/16/Spark-map-vs-mapPartitions/</loc>
+    
+    <lastmod>2018-10-25T15:00:00.536Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://tttmelody.github.io/2018/07/19/Spark-ColumnarBatch-ColumnVector-glance/</loc>
     
     <lastmod>2018-10-25T14:59:29.973Z</lastmod>
@@ -128,48 +191,6 @@
   </url>
   
   <url>
-    <loc>https://tttmelody.github.io/2018/10/24/%E5%AF%BB%E6%89%BE-spark-executor-%E6%97%A5%E5%BF%97/</loc>
-    
-    <lastmod>2018-10-24T14:24:07.247Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://tttmelody.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
-    
-    <lastmod>2018-10-23T03:27:56.852Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://tttmelody.github.io/2018/10/16/Spark-map-vs-mapPartitions/</loc>
-    
-    <lastmod>2018-10-16T12:29:26.788Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://tttmelody.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/</loc>
-    
-    <lastmod>2018-09-17T12:54:12.408Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://tttmelody.github.io/2018/08/30/Spark-mapPartitions/</loc>
-    
-    <lastmod>2018-08-30T14:56:55.145Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://tttmelody.github.io/2018/08/12/Spark-Strategy-DataSource/</loc>
-    
-    <lastmod>2018-08-20T01:49:21.844Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://tttmelody.github.io/about/index.html</loc>
     
     <lastmod>2018-07-19T14:45:56.501Z</lastmod>
@@ -191,30 +212,9 @@
   </url>
   
   <url>
-    <loc>https://tttmelody.github.io/2018/07/19/Spark-SQL-Relation-Deep-Dive/</loc>
-    
-    <lastmod>2018-07-19T10:20:04.962Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://tttmelody.github.io/2018/07/19/Spark-low-level-API-Deep-Dive/</loc>
     
     <lastmod>2018-07-19T10:16:47.478Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://tttmelody.github.io/2018/07/19/Spark-Tungsten-Deep-Dive/</loc>
-    
-    <lastmod>2018-07-19T10:16:06.726Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://tttmelody.github.io/2018/07/19/Spark-SQL-WholeStageCodeGen-Deep-Dive/</loc>
-    
-    <lastmod>2018-07-19T10:15:06.530Z</lastmod>
     
   </url>
   
