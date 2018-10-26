@@ -79,18 +79,18 @@
 
 
 
-<meta name="description" content="Kyligence">
+<meta name="description" content="提纲:如果用 shell 提交 Spark 应用, 需要指定 HADOOP_CONF_DIR, 然后 Spark 会帮你加到自己的 classpath 里去, 因为 Hadoop 的 Configuration 会从 classpath 中去找各种 site.xml. 如果你自己启动 spark 程序提交 Yarn 任务的话, 得自己的手动用代码加 classpath.  Spark 如何使用 H">
 <meta name="keywords" content="BigData,Spark">
 <meta property="og:type" content="article">
 <meta property="og:title" content="提交 Spark 应用">
 <meta property="og:url" content="https://tttmelody.github.io/2018/10/26/提交-Spark-应用/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="Kyligence">
+<meta property="og:description" content="提纲:如果用 shell 提交 Spark 应用, 需要指定 HADOOP_CONF_DIR, 然后 Spark 会帮你加到自己的 classpath 里去, 因为 Hadoop 的 Configuration 会从 classpath 中去找各种 site.xml. 如果你自己启动 spark 程序提交 Yarn 任务的话, 得自己的手动用代码加 classpath.  Spark 如何使用 H">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-10-26T08:22:15.187Z">
+<meta property="og:updated_time" content="2018-10-26T08:45:04.633Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="提交 Spark 应用">
-<meta name="twitter:description" content="Kyligence">
+<meta name="twitter:description" content="提纲:如果用 shell 提交 Spark 应用, 需要指定 HADOOP_CONF_DIR, 然后 Spark 会帮你加到自己的 classpath 里去, 因为 Hadoop 的 Configuration 会从 classpath 中去找各种 site.xml. 如果你自己启动 spark 程序提交 Yarn 任务的话, 得自己的手动用代码加 classpath.  Spark 如何使用 H">
 
 
 
@@ -354,7 +354,12 @@
       
 
       
-        
+        <p>提纲:如果用 shell 提交 Spark 应用, 需要指定 <code>HADOOP_CONF_DIR</code>, 然后 Spark 会帮你加到自己的 classpath 里去, 因为 Hadoop 的 Configuration 会从 classpath 中去找各种 site.xml. 如果你自己启动 spark 程序提交 Yarn 任务的话, 得自己的手动用代码加 classpath.</p>
+<ol>
+<li>Spark 如何使用 <code>HADOOP_CONF_DIR</code>(加到 classpath)</li>
+<li>Hadoop 如何加载 Configuration.</li>
+</ol>
+
       
     </div>
     
