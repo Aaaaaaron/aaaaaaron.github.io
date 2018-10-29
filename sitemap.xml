@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/about/index.html</loc>
+    
+    <lastmod>2018-10-29T05:09:32.268Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2018/10/13/Learning-Scala/</loc>
+    
+    <lastmod>2018-10-27T14:12:55.599Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
     
     <lastmod>2018-10-26T09:00:46.254Z</lastmod>
@@ -163,13 +177,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/10/13/Learning-Scala/</loc>
-    
-    <lastmod>2018-10-24T14:51:23.642Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/07/19/Golang/</loc>
     
     <lastmod>2018-10-24T14:49:52.384Z</lastmod>
@@ -194,13 +201,6 @@
     <loc>https://aaaaaaron.github.io/2018/07/19/Elixir/</loc>
     
     <lastmod>2018-10-24T14:49:18.405Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/about/index.html</loc>
-    
-    <lastmod>2018-07-19T14:45:56.501Z</lastmod>
     
   </url>
   
