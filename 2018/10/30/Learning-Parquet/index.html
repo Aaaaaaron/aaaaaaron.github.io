@@ -90,7 +90,7 @@
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/FileLayout.gif">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/FileFormat.gif">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/Parquet%20%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F.png">
-<meta property="og:updated_time" content="2018-10-30T12:54:19.649Z">
+<meta property="og:updated_time" content="2018-10-30T13:34:00.149Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Learning Parquet">
 <meta name="twitter:description" content="Glossary Row group: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column i">
@@ -375,6 +375,10 @@
 <p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/FileLayout.gif" alt=""></p>
 <p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/FileFormat.gif" alt=""></p>
 <p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/Parquet%20%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F.png" alt=""></p>
+<h1 id="Deep"><a href="#Deep" class="headerlink" title="Deep"></a>Deep</h1><p>正是因为有 row group, 才使得 parquet 文件 splitable, 且每个 split 都有完整的 record(Spark 中也是根据 row group 来切 split 的). </p>
+<p>Row groups are used to keep all the columns of each record in the same HDFS block so records can be reassembled from a single block.</p>
+<p>你只可以 sort 一个 column, 所以 sort 你最常 filter 的列.</p>
+<p>RowGroups are typically chosen to be pretty large to avoid the cost of random i/o</p>
 
       
     </div>
@@ -543,7 +547,7 @@
             
 
             
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Glossary"><span class="nav-number">1.</span> <span class="nav-text">Glossary</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Unit-of-parallelization"><span class="nav-number">1.1.</span> <span class="nav-text">Unit of parallelization</span></a></li></ol></li></ol></div>
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Glossary"><span class="nav-number">1.</span> <span class="nav-text">Glossary</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Unit-of-parallelization"><span class="nav-number">1.1.</span> <span class="nav-text">Unit of parallelization</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Deep"><span class="nav-number">2.</span> <span class="nav-text">Deep</span></a></li></ol></div>
             
 
           </div>
