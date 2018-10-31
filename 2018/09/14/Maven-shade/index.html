@@ -89,9 +89,9 @@
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-9-14/40098244.jpg">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/5.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11861540974584_.pic.jpg">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11871540974627_.pic_hd.jpg">
-<meta property="og:updated_time" content="2018-10-31T08:34:29.042Z">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11861540974584_.pic.jpg">
+<meta property="og:updated_time" content="2018-10-31T08:36:24.610Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Maven shade">
 <meta name="twitter:description" content="程序里报错Caused by: java.lang.NoSuchMethodError: com.fasterxml.jackson.databind.ObjectMapper.canSerialize(Ljava/lang/Class;Ljava/util/concurrent/atomic/AtomicReference;)Z 但是无论从mvn dependency:tree, 还是运行时加载">
@@ -377,7 +377,7 @@
 <p>  This is much like compile, but indicates you expect the JDK or a container to provide the dependency at runtime. For example, when building a web application for the Java Enterprise Edition, you would set the dependency on the Servlet API and related Java EE APIs to scope provided because the web container provides those classes. This scope is only available on the compilation and test classpath, and is not transitive.</p>
 </li>
 </ul>
-<h5 id="解决问题的思路"><a href="#解决问题的思路" class="headerlink" title="解决问题的思路"></a>解决问题的思路</h5><p>当你遇到 <code>java.lang.NoClassDefFoundError</code> 等错误的时候, 如果是在 IDEA 里运行的, 很有可能是是 provided 依赖. 具体可以先看 IDEA 中打出的 classpath 里有没有依赖的包,<img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/5.png" alt="">, 然后看看 iml 里的 scope <img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11861540974584_.pic.jpg" alt="">. 解决方法是 把 iml 里的都改成 compile 或者在 IDEA 中勾选上这个:<img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11871540974627_.pic_hd.jpg" alt=""></p>
+<h5 id="解决问题的思路"><a href="#解决问题的思路" class="headerlink" title="解决问题的思路"></a>解决问题的思路</h5><p>当你遇到 <code>java.lang.NoClassDefFoundError</code> 等错误的时候, 如果是在 IDEA 里运行的, 很有可能是是 provided 依赖. 具体可以先看 IDEA 中打出的 classpath 里有没有依赖的包,<img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/5.png" alt="">, 然后看看 iml 里的 scope <img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11871540974627_.pic_hd.jpg" alt="">. 解决方法是 把 iml 里的都改成 compile 或者在 IDEA 中勾选上这个:<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11861540974584_.pic.jpg" alt=""></p>
 
       
     </div>
