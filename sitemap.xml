@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
+    
+    <lastmod>2018-10-31T03:11:24.463Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/</loc>
+    
+    <lastmod>2018-10-31T03:09:33.488Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/</loc>
     
     <lastmod>2018-10-30T13:34:00.149Z</lastmod>
@@ -44,37 +58,9 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/08/30/Spark-mapPartitions/</loc>
-    
-    <lastmod>2018-10-30T01:53:30.910Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Spark-low-level-API-Deep-Dive/</loc>
-    
-    <lastmod>2018-10-30T01:53:12.876Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Scala/</loc>
-    
-    <lastmod>2018-10-30T01:52:38.552Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/07/19/Linux-IO-%E6%A8%A1%E5%9E%8B/</loc>
     
     <lastmod>2018-10-30T01:52:17.891Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Learning-Spark-by-keywords/</loc>
-    
-    <lastmod>2018-10-30T01:52:09.037Z</lastmod>
     
   </url>
   
@@ -107,13 +93,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
-    
-    <lastmod>2018-10-26T09:00:46.254Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/10/26/%E6%8F%90%E4%BA%A4-Spark-%E5%BA%94%E7%94%A8/</loc>
     
     <lastmod>2018-10-26T08:45:04.633Z</lastmod>
@@ -124,13 +103,6 @@
     <loc>https://aaaaaaron.github.io/2018/10/24/%E5%AF%BB%E6%89%BE-spark-executor-%E6%97%A5%E5%BF%97/</loc>
     
     <lastmod>2018-10-25T15:01:06.437Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/</loc>
-    
-    <lastmod>2018-10-25T15:01:01.117Z</lastmod>
     
   </url>
   
