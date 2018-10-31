@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/</loc>
+    
+    <lastmod>2018-10-31T03:19:10.395Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
     
-    <lastmod>2018-10-31T03:11:24.463Z</lastmod>
+    <lastmod>2018-10-31T03:18:56.050Z</lastmod>
     
   </url>
   
@@ -166,13 +173,6 @@
     <loc>https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/</loc>
     
     <lastmod>2018-10-25T14:58:16.190Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/</loc>
-    
-    <lastmod>2018-10-24T14:53:25.390Z</lastmod>
     
   </url>
   

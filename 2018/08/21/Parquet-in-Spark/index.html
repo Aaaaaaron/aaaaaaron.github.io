@@ -6,10 +6,10 @@
 
 
 <html class="theme-next mist use-motion" lang="zh-Hans">
-<head>
-  <meta charset="UTF-8"/>
-<meta http-equiv="X-UA-Compatible" content="IE=edge" />
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1"/>
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
 <meta name="theme-color" content="#222">
 
 
@@ -20,8 +20,8 @@
 
 
 
-<meta http-equiv="Cache-Control" content="no-transform" />
-<meta http-equiv="Cache-Control" content="no-siteapp" />
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
 
 
 
@@ -40,7 +40,7 @@
 
   
   
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css" />
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
 
 
 
@@ -48,9 +48,9 @@
 
 
 
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css" />
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
 
-<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css" />
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
 
 
   <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="BigData,Spark," />
+  <meta name="keywords" content="BigData,Spark,">
 
 
 
@@ -125,7 +125,7 @@
 
 
 
-  <link rel="canonical" href="https://aaaaaaron.github.io/2018/08/21/Parquet-in-Spark/"/>
+  <link rel="canonical" href="https://aaaaaaron.github.io/2018/08/21/Parquet-in-Spark/">
 
 
 
@@ -146,7 +146,7 @@
   
 </head>
 
-<body itemscope itemtype="http://schema.org/WebPage" lang="zh-Hans">
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
 
   
   
@@ -156,13 +156,13 @@
   <div class="container sidebar-position-left page-post-detail">
     <div class="headband"></div>
 
-    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
       <div class="header-inner"><div class="site-brand-wrapper">
   <div class="site-meta ">
     
 
     <div class="custom-logo-site-title">
-      <a href="/"  class="brand" rel="start">
+      <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
         <span class="site-title">Jiatao Tao's blog</span>
         <span class="logo-line-after"><i></i></span>
@@ -192,7 +192,7 @@
         <li class="menu-item menu-item-home">
           <a href="/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-home"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-home"></i> <br>
             
             首页
           </a>
@@ -202,7 +202,7 @@
         <li class="menu-item menu-item-tags">
           <a href="/tags/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
             
             标签
           </a>
@@ -212,7 +212,7 @@
         <li class="menu-item menu-item-categories">
           <a href="/categories/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-th"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-th"></i> <br>
             
             分类
           </a>
@@ -222,7 +222,7 @@
         <li class="menu-item menu-item-archives">
           <a href="/archives/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
             
             归档
           </a>
@@ -232,7 +232,7 @@
         <li class="menu-item menu-item-about">
           <a href="/about/" rel="section">
             
-              <i class="menu-item-icon fa fa-fw fa-user"></i> <br />
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
             
             关于
           </a>
@@ -266,20 +266,20 @@
   
   
 
-  <article class="post post-type-normal" itemscope itemtype="http://schema.org/Article">
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
   
   
   
   <div class="post-block">
     <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/08/21/Parquet-in-Spark/">
 
-    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
       <meta itemprop="name" content="Aron Tao">
       <meta itemprop="description" content="">
       <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
     </span>
 
-    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
       <meta itemprop="name" content="Jiatao Tao's blog">
     </span>
 
@@ -382,7 +382,7 @@
 <h3 id="data-flow"><a href="#data-flow" class="headerlink" title="data flow"></a>data flow</h3><p>最底下的流在 <code>VectorizedPlainValuesReader</code><br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">VectorizedPlainValuesReader</span> <span class="keyword">extends</span> <span class="title">ValuesReader</span> <span class="keyword">implements</span> <span class="title">VectorizedValuesReader</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> ByteBufferInputStream in = <span class="keyword">null</span>;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initFromPage</span><span class="params">(<span class="keyword">int</span> valueCount, ByteBufferInputStream in)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.in = in;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> ByteBuffer <span class="title">getBuffer</span><span class="params">(<span class="keyword">int</span> length)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      <span class="keyword">return</span> in.slice(length).order(ByteOrder.LITTLE_ENDIAN);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> ParquetDecodingException(<span class="string">"Failed to read "</span> + length + <span class="string">" bytes"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="meta">@Override</span></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">final</span> <span class="keyword">void</span> <span class="title">readIntegers</span><span class="params">(<span class="keyword">int</span> total, WritableColumnVector c, <span class="keyword">int</span> rowId)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> requiredBytes = total * <span class="number">4</span>;</span><br><span class="line">    ByteBuffer buffer = getBuffer(requiredBytes);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (buffer.hasArray()) &#123;</span><br><span class="line">      <span class="keyword">int</span> offset = buffer.arrayOffset() + buffer.position();</span><br><span class="line">      c.putIntsLittleEndian(rowId, total, buffer.array(), offset);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; total; i += <span class="number">1</span>) &#123;</span><br><span class="line">        c.putInt(rowId + i, buffer.getInt());</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>可以看到是 <code>initFromPage</code> 的时候传入的, 是在 <code>VectorizedColumnReader#readPage</code> 时, 读出的 page:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Decoder to return values from a single column.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">VectorizedColumnReader</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span> ValuesReader dataColumn;</span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">final</span> PageReader pageReader;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readPage</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    DataPage page = pageReader.readPage();</span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> Why is this a visitor?</span></span><br><span class="line">    page.accept(<span class="keyword">new</span> DataPage.Visitor&lt;Void&gt;() &#123;</span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> Void <span class="title">visit</span><span class="params">(DataPageV1 dataPageV1)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          readPageV1(dataPageV1);</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">      <span class="meta">@Override</span></span><br><span class="line">      <span class="function"><span class="keyword">public</span> Void <span class="title">visit</span><span class="params">(DataPageV2 dataPageV2)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">          readPageV2(dataPageV2);</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(e);</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">initDataReader</span><span class="params">(Encoding dataEncoding, ByteBufferInputStream in)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (dataEncoding != Encoding.PLAIN) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(<span class="string">"Unsupported encoding: "</span> + dataEncoding);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">this</span>.dataColumn = <span class="keyword">new</span> VectorizedPlainValuesReader();</span><br><span class="line">    <span class="keyword">this</span>.isCurrentPageDictionaryEncoded = <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      dataColumn.initFromPage(pageValueCount, in);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"could not read page in col "</span> + descriptor, e);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readPageV1</span><span class="params">(DataPageV1 page)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.pageValueCount = page.getValueCount();</span><br><span class="line">    ValuesReader rlReader = page.getRlEncoding().getValuesReader(descriptor, REPETITION_LEVEL);</span><br><span class="line">    ValuesReader dlReader;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Initialize the decoders.</span></span><br><span class="line">    <span class="keyword">if</span> (page.getDlEncoding() != Encoding.RLE &amp;&amp; descriptor.getMaxDefinitionLevel() != <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> UnsupportedOperationException(<span class="string">"Unsupported encoding: "</span> + page.getDlEncoding());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">int</span> bitWidth = BytesUtils.getWidthFromMaxInt(descriptor.getMaxDefinitionLevel());</span><br><span class="line">    <span class="keyword">this</span>.defColumn = <span class="keyword">new</span> VectorizedRleValuesReader(bitWidth);</span><br><span class="line">    dlReader = <span class="keyword">this</span>.defColumn;</span><br><span class="line">    <span class="keyword">this</span>.repetitionLevelColumn = <span class="keyword">new</span> ValuesReaderIntIterator(rlReader);</span><br><span class="line">    <span class="keyword">this</span>.definitionLevelColumn = <span class="keyword">new</span> ValuesReaderIntIterator(dlReader);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      BytesInput bytes = page.getBytes();</span><br><span class="line">      ByteBufferInputStream in = bytes.toInputStream();</span><br><span class="line">      rlReader.initFromPage(pageValueCount, in);</span><br><span class="line">      dlReader.initFromPage(pageValueCount, in);</span><br><span class="line">      initDataReader(page.getValueEncoding(), in);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"could not read page "</span> + page + <span class="string">" in col "</span> + descriptor, e);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">readPageV2</span><span class="params">(DataPageV2 page)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    <span class="keyword">this</span>.pageValueCount = page.getValueCount();</span><br><span class="line">    <span class="keyword">this</span>.repetitionLevelColumn = createRLEIterator(descriptor.getMaxRepetitionLevel(),</span><br><span class="line">        page.getRepetitionLevels(), descriptor);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">int</span> bitWidth = BytesUtils.getWidthFromMaxInt(descriptor.getMaxDefinitionLevel());</span><br><span class="line">    <span class="comment">// do not read the length from the stream. v2 pages handle dividing the page bytes.</span></span><br><span class="line">    <span class="keyword">this</span>.defColumn = <span class="keyword">new</span> VectorizedRleValuesReader(bitWidth, <span class="keyword">false</span>);</span><br><span class="line">    <span class="keyword">this</span>.definitionLevelColumn = <span class="keyword">new</span> ValuesReaderIntIterator(<span class="keyword">this</span>.defColumn);</span><br><span class="line">    <span class="keyword">this</span>.defColumn.initFromPage(</span><br><span class="line">        <span class="keyword">this</span>.pageValueCount, page.getDefinitionLevels().toInputStream());</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">      initDataReader(page.getDataEncoding(), page.getData().toInputStream());</span><br><span class="line">    &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> IOException(<span class="string">"could not read page "</span> + page + <span class="string">" in col "</span> + descriptor, e);</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>在 <code>VectorizedColumnReader</code> 会 readPage. 见 VectorizedColumnReader#readBatch. readBatch 又被 VectorizedParquetRecordReader#nextBatch 调用. nextBatch 又被 <code>.VectorizedParquetRecordReader#nextKeyValue</code> 调用</p>
-<p><code>nextKeyValue</code> 的调用见:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An adaptor from a Hadoop [[RecordReader]] to an [[Iterator]] over the values returned.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Note that this returns [[Object]]s instead of [[InternalRow]] because we rely on erasure to pass</span></span><br><span class="line"><span class="comment"> * column batches by pretending they are rows.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">class RecordReaderIterator[T](private[this] var rowReader: RecordReader[_, T]) extends Iterator[T] with Closeable &#123;</span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] var havePair = <span class="keyword">false</span></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] var finished = <span class="keyword">false</span></span><br><span class="line"></span><br><span class="line">  override def hasNext: Boolean = &#123;</span><br><span class="line">    <span class="keyword">if</span> (!finished &amp;&amp; !havePair) &#123;</span><br><span class="line">      finished = !rowReader.nextKeyValue</span><br><span class="line">      <span class="keyword">if</span> (finished) &#123;</span><br><span class="line">        <span class="comment">// Close and release the reader here; close() will also be called when the task</span></span><br><span class="line">        <span class="comment">// completes, but for tasks that read from many files, it helps to release the</span></span><br><span class="line">        <span class="comment">// resources early.</span></span><br><span class="line">        close()</span><br><span class="line">      &#125;</span><br><span class="line">      havePair = !finished</span><br><span class="line">    &#125;</span><br><span class="line">    !finished</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function">override def <span class="title">next</span><span class="params">()</span>: T </span>= &#123;</span><br><span class="line">    <span class="keyword">if</span> (!hasNext) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> java.util.NoSuchElementException(<span class="string">"End of stream"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    havePair = <span class="keyword">false</span></span><br><span class="line">    rowReader.getCurrentValue</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p><code>nextKeyValue</code> 的调用见:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An adaptor from a Hadoop [[RecordReader]] to an [[Iterator]] over the values returned.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Note that this returns [[Object]]s instead of [[InternalRow]] because we rely on erasure to pass</span></span><br><span class="line"><span class="comment"> * column batches by pretending they are rows.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">class RecordReaderIterator[T](private[this] var rowReader: RecordReader[_, T]) extends Iterator[T] with Closeable &#123;</span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">var</span> havePair = <span class="keyword">false</span></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">var</span> finished = <span class="keyword">false</span></span><br><span class="line"></span><br><span class="line">  override def hasNext: Boolean = &#123;</span><br><span class="line">    <span class="keyword">if</span> (!finished &amp;&amp; !havePair) &#123;</span><br><span class="line">      finished = !rowReader.nextKeyValue</span><br><span class="line">      <span class="keyword">if</span> (finished) &#123;</span><br><span class="line">        <span class="comment">// Close and release the reader here; close() will also be called when the task</span></span><br><span class="line">        <span class="comment">// completes, but for tasks that read from many files, it helps to release the</span></span><br><span class="line">        <span class="comment">// resources early.</span></span><br><span class="line">        close()</span><br><span class="line">      &#125;</span><br><span class="line">      havePair = !finished</span><br><span class="line">    &#125;</span><br><span class="line">    !finished</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function">override def <span class="title">next</span><span class="params">()</span>: T </span>= &#123;</span><br><span class="line">    <span class="keyword">if</span> (!hasNext) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> java.util.NoSuchElementException(<span class="string">"End of stream"</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    havePair = <span class="keyword">false</span></span><br><span class="line">    rowReader.getCurrentValue</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <p>最后在 ParquetFileFormat 中</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (enableVectorizedReader) &#123;</span><br><span class="line">  val vectorizedReader = <span class="keyword">new</span> VectorizedParquetRecordReader(convertTz.orNull, enableOffHeapColumnVector &amp;&amp; taskContext.isDefined, capacity)</span><br><span class="line">  val iter = <span class="keyword">new</span> RecordReaderIterator(vectorizedReader)</span><br><span class="line">  <span class="comment">// SPARK-23457 Register a task completion lister before `initialization`.</span></span><br><span class="line">  taskContext.foreach(_.addTaskCompletionListener[Unit](_ =&gt; iter.close()))</span><br><span class="line">  vectorizedReader.initialize(split, hadoopAttemptContext)</span><br><span class="line">  logDebug(s<span class="string">"Appending $partitionSchema $&#123;file.partitionValues&#125;"</span>)</span><br><span class="line">  vectorizedReader.initBatch(partitionSchema, file.partitionValues)</span><br><span class="line">  <span class="keyword">if</span> (returningBatch) &#123;</span><br><span class="line">    vectorizedReader.enableReturningBatches()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// UnsafeRowParquetRecordReader appends the columns internally to avoid another copy.</span></span><br><span class="line">  iter.asInstanceOf[Iterator[InternalRow]]</span><br><span class="line">&#125; <span class="keyword">else</span> &#123; ... &#125;</span><br></pre></td></tr></table></figure>
       
@@ -495,11 +495,9 @@
 
       <section class="site-overview-wrap sidebar-panel">
         <div class="site-overview">
-          <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
             
-              <img class="site-author-image" itemprop="image"
-                src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg"
-                alt="Aron Tao" />
+              <img class="site-author-image" itemprop="image" src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Aron Tao">
             
               <p class="site-author-name" itemprop="name">Aron Tao</p>
               <p class="site-description motion-element" itemprop="description">Kyligence</p>
