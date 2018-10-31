@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/09/14/Maven-shade/</loc>
+    
+    <lastmod>2018-10-31T08:34:29.042Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/</loc>
     
     <lastmod>2018-10-31T03:19:10.395Z</lastmod>
@@ -145,13 +152,6 @@
     <loc>https://aaaaaaron.github.io/2018/08/22/Parquet-encoding-definitions-official/</loc>
     
     <lastmod>2018-10-25T14:59:07.970Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/09/14/Maven-shade/</loc>
-    
-    <lastmod>2018-10-25T14:58:58.819Z</lastmod>
     
   </url>
   
