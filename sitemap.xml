@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/</loc>
+    
+    <lastmod>2018-11-02T11:13:34.042Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/11/01/Spark-Parquet-Deep-Dive/</loc>
     
     <lastmod>2018-11-01T03:33:59.284Z</lastmod>
@@ -33,13 +40,6 @@
     <loc>https://aaaaaaron.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/</loc>
     
     <lastmod>2018-10-31T03:09:33.488Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/</loc>
-    
-    <lastmod>2018-10-30T13:34:00.149Z</lastmod>
     
   </url>
   
