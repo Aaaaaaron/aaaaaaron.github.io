@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="BigData,Kylin,">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="转载自:Kylin 执行查询流程分析 这篇博客应该是目前网上最好的一篇关于 Kylin 查询流程的 blog, 不过年代也有些久远了. Kylin 基于 MOLAP 实现，查询的时候利用 Calcite 框架，从存储在 Hbase 的 segment 表（每一个 segment 对应着一个 htable）获取数据，其实理论上就相当于使用 Calcite 支持 SQL 解析，数据从 Hbase 中读">
+<meta name="keywords" content="BigData,Kylin">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Kylin 执行查询流程分析">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/07/24/Kylin-执行查询流程分析/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="转载自:Kylin 执行查询流程分析 这篇博客应该是目前网上最好的一篇关于 Kylin 查询流程的 blog, 不过年代也有些久远了. Kylin 基于 MOLAP 实现，查询的时候利用 Calcite 框架，从存储在 Hbase 的 segment 表（每一个 segment 对应着一个 htable）获取数据，其实理论上就相当于使用 Calcite 支持 SQL 解析，数据从 Hbase 中读">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://img.blog.csdn.net/20160309201844038">
+<meta property="og:image" content="http://img.blog.csdn.net/20160309202202156">
+<meta property="og:image" content="http://img.blog.csdn.net/20160309202741151">
+<meta property="og:updated_time" content="2018-10-25T14:58:39.829Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Kylin 执行查询流程分析">
+<meta name="twitter:description" content="转载自:Kylin 执行查询流程分析 这篇博客应该是目前网上最好的一篇关于 Kylin 查询流程的 blog, 不过年代也有些久远了. Kylin 基于 MOLAP 实现，查询的时候利用 Calcite 框架，从存储在 Hbase 的 segment 表（每一个 segment 对应着一个 htable）获取数据，其实理论上就相当于使用 Calcite 支持 SQL 解析，数据从 Hbase 中读">
+<meta name="twitter:image" content="http://img.blog.csdn.net/20160309201844038">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://aaaaaaron.github.io/2018/07/24/Kylin-执行查询流程分析/">
+
+
+
+
+
+  <title>Kylin 执行查询流程分析 | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+  
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/07/24/Kylin-执行查询流程分析/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Aron Tao">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Kylin 执行查询流程分析</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-24T17:10:51+08:00">
+                2018-07-24
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2018/07/24/Kylin-执行查询流程分析/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2018/07/24/Kylin-执行查询流程分析/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2018/07/24/Kylin-执行查询流程分析/" class="leancloud_visitors" data-flag-title="Kylin 执行查询流程分析">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <p><strong>转载自:</strong><a href="https://blog.csdn.net/yu616568/article/details/50838504" target="_blank" rel="noopener">Kylin 执行查询流程分析</a></p>
+<p>这篇博客应该是目前网上最好的一篇关于 Kylin 查询流程的 blog, 不过年代也有些久远了.</p>
+<p>Kylin 基于 MOLAP 实现，查询的时候利用 Calcite 框架，从存储在 Hbase 的 segment 表（每一个 segment 对应着一个 htable）获取数据，其实理论上就相当于使用 Calcite 支持 SQL 解析，数据从 Hbase 中读取，中间 Kylin 主要完成如何确定从 Hbase 中的哪些表读数据，如何读取数据，以及解析数据的格式。</p>
+<h2 id="场景设置"><a href="#场景设置" class="headerlink" title="场景设置"></a>场景设置</h2><p>首先设想一种 cube 的场景：</p>
+<p>维度：A（cardinality=10）、B（cardinality=20）、C（cardinality=30）、D（cardinality=40），其中 A 为 mandatory 维度，rowkey 顺序为 A、B、C、D，只有一个分组。</p>
+<p>度量：COUNT(1), SUM(X)</p>
+<p>　　在这种情况下，这个 cube 包含如下的 cuboid：ABCD、ABC、ABD、ACD、AB、AC、AD、A。目前 Kylin 在执行查询的时候只能通过查找 cube 进行匹配，如果能够找到一个匹配的 cube 则读取通过扫描该 cube 的所有 segment 处理该请求，首先先看一下 kylin 是如何处理一个 SQL 查询的。</p>
+<h2 id="执行查询"><a href="#执行查询" class="headerlink" title="执行查询"></a>执行查询</h2><p>　　Kylin 提供了两种执行 SQL 查询的方式：jdbc 访问和 http api 的访问，前者的实现实际上是在客户端封装了 http api 请求，然后获取结果再转换成 ResultSet 对象，在执行查询之前 Kylin 服务端会对查询的 SQL 做缓存，尤其是执行时间比较久的查询，缓存是基于 SQL 的内容作为 key，结果作为 value 的，所以重复执行一个查询会很快返回的（这是因为 Kylin 假设数据是只读的，不会被修改）。如果缓存不命中则使用服务器内嵌的 Calcite 创建一个向 Calcite 的 jdbc connection，然后使用 jdbc 的方式获取执行结果，在使用 Calcite 的时候用户只需要给 Calcite 提供数据，Calcite 能够完成其他物理算子的优化和执行，但是对于 Kylin 来说，它深度定制了 Calcite，增加了一些优化的策略，所以总的来说查询可以分成两部分：1、kylin 是如何使用 calcite 完成 SQL 的解析，获取 SQL 的上下文；2、kylin 如何从预计算的数据中获取数据并进行计算的。</p>
+<h3 id="使用-Calcite-完成-SQL-解析，获取查询上下文"><a href="#使用-Calcite-完成-SQL-解析，获取查询上下文" class="headerlink" title="使用 Calcite 完成 SQL 解析，获取查询上下文"></a>使用 Calcite 完成 SQL 解析，获取查询上下文</h3><p><img src="http://img.blog.csdn.net/20160309201844038" alt="这里写图片描述 "></p>
+<p>　　当在 Calcite 中执行一个 SQL 时，Calcite 会解析得到 AST 树，然后再对逻辑执行计划进行优化，Calcite 的优化规则是基于规则的，在 Calcite 中注册了一些新的 Rule，在优化的过程中会根据这些规则对算子进行转换为对应的物理执行算子，接下来 Calcite 从上到下一次执行这些算子。这些算子都实现了 EnumerableRel 接口，在执行的时候调用 implement 函数：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">public interface EnumerableRel</span><br><span class="line">    extends RelNode &#123;</span><br><span class="line">  /**</span><br><span class="line">   * Creates a plan for this expression according to a calling convention.</span><br><span class="line">   *</span><br><span class="line">   * @param implementor Implementor</span><br><span class="line">   * @param pref Preferred representation for rows in result expression</span><br><span class="line">   * @return Plan for this expression according to a calling convention</span><br><span class="line">   */</span><br><span class="line">  Result implement (EnumerableRelImplementor implementor , Prefer pref);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p><img src="http://img.blog.csdn.net/20160309202202156" alt="这里写图片描述 "></p>
+<p>　　在所有 Kylin 优化之后的查询树中，根节点都是 OLAPToEnumerableConverter，在它的 implement 函数中首先根据每一个算子中保持的信息构造本次查询的上下文 OLAPContext，例如根据 OLAPAggregateRel 算子获取 groupByColumns，根据 OLAPFilterRel 算子将每次查询的过滤条件转换成 TupleFilter。然后根据本次查询中使用的维度列（出现在 groupByColumns 和 filterColumns 中）、度量信息（aggregations）查询是否有满足本次查询的 Cube，如果有则将其保存在 OLAPContext 的 realization 中，获取数据时需要依赖于它。然后再 rewrite 回调函数中递归调用每一个算子的 implementRewrite 函数重新构造每一个算子的参数，最后再调用每一个算子的 implementEnumerable 函数将其转换成 EnumerableRel 对象，这一步相当于将上面生成的物理执行计划再次转换生成一个新的物理执行计划。</p>
+<p>　　Calcite 会根据这个执行计划动态生成执行代码，其中代码的生成根据每一个算子的 implement 函数构造，并且 Calcite 根据算子之间的依赖关系生成在新生成的类中构造 bind 函数，在 bind 函数中首先会执行 TableScan 获取数据，数据是通过一个 Enumerable 对象返回的，所以 OLAPTableScan 需要负责产生一个该对象获取原始数据，在执行 moveNext 获取下一条记录的时候通过 filter 中指定的条件对原始数据进行过滤，在 current 函数中执行映射返回 select 中指定的列数据，接着对这个 Enumerable 依次执行 groupBy 和 orderBy 函数，将结果返回。本次查询的 statement 会根据 bind 函数返回的 Enumerable 对象构造 ResultSet 对象。</p>
+<p>　　上面大致上介绍了 Kylin 利用 Calcite 框架执行查询的流程，Kylin 主要注册了几个优化规则，在每一个优化规则中将对应的物理算子转换成 Kylin 自己的 OLAPxxxRel 算子，然后再将每一个算子根据本次查询的参数生成 Calcite 自身的 EnumerableXXX 算子执行，比较特殊的是 OLAPTableScan 并不会转换成其他的算子，同样的还有 OLAPJoinRel（当执行的 sql 有 JOIN 是会产生该算子），这 OLAPTableScan 算子的 implement 函数实现如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public Result implement(EnumerableRelImplementor implementor, Prefer pref ) &#123;</span><br><span class="line">    PhysType physType = PhysTypeImpl. of(implementor.getTypeFactory(), this.rowType , pref .preferArray());</span><br><span class="line"></span><br><span class="line">    String execFunction = genExecFunc();</span><br><span class="line"></span><br><span class="line">    MethodCallExpression exprCall = Expressions.call(table.getExpression(OLAPTable. class), execFunction , implementor.getRootExpression(), Expressions.constant( context. id));</span><br><span class="line">    return implementor .result(physType , Blocks.toBlock( exprCall));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">private String genExecFunc() &#123;</span><br><span class="line">    // if the table to scan is not the fact table of cube, then it&apos;s a lookup table</span><br><span class="line">    if (context .hasJoin == false &amp;&amp; tableName.equalsIgnoreCase(context .realization .getFactTable()) == false) &#123;</span><br><span class="line">        return &quot;executeLookupTableQuery&quot; ;</span><br><span class="line">    &#125; else &#123;</span><br><span class="line">        return &quot;executeIndexQuery&quot; ;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>　　可以看出它根据 MethodCallExpression 对象 exprCall 执行 Blocks.toBlock 生成对应的代码段（在 bind 函数中调用），例如本例中生成的代码段如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">final org.apache.calcite.linq4j.Enumerable _inputEnumerable = ((org.apache.kylin.query.schema.OLAPTable)</span><br><span class="line">     root.getRootSchema().getSubSchema(&quot;databaseName&quot;).getTable(&quot;tableName&quot;)).executeIndexQuery(root, 0);</span><br></pre></td></tr></table></figure>
+<p>　　返回的 Enumerable 是由 executeIndexQuery 函数返回的，在 genExecFunc 函数中会判断是根据之前生成的查询上下文 OLAPContext，如果本次查询没有 join 并且查询的表不是当前使用的 Cube 的事实表，则使用 executeLookupTableQuery 函数，否则（有 join 或者查询事实表）则使用 executeIndexQuery 函数。</p>
+<p>　　而在 OLAPJoinRel 的 implement 函数的实现则是直接使用 executeIndexQuery 函数。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public Result implement(EnumerableRelImplementor implementor, Prefer pref ) &#123;</span><br><span class="line">    PhysType physType = PhysTypeImpl. of(implementor.getTypeFactory(), getRowType(), pref.preferArray());</span><br><span class="line">    RelOptTable factTable = context .firstTableScan .getTable();</span><br><span class="line">    MethodCallExpression exprCall = Expressions.call(factTable.getExpression(OLAPTable. class), &quot;executeIndexQuery&quot; , implementor.getRootExpression(), Expressions.constant( context. id));</span><br><span class="line">    return implementor .result(physType , Blocks.toBlock( exprCall));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>　　为什么是这两个不同的函数呢？这是由于在 Kylin 中预计算了所有可能的组合值保存在 hbase 中，rowkey 为值的组合，例如 A=”abc”,B=”xyz”就对应着一条记录，value 为 select count(1), sum(X) from table where A=”abc” and B=”xyz”的返回值，所以对于事实表中的数据都是需要进行计算的，保存在 hbase 中，只能通过访问 hbase 获取，而 Kylin 会保存所有维度表的信息，在内存中生成 SnapshotTable，这样对维度表的查询则不需要扫描 hbase 了。</p>
+<h3 id="Kylin-从-Hbase-中获取数据"><a href="#Kylin-从-Hbase-中获取数据" class="headerlink" title="Kylin 从 Hbase 中获取数据"></a>Kylin 从 Hbase 中获取数据</h3><p>　　上面吧 Calcite 解析和执行部分介绍完了，在 bind 函数中需要返回一个 Enumerable 对象给 Calcite 执行接下来的过滤、Project、groupBy、orderBy、limit 等操作，这里不关注只对维度表的查询，而是看一下 Kylin 如何从 Hbase 中获取数据的。首先这个 Enumerable 对象时 OLAPTable 的 executeIndexQuery 函数返回的。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">public Enumerable&lt;Object[]&gt; executeIndexQuery(DataContext optiqContext, int ctxSeq) &#123;</span><br><span class="line">    return new OLAPQuery(optiqContext, EnumeratorTypeEnum. INDEX, ctxSeq );</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+<p>　　它的 enumerator 函数如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"> public Enumerator&lt;Object[]&gt; enumerator() &#123;</span><br><span class="line">    OLAPContext olapContext = OLAPContext.getThreadLocalContextById( contextId);</span><br><span class="line">    switch (type ) &#123;</span><br><span class="line">    case INDEX :</span><br><span class="line">        return new CubeEnumerator(olapContext, optiqContext);</span><br><span class="line">    case LOOKUP_TABLE :</span><br><span class="line">        return new LookupTableEnumerator(olapContext);</span><br><span class="line">    case HIVE :</span><br><span class="line">        return new HiveEnumerator(olapContext);</span><br><span class="line">    default:</span><br><span class="line">        throw new IllegalArgumentException(&quot;Wrong type &quot; + type + &quot;!&quot;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>　　在 CubeEnumerator 中主要由 current 返回当前的数据，moveNext 查看是否还有数据，它们完成了一个迭代器的功能：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">@Override</span><br><span class="line">public Object[] current() &#123;</span><br><span class="line">    return current ;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">@Override</span><br><span class="line">public boolean moveNext() &#123;</span><br><span class="line">    if (cursor == null) &#123;</span><br><span class="line">        cursor = queryStorage();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    if (!cursor .hasNext()) &#123;</span><br><span class="line">        return false ;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ITuple tuple = cursor.next();</span><br><span class="line">    if (tuple == null) &#123;</span><br><span class="line">        return false ;</span><br><span class="line">    &#125;</span><br><span class="line">    convertCurrentRow (tuple );</span><br><span class="line">    return true ;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>　　queryStorage 函数返回一个迭代器，所有的数据都是通过这个迭代器获得，其中 current 变量是在 covertCurrentRow 函数中根据 hbase 中的数据解码之后的值，为什么需要解码呢？首先 hbase 中存储的都是二进制的数据，然后由于维度的成员的值可能会占用很大的空间，如果存储原始值的话会造成：1、hbase 存储空间增大，2、相同 cuboid 的 rowkey 的长度不一样，所以 Kylin 在构建 Cube 的时候会将每一个维度下的成员进行编码，每一个维度中的每一个成员编码程一个从 0 开始的整数值，存储在 hbase 中的数据是这些编码值的二进制组合，因此读取到这些值之后需要解码获取原始的维度值。</p>
+<p>　　querySorage 函数主要执行逻辑：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">IStorageEngine storageEngine = StorageEngineFactory.getStorageEngine( olapContext.realization );</span><br><span class="line">ITupleIterator iterator = storageEngine.search(olapContext .storageContext , olapContext.getSQLDigest());</span><br></pre></td></tr></table></figure>
+<p>　　首先根据本次查询选中的 Cube 生成 storageEngine 对象，然后通过 search 方法返回一个迭代器，从其中获取全部数据。CubeStorageEngine 是在 Cube 中获取数据使用的 engine，它的 search 方法执行逻辑如下：</p>
+<p><img src="http://img.blog.csdn.net/20160309202741151" alt="这里写图片描述 "></p>
+<p>　　由于在线程局部变量中保存了本次查询的 OLAPContext，可以根据它保存的信息获取根据哪些列 group by 和 filter，以及对哪些度量进行计算，此时需要考虑 derived 维度，这种维度实际上会被它所在的维度表的主键代替，所以需要将这些列转换为主键列，并根据 snapshotTable 修改 filter 对象，然后判断本次查询是否需要启动 hbase 的 coprocessor，Kylin 对于每一个 htable 都设置了一个 observer 类型的 coprocessor，当执行 scan 操作之前会回调这个类的 doPostScannerObserver 函数，执行对表中的原始记录执行一些过滤和聚合运算，这样可以减小每一个 scan 返回的记录数，例如执行 select A，count(1) from table where B &gt; 1 and C not in (”) group by A，这样的查询可以根据 B&gt;1 计算出本次查询需要扫描的 rowkey 范围，而 C not in (”) 则需要在 coprocessor 对扫描获得的每一条记录执行判断，如果满足才可以从 hbase 中返回。例如上例中查询出现了 A/B/C 维度，但是这个 cuboid 并没有预计算，此时只能定位到 A/B/C/D 这个 cuboid，在 coprocessor 中需要再根据 D 这一列执行聚合，进一步减小返回记录数。</p>
+<h2 id="关于内存"><a href="#关于内存" class="headerlink" title="关于内存"></a>关于内存</h2><ul>
+<li><p>1、首先在 coprocessor 中，它是在 hbase 的 regionServer 中执行的，所以不能占用 hbase 太多的内存，Kylin 在这里做的内存限制是 500MB，因为需要执行额外的聚合运算，因此在 coprocessor 中维护了一个 map 保存每一个需要返回的记录并且持续的执行聚合运算，但是如果查询中带有 distinct count 的聚合运算，Kylin 使用 HLL 实现的，每一个聚合值大概占用 32KB 大小（根据精确度），所以如果查询中有这样的聚合函数会很快消耗完这些内存，所以这种聚合的查询不会启动 coprocessor。</p>
+</li>
+<li><p>2、对于返回的记录，只是原始的数据，需要再交给 calcite 完成下面的聚合、过滤和排序等操作，但是既然 coprocessor 中都已经把过滤和聚合做完了，为什么还要在 coprocessor 中做呢？filter 的确是在 Kylin 中已经完成的了，再使用 Calcite 执行过滤是为了正确性的保证，但是这样也限制的 Kylin 不能支持全部的 Calcite 的过滤（这里可以扩展，Kylin 只处理自己能处理的，剩余由 Calcite 处理），至于还需要聚合运算是因为一个 Cube 查询可能涉及到多个 segment，因此这些 segment 可能返回相同的 key，此时就需要 Calcite 执行聚合运算，运算函数是由 Kylin 指定的，但是需要将所有从 hbase 中返回的记录保存在内存中，Kylin 为每一个查询设置了最大内存内存上线为 3GB，根据每一个 key-value 的大小计算出 hbase 最多返回的记录数，如果超出这个数则根据配置是否接受部分结果，如果不接受则返回查询失败，如果接受则指根据已返回的记录进行 Calcite 的运算，可能出现错误。</p>
+</li>
+</ul>
+<h2 id="获取数据"><a href="#获取数据" class="headerlink" title="获取数据"></a>获取数据</h2><p>　　将 filter 转换为扁平式的使用 AND 连接 filter，然后每一个 childFilter 可以根据不同的 segment 生成一个 keyRange，这里成为 ColumnKeyRange，每一个 segment 中有多个 ColumnKeyRange，由于每一个 segment 对应着一个 htable，所以首先会尝试 merge 每一个 segment 下的 ColumnKeyRange（根据是否有重合的范围），生成多个 HBaseKeyRange（merge 之后的多个范围，直接对应着 hbase 中 rowkey 的范围），根据这些 HBaseKeyRange 生成 SerializedHBaseTupleIterator。</p>
+<p>　　在这个 SerializedHBaseTupleIterator 迭代器中按照每一个 segment 下的 HbaseKeyRange 创建一个 map，segment 为 key，这个 segment 下需要扫面的 HbaseKeyRange 数组作为 value，然后为每一个 Segment 创建一个 CubeSegmentTupleIterator 对象，它中保持了多个 HbaseKeyRange，然后对每一个 HbaseKeyRange 创建 Scan 对象，接着使用该对象向 Hbase 发起一个 scan 请求，上面每一个迭代器都是对它包含的迭代器数组的封装。</p>
+<h2 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h2><p>　　本文介绍了 Kylin 如何处理 Sql 的查询，充分利用了 Calcite 的 sql 解析和优化的功能，可以看到 Calcite 是一个非常强大的 SQL 引擎框架，Kylin 较深入的定制了 Calcite 的功能，对于 Calcite 的初级使用可以参考：<a href="http://blog.csdn.net/yu616568/article/details/49915577" title="初识 Calcite——使用实例" target="_blank" rel="noopener">http://blog.csdn.net/yu616568/article/details/49915577</a>，而 Kylin 提供从 Hbase 中读取数据返回前端又有点类似于 phoenix 的做法（它也是通过 Calcite 完成解析和优化的），但是后者更加通用一些。Kylin 2.0 中把存储做成插件式的，理论上可以支持更多的存储组件（需要支持 scan 和类似 coprocessor 的功能啊），但是基本上查询流程是类似的。本文如果有什么错误，还请多多指正，谢谢~</p>
+
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/BigData/" rel="tag"># BigData</a>
+          
+            <a href="/tags/Kylin/" rel="tag"># Kylin</a>
+          
+        </div>
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2018/07/19/Linux-IO-模型/" rel="next" title="Linux IO 模型">
+                <i class="fa fa-chevron-left"></i> Linux IO 模型
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+              <a href="/2018/08/12/Spark-Strategy-DataSource/" rel="prev" title="Spark Strategy:DataSource">
+                Spark Strategy:DataSource <i class="fa fa-chevron-right"></i>
+              </a>
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Aron Tao">
+            
+              <p class="site-author-name" itemprop="name">Aron Tao</p>
+              <p class="site-description motion-element" itemprop="description">Kyligence</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">30</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/aaaaaaron" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#场景设置"><span class="nav-number">1.</span> <span class="nav-text">场景设置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#执行查询"><span class="nav-number">2.</span> <span class="nav-text">执行查询</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#使用-Calcite-完成-SQL-解析，获取查询上下文"><span class="nav-number">2.1.</span> <span class="nav-text">使用 Calcite 完成 SQL 解析，获取查询上下文</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Kylin-从-Hbase-中获取数据"><span class="nav-number">2.2.</span> <span class="nav-text">Kylin 从 Hbase 中获取数据</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#关于内存"><span class="nav-number">3.</span> <span class="nav-text">关于内存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#获取数据"><span class="nav-number">4.</span> <span class="nav-text">获取数据</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2018</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Aron Tao</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'xUIDY0rxakumlhKmQqajlnUc-gzGzoHsz',
+        appKey: 'lrqs8UwcvY6z1has9clbxJWL',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("8XOG5IciFE9Tot0TjP2HVe9R-gzGzoHsz", "S0vOkjPeVIvuRtqdYiggJFt8");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
