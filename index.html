@@ -635,9 +635,8 @@
       
         
           
-          How Spark reads Parquet先来快速过一下, 主要把重点留到 ParquetFileFormat. 
-负责数据文件扫描的执行算子是 FileSourceScanExec, 借一张图
-先到 WholeStageCodegenExec 的doExecute, 这里要下面会提到的有两个地
+          读取流程WholeStageCodegenExec负责数据文件扫描的执行算子是 FileSourceScanExec, 借一张图
+先到 WholeStageCodegenExec 的doExecute, 这里要下面会提到的有两个地方, 一个是 inputRDDs, 另一个是 buffer.hasNe
           ...
           <!--noindex-->
           <div class="post-button text-center">
