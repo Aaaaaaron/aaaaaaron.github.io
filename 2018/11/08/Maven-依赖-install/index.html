@@ -79,22 +79,22 @@
 
 
 
-<meta name="description" content="基础首先明确:  mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去. 可以通过 assembly/shade 插件把依赖的 jar 包打到一个 assembly.jar 包中去. 和源码的 jar 包可以是独立的, 也可以打到一起. 如果你一个依赖(D1)有两个版本(在父/子pom 中都有定义, 但是版本不一样)">
+<meta name="description" content="基础首先明确:  mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去, 但是如果打成 war 包, 是会包含 compile scope 的依赖的. 而 provided 是要容器提供, 比如说 Tomcat, 会到 Tomcat 的 $liferay-tomcat-home\webapps\ROOT\WEB-IN">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Maven 依赖 install">
 <meta property="og:url" content="https://aaaaaaron.github.io/2018/11/08/Maven-依赖-install/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="基础首先明确:  mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去. 可以通过 assembly/shade 插件把依赖的 jar 包打到一个 assembly.jar 包中去. 和源码的 jar 包可以是独立的, 也可以打到一起. 如果你一个依赖(D1)有两个版本(在父/子pom 中都有定义, 但是版本不一样)">
+<meta property="og:description" content="基础首先明确:  mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去, 但是如果打成 war 包, 是会包含 compile scope 的依赖的. 而 provided 是要容器提供, 比如说 Tomcat, 会到 Tomcat 的 $liferay-tomcat-home\webapps\ROOT\WEB-IN">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/50973815.jpg">
 <meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/29736635.jpg">
 <meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/57385130.jpg">
 <meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/76336665.jpg">
 <meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/65076854.jpg">
-<meta property="og:updated_time" content="2018-11-08T09:00:02.184Z">
+<meta property="og:updated_time" content="2018-11-08T09:04:48.331Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Maven 依赖 install">
-<meta name="twitter:description" content="基础首先明确:  mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去. 可以通过 assembly/shade 插件把依赖的 jar 包打到一个 assembly.jar 包中去. 和源码的 jar 包可以是独立的, 也可以打到一起. 如果你一个依赖(D1)有两个版本(在父/子pom 中都有定义, 但是版本不一样)">
+<meta name="twitter:description" content="基础首先明确:  mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去, 但是如果打成 war 包, 是会包含 compile scope 的依赖的. 而 provided 是要容器提供, 比如说 Tomcat, 会到 Tomcat 的 $liferay-tomcat-home\webapps\ROOT\WEB-IN">
 <meta name="twitter:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/50973815.jpg">
 
 
@@ -341,7 +341,7 @@
       
         <h3 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h3><p>首先明确:</p>
 <ol>
-<li>mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去.</li>
+<li>mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去, 但是如果打成 war 包, 是会包含 compile scope 的依赖的. 而 provided 是要容器提供, 比如说 Tomcat, 会到 Tomcat 的 <code>$liferay-tomcat-home\webapps\ROOT\WEB-INF\lib</code> 目录下找.</li>
 <li>可以通过 assembly/shade 插件把依赖的 jar 包打到一个 assembly.jar 包中去. 和源码的 jar 包可以是独立的, 也可以打到一起. 如果你一个依赖(D1)有两个版本(在父/子pom 中都有定义, 但是版本不一样), 在打出的 jar 包里只会有一个版本, 因为路径里不带版本的. 所以会出现各种 NoSuchMethodError 等等问题, 因为编译的时候都是各自用的正确的 D1 编译的出的 class. 但是运行时用到的 D1 只会有一个版本, 会有不匹配.</li>
 </ol>
 <p>所以, 不要在一个项目里, 不同 pom 里面尝试使用不同 version 的依赖. 来看个实例:</p>

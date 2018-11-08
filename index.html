@@ -637,8 +637,7 @@
           
           基础首先明确:
 
-mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去.
-可以通过 assembly/shade 插件把依赖的 jar 包打到一个 assembly.jar 包中去. 和源码的 jar 包可以是独立的,
+mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去, 但是如果打成 war 包, 是会包含 compile scope 的依赖的. 而 provided 是要容器提供, 比如说 Tomcat, 会到
           ...
           <!--noindex-->
           <div class="post-button text-center">
