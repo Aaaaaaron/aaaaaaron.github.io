@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/</loc>
+    
+    <lastmod>2018-11-18T04:01:24.231Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/11/01/Spark-Parquet-Deep-Dive/</loc>
     
     <lastmod>2018-11-14T15:35:45.281Z</lastmod>
@@ -194,13 +201,6 @@
     <loc>https://aaaaaaron.github.io/2018/10/24/Shuffle/</loc>
     
     <lastmod>2018-10-24T14:52:49.951Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/</loc>
-    
-    <lastmod>2018-10-24T14:51:40.929Z</lastmod>
     
   </url>
   
