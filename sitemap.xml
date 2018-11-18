@@ -2,37 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/</loc>
-    
-    <lastmod>2018-11-18T04:10:35.310Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/09/14/Maven-shade/</loc>
-    
-    <lastmod>2018-11-18T04:10:34.803Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/11/08/Maven-%E4%BE%9D%E8%B5%96-install/</loc>
     
-    <lastmod>2018-11-18T04:10:34.325Z</lastmod>
+    <lastmod>2018-11-18T04:20:39.657Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/08/21/Parquet-in-Spark/</loc>
+    <loc>https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/</loc>
     
-    <lastmod>2018-11-18T04:10:33.709Z</lastmod>
+    <lastmod>2018-11-18T04:20:38.775Z</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/08/12/Spark-Strategy-DataSource/</loc>
     
-    <lastmod>2018-11-18T04:10:23.847Z</lastmod>
+    <lastmod>2018-11-18T04:20:37.888Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2018/08/21/Parquet-in-Spark/</loc>
+    
+    <lastmod>2018-11-18T04:20:36.894Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2018/09/14/Maven-shade/</loc>
+    
+    <lastmod>2018-11-18T04:20:36.106Z</lastmod>
     
   </url>
   
