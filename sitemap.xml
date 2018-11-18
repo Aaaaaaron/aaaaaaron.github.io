@@ -2,37 +2,37 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/08/12/Spark-Strategy-DataSource/</loc>
-    
-    <lastmod>2018-11-18T04:23:30.819Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/11/08/Maven-%E4%BE%9D%E8%B5%96-install/</loc>
     
-    <lastmod>2018-11-18T04:23:18.032Z</lastmod>
+    <lastmod>2018-11-18T04:25:40.769Z</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/</loc>
     
-    <lastmod>2018-11-18T04:23:15.565Z</lastmod>
+    <lastmod>2018-11-18T04:25:40.002Z</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/08/21/Parquet-in-Spark/</loc>
     
-    <lastmod>2018-11-18T04:22:44.598Z</lastmod>
+    <lastmod>2018-11-18T04:25:38.600Z</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/09/14/Maven-shade/</loc>
     
-    <lastmod>2018-11-18T04:22:29.958Z</lastmod>
+    <lastmod>2018-11-18T04:25:37.968Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2018/08/12/Spark-Strategy-DataSource/</loc>
+    
+    <lastmod>2018-11-18T04:23:30.819Z</lastmod>
     
   </url>
   
