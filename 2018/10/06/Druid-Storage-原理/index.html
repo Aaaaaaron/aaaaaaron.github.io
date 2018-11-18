@@ -87,18 +87,18 @@
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
 <meta property="og:description" content="转载自编程小梦, 该博主一系列文章质量都非常高 What is DruidDruid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：  列式存储 倒排索引 （基于 Bitmap 实现） 分布式的 Shared-Nothing 架构 （高可用，易扩展是 Druid 的设计目标） 实时摄入 （数据被 Druid 实时摄入后便可以立即查询）  Why Druid为了">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/55283969.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/98456054.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/34009295.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/29577015.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/8107893.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/79137485.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/34569900.jpg">
-<meta property="og:updated_time" content="2018-10-25T14:58:16.190Z">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/55283969.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/98456054.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/34009295.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/29577015.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/8107893.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/79137485.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/34569900.jpg">
+<meta property="og:updated_time" content="2018-11-18T04:10:35.310Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Druid Storage 原理">
 <meta name="twitter:description" content="转载自编程小梦, 该博主一系列文章质量都非常高 What is DruidDruid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：  列式存储 倒排索引 （基于 Bitmap 实现） 分布式的 Shared-Nothing 架构 （高可用，易扩展是 Druid 的设计目标） 实时摄入 （数据被 Druid 实时摄入后便可以立即查询）  Why Druid为了">
-<meta name="twitter:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/55283969.jpg">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/55283969.jpg">
 
 
 
@@ -351,7 +351,7 @@
 <li>实时摄入 （数据被 Druid 实时摄入后便可以立即查询）</li>
 </ol>
 <h3 id="Why-Druid"><a href="#Why-Druid" class="headerlink" title="Why Druid"></a>Why Druid</h3><p>为了能够提取利用大数据的商业价值，我们必然需要对数据进行分析，尤其是多维分析， 但是在几年前，整个业界并没有一款很好的 OLAP 工具，各种多维分析的方式如下图所示：</p>
-<p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/55283969.jpg" alt="屏幕快照 2017-10-31 下午8.27.50.png-1080.8kB"></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/55283969.jpg" alt="屏幕快照 2017-10-31 下午8.27.50.png-1080.8kB"></p>
 <p>其中直接基于 Hive，MR，Spark 的方式查询速度一般十分慢，并发低；而传统的关系型数据库无法支撑大规模数据；以 HBase 为代表的 NoSQL 数据库也无法提供高效的过滤，聚合能力。正因为现有工具有着各种各样的痛点，Druid 应运而生，以下几点自然是其设计目标：</p>
 <ol>
 <li>快速查询</li>
@@ -359,7 +359,7 @@
 <li>高效的过滤和聚合</li>
 <li>实时摄入</li>
 </ol>
-<h3 id="Druid-架构"><a href="#Druid-架构" class="headerlink" title="Druid 架构"></a>Druid 架构</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/98456054.jpg" alt="image.png-181kB"></p>
+<h3 id="Druid-架构"><a href="#Druid-架构" class="headerlink" title="Druid 架构"></a>Druid 架构</h3><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/98456054.jpg" alt="image.png-181kB"></p>
 <p>Druid 的整体架构如上图所示，其中主要有 3 条路线：</p>
 <ol>
 <li><p>实时摄入的过程： 实时数据会首先按行摄入 Real-time Nodes，Real-time Nodes 会先将每行的数据加入到 1 个 map 中，等达到一定的行数或者大小限制时，Real-time Nodes 就会将内存中的 map 持久化到磁盘中，Real-time Nodes 会按照 segmentGranularity 将一定时间段内的小文件 merge 为一个大文件，生成 Segment，然后将 Segment 上传到 Deep Storage（HDFS，S3）中，Coordinator 知道有 Segment 生成后，会通知相应的 Historical Node 下载对应的 Segment，并负责该 Segment 的查询。</p>
@@ -378,11 +378,11 @@
 <h4 id="Zookeeper"><a href="#Zookeeper" class="headerlink" title="Zookeeper"></a>Zookeeper</h4><p>Druid 依赖 ZK 实现服务发现，数据拓扑的感知，以及 Coordinator 的选主。</p>
 <h4 id="Metadata-Storage"><a href="#Metadata-Storage" class="headerlink" title="Metadata Storage"></a>Metadata Storage</h4><p>Metadata storage（Mysql） 主要用来存储 Segment 和配置的元数据。当有新 Segment 生成时，就会将 Segment 的元信息写入 metadata store, Coordinator 节点会监控 Metadata store 从而知道何时 load 新 Segment，何时 drop 旧 Segment。注意，查询时不会涉及 Metadata store。</p>
 <h4 id="Deep-Storage"><a href="#Deep-Storage" class="headerlink" title="Deep Storage"></a>Deep Storage</h4><p>Deep storage (S3 and HDFS) 是作为 Segment 的永久备份，查询时同样不会涉及 Deep storage。</p>
-<h3 id="Column"><a href="#Column" class="headerlink" title="Column"></a>Column</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/34009295.jpg" alt="屏幕快照 2017-10-27 下午3.45.05.png-278kB"></p>
+<h3 id="Column"><a href="#Column" class="headerlink" title="Column"></a>Column</h3><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/34009295.jpg" alt="屏幕快照 2017-10-27 下午3.45.05.png-278kB"></p>
 <p>Druid 中的列主要分为 3 类：时间列，维度列，指标列。Druid 在数据摄入和查询时都依赖时间列，这也是合理的，因为多维分析一般都带有时间维度。维度和指标是 OLAP 系统中常见的概念，维度主要是事件的属性，在查询时一般用来 filtering 和 group by，指标是用来聚合和计算的，一般是数值类型，像 count,sum，min，max 等。</p>
 <p>Druid 中的维度列支持 String，Long，Float，不过只有 String 类型支持倒排索引；指标列支持 Long，Float，Complex， 其中 Complex 指标包含 HyperUnique，Cardinality，Histogram，Sketch 等复杂指标。强类型的好处是可以更好的对每 1 列进行编码和压缩， 也可以保证数据索引的高效性和查询性能。</p>
 <h3 id="Segment"><a href="#Segment" class="headerlink" title="Segment"></a>Segment</h3><p>前面提到过，Druid 中会按时间段生成不可变的带倒排索引的列式文件，这个文件就称之为 Segment，Segment 是 Druid 中数据存储、复制、均衡、以及计算的基本单元， Segment 由 dataSource_beginTime_endTime_version_shardNumber 唯一标识，1 个 segment 一般包含 5–10 million 行记录，大小一般在 300~700mb。</p>
-<h3 id="Segment-的存储格式"><a href="#Segment-的存储格式" class="headerlink" title="Segment 的存储格式"></a>Segment 的存储格式</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/29577015.jpg" alt="image.png-90kB">Druid segment 的存储格式如上图所示，包含 3 部分：</p>
+<h3 id="Segment-的存储格式"><a href="#Segment-的存储格式" class="headerlink" title="Segment 的存储格式"></a>Segment 的存储格式</h3><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/29577015.jpg" alt="image.png-90kB">Druid segment 的存储格式如上图所示，包含 3 部分：</p>
 <ul>
 <li>version 文件</li>
 <li>meta 文件</li>
@@ -392,7 +392,7 @@
 <p>在 smoosh 文件中，数据是按列存储中，包含时间列，维度列和指标列，其中每 1 列会包含 2 部分：ColumnDescriptor 和 binary 数据。其中 ColumnDescriptor 主要保存每 1 列的数据类型和 Serde 的方式。</p>
 <p>smoosh 文件中还有 index.drd 文件和 metadata.drd 文件，其中 index.drd 主要包含该 segment 有哪些列，哪些维度，该 Segment 的时间范围以及使用哪种 bitmap；metadata.drd 主要包含是否需要聚合，指标的聚合函数，查询粒度，时间戳字段的配置等。</p>
 <h3 id="指标列的存储格式"><a href="#指标列的存储格式" class="headerlink" title="指标列的存储格式"></a>指标列的存储格式</h3><p>我们先来看指标列的存储格式：</p>
-<p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/8107893.jpg" alt="image.png-35.9kB"></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/8107893.jpg" alt="image.png-35.9kB"></p>
 <p>指标列的存储格式如上图所示：</p>
 <ul>
 <li>version</li>
@@ -407,7 +407,7 @@
 <h4 id="Long-型指标"><a href="#Long-型指标" class="headerlink" title="Long 型指标"></a>Long 型指标</h4><p>Druid 中对 Long 型指标会先进行编码，然后按 block 进行压缩。编码算法包含差分编码和 table 编码，压缩算法包含 LZ4 和 LZF。</p>
 <h4 id="Float-型指标"><a href="#Float-型指标" class="headerlink" title="Float 型指标"></a>Float 型指标</h4><p>Druid 对于 Float 类型的指标不会进行编码，只会按 block 进行压缩。</p>
 <h4 id="Complex-型指标"><a href="#Complex-型指标" class="headerlink" title="Complex 型指标"></a>Complex 型指标</h4><p>Druid 对于 HyperUnique，Cardinality，Histogram，Sketch 等复杂指标不会进行编码和压缩处理，每种复杂指标的 Serde 方式由每种指标自己的 ComplexMetricSerde 实现类实现。</p>
-<h3 id="String-维度的存储格式"><a href="#String-维度的存储格式" class="headerlink" title="String 维度的存储格式"></a>String 维度的存储格式</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/79137485.jpg" alt="image.png-81.2kB"></p>
+<h3 id="String-维度的存储格式"><a href="#String-维度的存储格式" class="headerlink" title="String 维度的存储格式"></a>String 维度的存储格式</h3><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/79137485.jpg" alt="image.png-81.2kB"></p>
 <p>String 维度的存储格式如上图所示，前面提到过，时间列，维度列，指标列由两部分组成：ColumnDescriptor 和 binary 数据。 String 维度的 binary 数据主要由 3 部分组成：dict，字典编码后的 id 数组，用于倒排索引的 bitmap。</p>
 <p>以上图中的 D2 维度列为例，总共有 4 行，前 3 行的值是 meituan，第 4 行的值是 dianing。Druid 中 dict 的实现十分简单，就是一个 hashmap。图中 dict 的内容就是将 meituan 编码为 0，dianping 编码为 1。 Id 数组的内容就是用编码后的 ID 替换掉原始值，所以就是 [1,1,1,0]。第 3 部分的倒排索引就是用 bitmap 表示某个值是否出现在某行中，如果出现了，bitmap 对应的位置就会置为 1，如图：meituan 在前 3 行中都有出现，所以倒排索引 1：[1,1,1,0] 就表示 meituan 在前 3 行中出现。</p>
 <p>显然，倒排索引的大小是列的基数 * 总的行数，如果没有处理的话结果必然会很大。不过好在如果维度列如果基数很高的话，bitmap 就会比较稀疏，而稀疏的 bitmap 可以进行高效的压缩。</p>
@@ -423,7 +423,7 @@
 <li>Merge and write bitmaps</li>
 <li>Write metadata.drd</li>
 </ol>
-<h3 id="Segment-load-过程"><a href="#Segment-load-过程" class="headerlink" title="Segment load 过程"></a>Segment load 过程</h3><p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-10-6/34569900.jpg" alt="meta.png-44.3kB"></p>
+<h3 id="Segment-load-过程"><a href="#Segment-load-过程" class="headerlink" title="Segment load 过程"></a>Segment load 过程</h3><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-10-6/34569900.jpg" alt="meta.png-44.3kB"></p>
 <ol>
 <li>Read version</li>
 <li>Load segment to MappedByteBuffer</li>

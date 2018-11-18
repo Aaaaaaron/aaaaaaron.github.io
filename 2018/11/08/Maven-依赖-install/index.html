@@ -86,16 +86,16 @@
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
 <meta property="og:description" content="基础首先明确:  mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去, 但是如果打成 war 包, 是会包含 compile scope 的依赖的. 而 provided 是要容器提供, 比如说 Tomcat, 会到 Tomcat 的 $liferay-tomcat-home\webapps\ROOT\WEB-IN">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/50973815.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/29736635.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/57385130.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/76336665.jpg">
-<meta property="og:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/65076854.jpg">
-<meta property="og:updated_time" content="2018-11-08T09:20:08.678Z">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/50973815.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/29736635.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/57385130.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/76336665.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/65076854.jpg">
+<meta property="og:updated_time" content="2018-11-18T04:10:34.325Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Maven 依赖 install">
 <meta name="twitter:description" content="基础首先明确:  mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去, 但是如果打成 war 包, 是会包含 compile scope 的依赖的. 而 provided 是要容器提供, 比如说 Tomcat, 会到 Tomcat 的 $liferay-tomcat-home\webapps\ROOT\WEB-IN">
-<meta name="twitter:image" content="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/50973815.jpg">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/50973815.jpg">
 
 
 
@@ -346,13 +346,13 @@
 </ol>
 <p>所以, 不要在一个项目里, 不同 pom 里面尝试使用不同 version 的依赖. 来看个实例:</p>
 <p>parquet-column 里会 shade 一个 fasttuil, 你 jar -tf parquet-column.jar 看他 里面会有这个 fastutil.</p>
-<p><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/50973815.jpg" alt=""></p>
-<p>可以看到有两个 jar 包, 一个 origin 不带 shade 的 fastutil, 另外一个是带着的, 也是放到 maven 仓库的 jar 包.<br><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/29736635.jpg" alt=""></p>
-<p>jar -tf 确认<br><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/57385130.jpg" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/50973815.jpg" alt=""></p>
+<p>可以看到有两个 jar 包, 一个 origin 不带 shade 的 fastutil, 另外一个是带着的, 也是放到 maven 仓库的 jar 包.<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/29736635.jpg" alt=""></p>
+<p>jar -tf 确认<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/57385130.jpg" alt=""></p>
 <h3 id="问题定位"><a href="#问题定位" class="headerlink" title="问题定位"></a>问题定位</h3><ol>
-<li><p>如果有遇到什么 NoSuchMethodError, ClassNotFoundException 等等的, 先看看打印出来的 classpath. IDEA 里可以直接看:<br><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/76336665.jpg" alt=""></p>
+<li><p>如果有遇到什么 NoSuchMethodError, ClassNotFoundException 等等的, 先看看打印出来的 classpath. IDEA 里可以直接看:<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/76336665.jpg" alt=""></p>
 </li>
-<li><p>然后可以 double shift, 搜下出问题的类, 一般会跳出来多个:<br><img src="http://aron-blog-image.oss-cn-hangzhou.aliyuncs.com/18-11-8/65076854.jpg" alt=""></p>
+<li><p>然后可以 double shift, 搜下出问题的类, 一般会跳出来多个:<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com//18-11-8/65076854.jpg" alt=""></p>
 </li>
 <li><p>然后再用 <code>mvn dependency:tree</code> 看下当前 model 用的哪个版本的依赖</p>
 </li>
