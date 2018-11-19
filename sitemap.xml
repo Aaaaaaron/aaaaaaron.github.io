@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/11/01/Spark-Parquet-Deep-Dive/</loc>
+    
+    <lastmod>2018-11-19T02:02:48.564Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/11/08/Maven-%E4%BE%9D%E8%B5%96-install/</loc>
     
     <lastmod>2018-11-18T07:51:01.611Z</lastmod>
@@ -40,13 +47,6 @@
     <loc>https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/</loc>
     
     <lastmod>2018-11-18T04:07:55.920Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/11/01/Spark-Parquet-Deep-Dive/</loc>
-    
-    <lastmod>2018-11-14T15:35:45.281Z</lastmod>
     
   </url>
   
