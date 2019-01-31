@@ -1,0 +1,879 @@
+<!DOCTYPE html>
+
+
+
+  
+
+
+<html class="theme-next mist use-motion" lang="zh-Hans">
+<head><meta name="generator" content="Hexo 3.8.0">
+  <meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+<meta name="theme-color" content="#222">
+
+
+
+
+
+
+
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
+
+
+
+
+
+
+
+<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
+
+<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
+
+
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
+
+
+  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
+
+
+
+
+
+  <meta name="keywords" content="Hexo, NexT">
+
+
+
+
+
+
+
+
+
+
+<meta name="description" content="RDDscheduler 的调度主体. 1234567891011121314151617181920212223242526272829303132333435* Internally, each RDD is characterized by five main properties:**  - A list of partitions*  - A function for computing">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark Scheduler Deep Dive">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/01/26/Spark-Scheduler-Deep-Dive/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="RDDscheduler 的调度主体. 1234567891011121314151617181920212223242526272829303132333435* Internally, each RDD is characterized by five main properties:**  - A list of partitions*  - A function for computing">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127121445.png">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127121500.png">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127153603.png">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127154456.png">
+<meta property="og:updated_time" content="2019-01-27T08:19:12.983Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark Scheduler Deep Dive">
+<meta name="twitter:description" content="RDDscheduler 的调度主体. 1234567891011121314151617181920212223242526272829303132333435* Internally, each RDD is characterized by five main properties:**  - A list of partitions*  - A function for computing">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127121445.png">
+
+
+
+<script type="text/javascript" id="hexo.configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Mist',
+    version: '5.1.4',
+    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
+    fancybox: true,
+    tabs: true,
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    duoshuo: {
+      userId: '0',
+      author: '博主'
+    },
+    algolia: {
+      applicationID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    }
+  };
+</script>
+
+
+
+  <link rel="canonical" href="https://aaaaaaron.github.io/2019/01/26/Spark-Scheduler-Deep-Dive/">
+
+
+
+
+
+  <title>Spark Scheduler Deep Dive | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+
+
+  
+  <script type="text/javascript" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
+  
+</head>
+
+<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
+
+  
+  
+    
+  
+
+  <div class="container sidebar-position-left page-post-detail">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-wrapper">
+  <div class="site-meta ">
+    
+
+    <div class="custom-logo-site-title">
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+      
+        <p class="site-subtitle"></p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+<nav class="site-nav">
+  
+
+  
+    <ul id="menu" class="menu">
+      
+        
+        <li class="menu-item menu-item-tags">
+          <a href="/tags/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
+            
+            标签
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-archives">
+          <a href="/archives/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
+            
+            归档
+          </a>
+        </li>
+      
+        
+        <li class="menu-item menu-item-about">
+          <a href="/about/" rel="section">
+            
+              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
+            
+            关于
+          </a>
+        </li>
+      
+
+      
+    </ul>
+  
+
+  
+</nav>
+
+
+
+ </div>
+    </header>
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+    
+
+  
+
+  
+  
+  
+
+  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2019/01/26/Spark-Scheduler-Deep-Dive/">
+
+    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Aron Tao">
+      <meta itemprop="description" content="">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+
+    
+      <header class="post-header">
+
+        
+        
+          <h1 class="post-title" itemprop="name headline">Spark Scheduler Deep Dive</h1>
+        
+
+        <div class="post-meta">
+          <span class="post-time">
+            
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              
+                <span class="post-meta-item-text">发表于</span>
+              
+              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-01-26T17:26:14+08:00">
+                2019-01-26
+              </time>
+            
+
+            
+
+            
+          </span>
+
+          
+
+          
+            
+              <span class="post-comments-count">
+                <span class="post-meta-divider">|</span>
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-comment-o"></i>
+                </span>
+                <a href="/2019/01/26/Spark-Scheduler-Deep-Dive/#comments" itemprop="discussionUrl">
+                  <span class="post-comments-count valine-comment-count" data-xid="/2019/01/26/Spark-Scheduler-Deep-Dive/" itemprop="commentCount"></span>
+                </a>
+              </span>
+            
+          
+
+          
+          
+             <span id="/2019/01/26/Spark-Scheduler-Deep-Dive/" class="leancloud_visitors" data-flag-title="Spark Scheduler Deep Dive">
+               <span class="post-meta-divider">|</span>
+               <span class="post-meta-item-icon">
+                 <i class="fa fa-eye"></i>
+               </span>
+               
+                 <span class="post-meta-item-text">阅读次数&#58;</span>
+               
+                 <span class="leancloud-visitors-count"></span>
+             </span>
+          
+
+          
+
+          
+
+          
+
+        </div>
+      </header>
+    
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+      
+
+      
+        <h1 id="RDD"><a href="#RDD" class="headerlink" title="RDD"></a>RDD</h1><p>scheduler 的调度主体.</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">* <span class="type">Internally</span>, each <span class="type">RDD</span> is characterized by five main properties:</span><br><span class="line">*</span><br><span class="line">*  - <span class="type">A</span> list of partitions</span><br><span class="line">*  - <span class="type">A</span> function <span class="keyword">for</span> computing each split</span><br><span class="line">*  - <span class="type">A</span> list of dependencies on other <span class="type">RDDs</span></span><br><span class="line">*  - <span class="type">Optionally</span>, a <span class="type">Partitioner</span> <span class="keyword">for</span> key-value <span class="type">RDDs</span> (e.g. to say that the <span class="type">RDD</span> is hash-partitioned)</span><br><span class="line">*  - <span class="type">Optionally</span>, a list of preferred locations to compute each split on (e.g. block locations <span class="keyword">for</span></span><br><span class="line">*    an <span class="type">HDFS</span> file)</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * :: DeveloperApi ::</span></span><br><span class="line"><span class="comment">  * Implemented by subclasses to compute a given partition.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="meta">@DeveloperApi</span></span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(split: <span class="type">Partition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[<span class="type">T</span>]</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Implemented by subclasses to return the set of partitions in this RDD. This method will only</span></span><br><span class="line"><span class="comment">  * be called once, so it is safe to implement a time-consuming computation in it.</span></span><br><span class="line"><span class="comment">  *</span></span><br><span class="line"><span class="comment">  * The partitions in this array must satisfy the following property:</span></span><br><span class="line"><span class="comment">  *   `rdd.partitions.zipWithIndex.forall &#123; case (partition, index) =&gt; partition.index == index &#125;`</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">getPartitions</span></span>: <span class="type">Array</span>[<span class="type">Partition</span>]</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Implemented by subclasses to return how this RDD depends on parent RDDs. This method will only</span></span><br><span class="line"><span class="comment">  * be called once, so it is safe to implement a time-consuming computation in it.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">getDependencies</span></span>: <span class="type">Seq</span>[<span class="type">Dependency</span>[_]] = deps</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Optionally overridden by subclasses to specify placement preferences.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">getPreferredLocations</span></span>(split: <span class="type">Partition</span>): <span class="type">Seq</span>[<span class="type">String</span>] = <span class="type">Nil</span></span><br></pre></td></tr></table></figure>
+<h2 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h2><p>DAG中的各个RDD之间存在着依赖关系。换⾔之，正是RDD之间的依 赖关系构建了由RDD所组成的DAG。Spark使⽤Dependency来表⽰RDD之 间的依赖关系.</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Dependency</span>[<span class="type">T</span>] <span class="keyword">extends</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">rdd</span></span>: <span class="type">RDD</span>[<span class="type">T</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="窄依赖"><a href="#窄依赖" class="headerlink" title="窄依赖"></a>窄依赖</h3><p>RDD与上游RDD的分区是⼀对⼀的关系.</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">NarrowDependency</span>[<span class="type">T</span>](<span class="params">_rdd: <span class="type">RDD</span>[<span class="type">T</span>]</span>) <span class="keyword">extends</span> <span class="title">Dependency</span>[<span class="type">T</span>] </span>&#123;</span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Get the parent partitions for a child partition.</span></span><br><span class="line"><span class="comment">   * @param partitionId a partition of the child RDD</span></span><br><span class="line"><span class="comment">   * @return the partitions of the parent RDD that the child partition depends upon</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">getParents</span></span>(partitionId: <span class="type">Int</span>): <span class="type">Seq</span>[<span class="type">Int</span>]</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">rdd</span></span>: <span class="type">RDD</span>[<span class="type">T</span>] = _rdd</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>有两个实现类:OneToOneDependency/RangeDependency</p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127121445.png" alt=""></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getParents</span></span>(partitionId: <span class="type">Int</span>): <span class="type">List</span>[<span class="type">Int</span>] = <span class="type">List</span>(partitionId)</span><br></pre></td></tr></table></figure>
+<p>可以看到, OneToOneDependency 子 RDD 分区与依赖的父 RDD 分区相同.</p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127121500.png" alt=""><br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">getParents</span></span>(partitionId: <span class="type">Int</span>): <span class="type">List</span>[<span class="type">Int</span>] = &#123;</span><br><span class="line">  <span class="keyword">if</span> (partitionId &gt;= outStart &amp;&amp; partitionId &lt; outStart + length) &#123;</span><br><span class="line">    <span class="type">List</span>(partitionId - outStart + inStart)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="type">Nil</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<h3 id="Shuffle-依赖"><a href="#Shuffle-依赖" class="headerlink" title="Shuffle 依赖"></a>Shuffle 依赖</h3><p>RDD与上游RDD的分区如果不是一对一的关系，或者RDD的分区依赖于上游RDD的多个分区，那么这种依赖关系就叫做Shuffle依赖（ShuffleDependency）<br><code>override def rdd: RDD[Product2[K, V]] = _rdd.asInstanceOf[RDD[Product2[K, V]]]</code> 可以看到这边返回的 RDD 是RDD[Product2[K, V].</p>
+<h2 id="Partitioner"><a href="#Partitioner" class="headerlink" title="Partitioner"></a>Partitioner</h2><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127153603.png" alt=""></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An object that defines how the elements in a key-value pair RDD are partitioned by key.</span></span><br><span class="line"><span class="comment"> * Maps each key to a partition ID, from 0 to `numPartitions - 1`.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Note that, partitioner must be deterministic, i.e. it must return the same partition id given</span></span><br><span class="line"><span class="comment"> * the same partition key.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Partitioner</span> <span class="keyword">extends</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">numPartitions</span></span>: <span class="type">Int</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">getPartition</span></span>(key: <span class="type">Any</span>): <span class="type">Int</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>参照 HashPartitioner<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">getPartition</span></span>(key: <span class="type">Any</span>): <span class="type">Int</span> = key <span class="keyword">match</span> &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="literal">null</span> =&gt; <span class="number">0</span></span><br><span class="line">  <span class="keyword">case</span> _ =&gt; <span class="type">Utils</span>.nonNegativeMod(key.hashCode, numPartitions)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>一个上下游 RDD 的 partitions 数量都是定的().<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127154456.png" alt=""></p>
+<h2 id="Stage"><a href="#Stage" class="headerlink" title="Stage"></a>Stage</h2><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * A stage is a set of parallel tasks all computing the same function that need to run as part</span></span><br><span class="line"><span class="comment"> * of a Spark job, where all the tasks have the same shuffle dependencies. Each DAG of tasks run</span></span><br><span class="line"><span class="comment"> * by the scheduler is split up into stages at the boundaries where shuffle occurs, and then the</span></span><br><span class="line"><span class="comment"> * DAGScheduler runs these stages in topological order.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Each Stage can either be a shuffle map stage, in which case its tasks' results are input for</span></span><br><span class="line"><span class="comment"> * other stage(s), or a result stage, in which case its tasks directly compute a Spark action</span></span><br><span class="line"><span class="comment"> * (e.g. count(), save(), etc) by running a function on an RDD. For shuffle map stages, we also</span></span><br><span class="line"><span class="comment"> * track the nodes that each output partition is on.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Each Stage also has a firstJobId, identifying the job that first submitted the stage.  When FIFO</span></span><br><span class="line"><span class="comment"> * scheduling is used, this allows Stages from earlier jobs to be computed first or recovered</span></span><br><span class="line"><span class="comment"> * faster on failure.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Finally, a single stage can be re-executed in multiple attempts due to fault recovery. In that</span></span><br><span class="line"><span class="comment"> * case, the Stage object will track multiple StageInfo objects to pass to listeners or the web UI.</span></span><br><span class="line"><span class="comment"> * The latest one will be accessible through latestInfo.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @param id Unique stage ID</span></span><br><span class="line"><span class="comment"> * @param rdd RDD that this stage runs on: for a shuffle map stage, it's the RDD we run map tasks</span></span><br><span class="line"><span class="comment"> *   on, while for a result stage, it's the target RDD that we ran an action on</span></span><br><span class="line"><span class="comment"> * @param numTasks Total number of tasks in stage; result stages in particular may not need to</span></span><br><span class="line"><span class="comment"> *   compute all partitions, e.g. for first(), lookup(), and take().</span></span><br><span class="line"><span class="comment"> * @param parents List of stages that this stage depends on (through shuffle dependencies).</span></span><br><span class="line"><span class="comment"> * @param firstJobId ID of the first job this stage was part of, for FIFO scheduling.</span></span><br><span class="line"><span class="comment"> * @param callSite Location in the user program associated with this stage: either where the target</span></span><br><span class="line"><span class="comment"> *   RDD was created, for a shuffle map stage, or where the action for a result stage was called.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span>[scheduler] <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Stage</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    val id: <span class="type">Int</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    val rdd: <span class="type">RDD</span>[_],</span></span></span><br><span class="line"><span class="class"><span class="params">    val numTasks: <span class="type">Int</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    val parents: <span class="type">List</span>[<span class="type">Stage</span>],</span></span></span><br><span class="line"><span class="class"><span class="params">    val firstJobId: <span class="type">Int</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    val callSite: <span class="type">CallSite</span></span>)</span></span><br><span class="line"><span class="class">  <span class="keyword">extends</span> <span class="title">Logging</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> numPartitions = rdd.partitions.length</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Set of jobs that this stage belongs to. */</span></span><br><span class="line">  <span class="keyword">val</span> jobIds = <span class="keyword">new</span> <span class="type">HashSet</span>[<span class="type">Int</span>]</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** The ID to use for the next new attempt for this stage. */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">var</span> nextAttemptId: <span class="type">Int</span> = <span class="number">0</span></span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> name: <span class="type">String</span> = callSite.shortForm</span><br><span class="line">  <span class="keyword">val</span> details: <span class="type">String</span> = callSite.longForm</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Pointer to the [[StageInfo]] object for the most recent attempt. This needs to be initialized</span></span><br><span class="line"><span class="comment">   * here, before any attempts have actually been created, because the DAGScheduler uses this</span></span><br><span class="line"><span class="comment">   * StageInfo to tell SparkListeners when a job starts (which happens before any stage attempts</span></span><br><span class="line"><span class="comment">   * have been created).</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="keyword">var</span> _latestInfo: <span class="type">StageInfo</span> = <span class="type">StageInfo</span>.fromStage(<span class="keyword">this</span>, nextAttemptId)</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Set of stage attempt IDs that have failed. We keep track of these failures in order to avoid</span></span><br><span class="line"><span class="comment">   * endless retries if a stage keeps failing.</span></span><br><span class="line"><span class="comment">   * We keep track of each attempt ID that has failed to avoid recording duplicate failures if</span></span><br><span class="line"><span class="comment">   * multiple tasks from the same stage attempt fail (SPARK-5945).</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">val</span> failedAttemptIds = <span class="keyword">new</span> <span class="type">HashSet</span>[<span class="type">Int</span>]</span><br><span class="line"></span><br><span class="line">  <span class="keyword">private</span>[scheduler] <span class="function"><span class="keyword">def</span> <span class="title">clearFailures</span></span>() : <span class="type">Unit</span> = &#123;</span><br><span class="line">    failedAttemptIds.clear()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Creates a new attempt for this stage by creating a new StageInfo with a new attempt ID. */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">makeNewStageAttempt</span></span>(</span><br><span class="line">      numPartitionsToCompute: <span class="type">Int</span>,</span><br><span class="line">      taskLocalityPreferences: <span class="type">Seq</span>[<span class="type">Seq</span>[<span class="type">TaskLocation</span>]] = <span class="type">Seq</span>.empty): <span class="type">Unit</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> metrics = <span class="keyword">new</span> <span class="type">TaskMetrics</span></span><br><span class="line">    metrics.register(rdd.sparkContext)</span><br><span class="line">    _latestInfo = <span class="type">StageInfo</span>.fromStage(</span><br><span class="line">      <span class="keyword">this</span>, nextAttemptId, <span class="type">Some</span>(numPartitionsToCompute), metrics, taskLocalityPreferences)</span><br><span class="line">    nextAttemptId += <span class="number">1</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Returns the StageInfo for the most recent attempt for this stage. */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">latestInfo</span></span>: <span class="type">StageInfo</span> = _latestInfo</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">hashCode</span></span>(): <span class="type">Int</span> = id</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">equals</span></span>(other: <span class="type">Any</span>): <span class="type">Boolean</span> = other <span class="keyword">match</span> &#123;</span><br><span class="line">    <span class="keyword">case</span> stage: <span class="type">Stage</span> =&gt; stage != <span class="literal">null</span> &amp;&amp; stage.id == id</span><br><span class="line">    <span class="keyword">case</span> _ =&gt; <span class="literal">false</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/** Returns the sequence of partition ids that are missing (i.e. needs to be computed). */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">findMissingPartitions</span></span>(): <span class="type">Seq</span>[<span class="type">Int</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<p>makeNewStageAttempt的执行步骤如下。</p>
+<ul>
+<li>调用StageInfo的fromStage方法（见代码清单7-19）创建新的StageInfo。</li>
+<li>增加nextAttemptId。</li>
+</ul>
+<h3 id="ResultStage"><a href="#ResultStage" class="headerlink" title="ResultStage"></a>ResultStage</h3><p>ResultStage可以使用指定的函数对RDD中的分区进行计算并得出最终结果。ResultStage是最后执行的Stage，此阶段主要进行作业的收尾工作（例如，对各个分区的数据收拢、打印到控制台或写入到HDFS）</p>
+<p>可以看到多了 func, 即对 RDD 分区进行计算的函数.</p>
+<p>在 DAGScheduler#handleJobSubmitted 中 调用了 <code>setActiveJob</code>.</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * ResultStages apply a function on some partitions of an RDD to compute the result of an action.</span></span><br><span class="line"><span class="comment"> * The ResultStage object captures the function to execute, `func`, which will be applied to each</span></span><br><span class="line"><span class="comment"> * partition, and the set of partition IDs, `partitions`. Some stages may not run on all partitions</span></span><br><span class="line"><span class="comment"> * of the RDD, for actions like first() and lookup().</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">class</span> <span class="title">ResultStage</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    id: <span class="type">Int</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    rdd: <span class="type">RDD</span>[_],</span></span></span><br><span class="line"><span class="class"><span class="params">    val func: (<span class="type">TaskContext</span>, <span class="type">Iterator</span>[_]</span>) <span class="title">=&gt;</span> <span class="title">_</span>,</span></span><br><span class="line"><span class="class">    <span class="title">val</span> <span class="title">partitions</span></span>: <span class="type">Array</span>[<span class="type">Int</span>],</span><br><span class="line">    parents: <span class="type">List</span>[<span class="type">Stage</span>],</span><br><span class="line">    firstJobId: <span class="type">Int</span>,</span><br><span class="line">    callSite: <span class="type">CallSite</span>)</span><br><span class="line">  <span class="keyword">extends</span> <span class="type">Stage</span>(id, rdd, partitions.length, parents, firstJobId, callSite) &#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * The active job for this result stage. Will be empty if the job has already finished</span></span><br><span class="line"><span class="comment">   * (e.g., because the job was cancelled).</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">var</span> _activeJob: <span class="type">Option</span>[<span class="type">ActiveJob</span>] = <span class="type">None</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">activeJob</span></span>: <span class="type">Option</span>[<span class="type">ActiveJob</span>] = _activeJob</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">setActiveJob</span></span>(job: <span class="type">ActiveJob</span>): <span class="type">Unit</span> = &#123;</span><br><span class="line">    _activeJob = <span class="type">Option</span>(job)</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">removeActiveJob</span></span>(): <span class="type">Unit</span> = &#123;</span><br><span class="line">    _activeJob = <span class="type">None</span></span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Returns the sequence of partition ids that are missing (i.e. needs to be computed).</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * This can only be called when there is an active job.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">findMissingPartitions</span></span>(): <span class="type">Seq</span>[<span class="type">Int</span>] = &#123;</span><br><span class="line">    <span class="keyword">val</span> job = activeJob.get</span><br><span class="line">    (<span class="number">0</span> until job.numPartitions).filter(id =&gt; !job.finished(id))</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">toString</span></span>: <span class="type">String</span> = <span class="string">"ResultStage "</span> + id</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h3 id="ShuffleMapStage"><a href="#ShuffleMapStage" class="headerlink" title="ShuffleMapStage"></a>ShuffleMapStage</h3>
+      
+    </div>
+    
+    
+    
+
+    
+
+    
+
+    
+
+    <footer class="post-footer">
+      
+
+      
+      
+      
+
+      
+        <div class="post-nav">
+          <div class="post-nav-next post-nav-item">
+            
+              <a href="/2019/01/13/Spark-SchedulerPool-Deep-Div/" rel="next" title="Spark SchedulerPool Deep Dive">
+                <i class="fa fa-chevron-left"></i> Spark SchedulerPool Deep Dive
+              </a>
+            
+          </div>
+
+          <span class="post-nav-divider"></span>
+
+          <div class="post-nav-prev post-nav-item">
+            
+          </div>
+        </div>
+      
+
+      
+      
+    </footer>
+  </div>
+  
+  
+  
+  </article>
+
+
+
+    <div class="post-spread">
+      
+    </div>
+  </div>
+
+
+          </div>
+          
+
+
+          
+
+  
+    <div class="comments" id="comments">
+    </div>
+  
+
+
+
+        </div>
+        
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside id="sidebar" class="sidebar">
+    
+    <div class="sidebar-inner">
+
+      
+
+      
+        <ul class="sidebar-nav motion-element">
+          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
+            文章目录
+          </li>
+          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
+            站点概览
+          </li>
+        </ul>
+      
+
+      <section class="site-overview-wrap sidebar-panel">
+        <div class="site-overview">
+          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
+            
+              <img class="site-author-image" itemprop="image" src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Aron Tao">
+            
+              <p class="site-author-name" itemprop="name">Aron Tao</p>
+              <p class="site-description motion-element" itemprop="description">Kyligence</p>
+          </div>
+
+          <nav class="site-state motion-element">
+
+            
+              <div class="site-state-item site-state-posts">
+              
+                <a href="/archives/">
+              
+                  <span class="site-state-item-count">35</span>
+                  <span class="site-state-item-name">日志</span>
+                </a>
+              </div>
+            
+
+            
+
+            
+              
+              
+              <div class="site-state-item site-state-tags">
+                <a href="/tags/index.html">
+                  <span class="site-state-item-count">12</span>
+                  <span class="site-state-item-name">标签</span>
+                </a>
+              </div>
+            
+
+          </nav>
+
+          
+
+          
+            <div class="links-of-author motion-element">
+                
+                  <span class="links-of-author-item">
+                    <a href="https://github.com/aaaaaaron" target="_blank" title="GitHub">
+                      
+                        <i class="fa fa-fw fa-github"></i>GitHub</a>
+                  </span>
+                
+            </div>
+          
+
+          
+          
+
+          
+          
+
+          
+
+        </div>
+      </section>
+
+      
+      <!--noindex-->
+        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
+          <div class="post-toc">
+
+            
+              
+            
+
+            
+              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#RDD"><span class="nav-number">1.</span> <span class="nav-text">RDD</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#依赖"><span class="nav-number">1.1.</span> <span class="nav-text">依赖</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#窄依赖"><span class="nav-number">1.1.1.</span> <span class="nav-text">窄依赖</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Shuffle-依赖"><span class="nav-number">1.1.2.</span> <span class="nav-text">Shuffle 依赖</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Partitioner"><span class="nav-number">1.2.</span> <span class="nav-text">Partitioner</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Stage"><span class="nav-number">1.3.</span> <span class="nav-text">Stage</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#ResultStage"><span class="nav-number">1.3.1.</span> <span class="nav-text">ResultStage</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ShuffleMapStage"><span class="nav-number">1.3.2.</span> <span class="nav-text">ShuffleMapStage</span></a></li></ol></li></ol></li></ol></div>
+            
+
+          </div>
+        </section>
+      <!--/noindex-->
+      
+
+      
+
+    </div>
+  </aside>
+
+
+        
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
+  <span class="with-love">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Aron Tao</span>
+
+  
+</div>
+
+
+  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
+
+
+
+  <span class="post-meta-divider">|</span>
+
+
+
+  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
+
+
+
+
+        
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+
+    
+      <div class="back-to-top">
+        <i class="fa fa-arrow-up"></i>
+        
+      </div>
+    
+
+    
+
+  </div>
+
+  
+
+<script type="text/javascript">
+  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
+    window.Promise = null;
+  }
+</script>
+
+
+
+
+
+
+
+
+
+  
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
+  
+
+  
+  
+    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
+
+  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
+
+
+
+  
+  
+
+  
+  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
+<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
+
+
+
+  
+
+
+  
+
+
+
+
+	
+
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
+  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
+  
+  <script type="text/javascript">
+    var GUEST = ['nick','mail','link'];
+    var guest = 'nick,mail,link';
+    guest = guest.split(',').filter(item=>{
+      return GUEST.indexOf(item)>-1;
+    });
+    new Valine({
+        el: '#comments' ,
+        verify: false,
+        notify: false,
+        appId: 'xUIDY0rxakumlhKmQqajlnUc-gzGzoHsz',
+        appKey: 'lrqs8UwcvY6z1has9clbxJWL',
+        placeholder: 'Just go go',
+        avatar:'mm',
+        guest_info:guest,
+        pageSize:'10' || 10,
+    });
+  </script>
+
+
+
+  
+
+
+
+
+
+  
+
+  
+  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
+  <script>AV.initialize("8XOG5IciFE9Tot0TjP2HVe9R-gzGzoHsz", "S0vOkjPeVIvuRtqdYiggJFt8");</script>
+  <script>
+    function showTime(Counter) {
+      var query = new AV.Query(Counter);
+      var entries = [];
+      var $visitors = $(".leancloud_visitors");
+
+      $visitors.each(function () {
+        entries.push( $(this).attr("id").trim() );
+      });
+
+      query.containedIn('url', entries);
+      query.find()
+        .done(function (results) {
+          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
+
+          if (results.length === 0) {
+            $visitors.find(COUNT_CONTAINER_REF).text(0);
+            return;
+          }
+
+          for (var i = 0; i < results.length; i++) {
+            var item = results[i];
+            var url = item.get('url');
+            var time = item.get('time');
+            var element = document.getElementById(url);
+
+            $(element).find(COUNT_CONTAINER_REF).text(time);
+          }
+          for(var i = 0; i < entries.length; i++) {
+            var url = entries[i];
+            var element = document.getElementById(url);
+            var countSpan = $(element).find(COUNT_CONTAINER_REF);
+            if( countSpan.text() == '') {
+              countSpan.text(0);
+            }
+          }
+        })
+        .fail(function (object, error) {
+          console.log("Error: " + error.code + " " + error.message);
+        });
+    }
+
+    function addCount(Counter) {
+      var $visitors = $(".leancloud_visitors");
+      var url = $visitors.attr('id').trim();
+      var title = $visitors.attr('data-flag-title').trim();
+      var query = new AV.Query(Counter);
+
+      query.equalTo("url", url);
+      query.find({
+        success: function(results) {
+          if (results.length > 0) {
+            var counter = results[0];
+            counter.fetchWhenSave(true);
+            counter.increment("time");
+            counter.save(null, {
+              success: function(counter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(counter.get('time'));
+              },
+              error: function(counter, error) {
+                console.log('Failed to save Visitor num, with error message: ' + error.message);
+              }
+            });
+          } else {
+            var newcounter = new Counter();
+            /* Set ACL */
+            var acl = new AV.ACL();
+            acl.setPublicReadAccess(true);
+            acl.setPublicWriteAccess(true);
+            newcounter.setACL(acl);
+            /* End Set ACL */
+            newcounter.set("title", title);
+            newcounter.set("url", url);
+            newcounter.set("time", 1);
+            newcounter.save(null, {
+              success: function(newcounter) {
+                var $element = $(document.getElementById(url));
+                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
+              },
+              error: function(newcounter, error) {
+                console.log('Failed to create');
+              }
+            });
+          }
+        },
+        error: function(error) {
+          console.log('Error:' + error.code + " " + error.message);
+        }
+      });
+    }
+
+    $(function() {
+      var Counter = AV.Object.extend("Counter");
+      if ($('.leancloud_visitors').length == 1) {
+        addCount(Counter);
+      } else if ($('.post-title-link').length > 1) {
+        showTime(Counter);
+      }
+    });
+  </script>
+
+
+
+  
+
+  
+
+  
+  
+
+  
+
+  
+
+  
+
+</body>
+</html>
