@@ -68,7 +68,7 @@
 
 
 
-  <meta name="keywords" content="Hexo, NexT">
+  <meta name="keywords" content="Parquet,">
 
 
 
@@ -79,17 +79,22 @@
 
 
 
-<meta name="description" content="Kyligence">
+<meta name="description" content="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf    123456789101112131415161718192021222324">
+<meta name="keywords" content="Parquet">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Parquet 乱弹">
 <meta property="og:url" content="https://aaaaaaron.github.io/2019/05/09/Parquet-乱弹/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="Kyligence">
+<meta property="og:description" content="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf    123456789101112131415161718192021222324">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-05-09T08:30:34.146Z">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509164025.png">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509165611.png">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509170805.png">
+<meta property="og:updated_time" content="2019-05-09T09:08:12.481Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Parquet 乱弹">
-<meta name="twitter:description" content="Kyligence">
+<meta name="twitter:description" content="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf    123456789101112131415161718192021222324">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509164025.png">
 
 
 
@@ -333,7 +338,11 @@
       
 
       
-        
+        <p><a href="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf" target="_blank" rel="noopener">http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf</a></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509164025.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509165611.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509170805.png" alt=""></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testParquetRead</span><span class="params">(<span class="keyword">double</span>[] data, CompressionCodecName compress)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    Configuration conf = <span class="keyword">new</span> Configuration();</span><br><span class="line">    List&lt;Type&gt; fields = Lists.newArrayList();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; i++) &#123;</span><br><span class="line">        fields.add(<span class="keyword">new</span> PrimitiveType(Type.Repetition.REQUIRED, PrimitiveType.PrimitiveTypeName.DOUBLE, <span class="string">"f"</span> + i));</span><br><span class="line">    &#125;</span><br><span class="line">    MessageType schema = <span class="keyword">new</span> MessageType(<span class="string">"ori"</span>, fields);</span><br><span class="line"></span><br><span class="line">    writeFile(conf, schema, data, compress);</span><br><span class="line">    testRowGroupRead(conf, schema);</span><br><span class="line">    testSimpleRead(conf, data.length);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">writeFile</span><span class="params">(Configuration conf, MessageType schema, <span class="keyword">double</span>[] data, CompressionCodecName compress)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    GroupWriteSupport.setSchema(schema, conf);</span><br><span class="line">    ParquetWriter&lt;Group&gt; writer = <span class="keyword">new</span> ParquetWriter&lt;&gt;(path, <span class="keyword">new</span> GroupWriteSupport(), compress, <span class="number">10</span> * <span class="number">1024</span> * <span class="number">1024</span>,</span><br><span class="line">            <span class="number">1024</span> * <span class="number">1024</span>, <span class="number">1048576</span>, <span class="keyword">true</span>, <span class="keyword">false</span>, PARQUET_2_0, conf);</span><br><span class="line"></span><br><span class="line">    SimpleGroupFactory simpleGroupFactory = <span class="keyword">new</span> SimpleGroupFactory(schema);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">double</span> v : data) &#123;</span><br><span class="line">        writer.write(simpleGroupFactory.newGroup().append(<span class="string">"f0"</span>, v).append(<span class="string">"f1"</span>, v).append(<span class="string">"f2"</span>, v));</span><br><span class="line">    &#125;</span><br><span class="line">    writer.close();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testRowGroupRead</span><span class="params">(Configuration conf, MessageType messageType)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    ParquetMetadata footer = ParquetFileReader.readFooter(conf, path, ParquetMetadataConverter.NO_FILTER);</span><br><span class="line">    ParquetFileReader parquetFileReader = <span class="keyword">new</span> ParquetFileReader(conf, footer.getFileMetaData(), path,</span><br><span class="line">            footer.getBlocks(), messageType.getColumns());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">long</span> t = System.currentTimeMillis();</span><br><span class="line">    <span class="keyword">int</span> totalRowCount = <span class="number">0</span>;</span><br><span class="line">    PageReadStore pageReadStore = parquetFileReader.readNextRowGroup();</span><br><span class="line">    <span class="keyword">while</span> (pageReadStore != <span class="keyword">null</span>) &#123;</span><br><span class="line">        totalRowCount += pageReadStore.getRowCount();</span><br><span class="line">        <span class="keyword">for</span> (ColumnDescriptor columnDescriptor : footer.getFileMetaData().getSchema().getColumns()) &#123;</span><br><span class="line">            pageReadStore.getPageReader(columnDescriptor).readPage();</span><br><span class="line">        &#125;</span><br><span class="line">        pageReadStore = parquetFileReader.readNextRowGroup();</span><br><span class="line">    &#125;</span><br><span class="line">    System.out.println(<span class="string">"Row Group read style take:"</span> + (System.currentTimeMillis() - t));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testSimpleRead</span><span class="params">(Configuration conf, <span class="keyword">int</span> n)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    ParquetReader&lt;Group&gt; reader = ParquetReader.builder(<span class="keyword">new</span> GroupReadSupport(), path).withConf(conf).build();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">long</span> t = System.currentTimeMillis();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">        Group group = reader.read();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">10</span>; j++) &#123;</span><br><span class="line">            group.getDouble(<span class="string">"m"</span> + j, <span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    System.out.println(<span class="string">"Simple read take:"</span> + (System.currentTimeMillis() - t));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
       
     </div>
     
@@ -347,6 +356,12 @@
     
 
     <footer class="post-footer">
+      
+        <div class="post-tags">
+          
+            <a href="/tags/Parquet/" rel="tag"># Parquet</a>
+          
+        </div>
       
 
       
