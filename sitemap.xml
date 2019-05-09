@@ -2,9 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/</loc>
+    
+    <lastmod>2019-05-09T08:30:34.146Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2019/01/26/Spark-Scheduler-Deep-Dive/</loc>
     
-    <lastmod>2019-01-27T08:19:12.983Z</lastmod>
+    <lastmod>2019-02-01T06:22:02.887Z</lastmod>
     
   </url>
   
