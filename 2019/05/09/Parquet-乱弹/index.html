@@ -1,359 +1,59 @@
-<!DOCTYPE html>
-
-
-
-  
-
-
-<html class="theme-next mist use-motion" lang="zh-Hans">
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#222">
-
-
-
-
-
-
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform">
-<meta http-equiv="Cache-Control" content="no-siteapp">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
-
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
-
-<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
-
-
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
-
-
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
-
-
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
-
-
-  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
-
-
-
-
-
-  <meta name="keywords" content="Parquet,">
-
-
-
-
-
-
-
-
-
-
-<meta name="description" content="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf     recommended to set the parquet block s">
-<meta name="keywords" content="Parquet">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Parquet 乱弹">
-<meta property="og:url" content="https://aaaaaaron.github.io/2019/05/09/Parquet-乱弹/index.html">
-<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf     recommended to set the parquet block s">
-<meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509164025.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509165611.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509170805.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509182510.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528104542.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528104910.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528105205.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528105231.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528105342.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528105441.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528103634.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528103701.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528110659.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528110909.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528111155.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528103907.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528103951.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528104202.png">
-<meta property="og:updated_time" content="2019-05-28T03:13:51.721Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Parquet 乱弹">
-<meta name="twitter:description" content="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf     recommended to set the parquet block s">
-<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509164025.png">
-
-
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Mist',
-    version: '5.1.4',
-    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
-    fancybox: true,
-    tabs: true,
-    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
-    duoshuo: {
-      userId: '0',
-      author: '博主'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="https://aaaaaaron.github.io/2019/05/09/Parquet-乱弹/">
-
-
-
-
-
-  <title>Parquet 乱弹 | Jiatao Tao's blog</title>
-  
-
-
-
-
-
-
-
-
-  
-  <script type="text/javascript" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
-  
-</head>
-
-<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
-
-  
-  
+<!doctype html>
+<html lang="en">
+    <head><meta name="generator" content="Hexo 3.8.0">
+		
+        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="description" content="Kyligence">
+        <link rel="shortcut icon" href="/asset/guolin.png">
+        <link rel="canonical" href="http://guolinn.com/">
+        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
+        <title>Parquet 乱弹 | Jiatao Tao&#39;s blog</title>
+        <meta name="description" content="{{meta_description}}">
+
+        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+    </head>
     
-  
+		<body class="post-template">
+	
 
-  <div class="container sidebar-position-left page-post-detail">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
-    
-
-    <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Jiatao Tao's blog</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
-    </div>
-      
-        <p class="site-subtitle"></p>
-      
+        <header id="header">
+            <a id="logo" href="/"><img src="/asset/guolin.png" alt="Jiatao Tao's blog"></a>
+            <h1><a href="/">Aron Tao</a></h1>
+            <p></p>
+            <div id="follow-icons">
+                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
   </div>
+<h6><a href="/about">About</a></h6>
+        </header>
 
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
-</div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+        <main id="content">
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
-            
-            标签
-          </a>
-        </li>
-      
-        
-        <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
-            
-            归档
-          </a>
-        </li>
-      
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
-            
-            关于
-          </a>
-        </li>
-      
 
-      
-    </ul>
+<article class="post">
+  May 9, 2019
   
-
-  
-</nav>
-
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
-            
-
-  <div id="posts" class="posts-expand">
+    <span class="taglist">  &middot; 
     
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2019/05/09/Parquet-乱弹/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Aron Tao">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    
+      <a href="/tags/Parquet/">Parquet</a> 
+    
     </span>
+  
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiatao Tao's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">Parquet 乱弹</h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2019-05-09T16:30:34+08:00">
-                2019-05-09
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2019/05/09/Parquet-乱弹/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2019/05/09/Parquet-乱弹/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-             <span id="/2019/05/09/Parquet-乱弹/" class="leancloud_visitors" data-flag-title="Parquet 乱弹">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        <p><a href="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf" target="_blank" rel="noopener">http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf</a></p>
+  <h1 class="post-title">Parquet 乱弹</h1>
+  <section class="post-content article-entry">
+    <p><a href="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf" target="_blank" rel="noopener">http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf</a></p>
 <p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509164025.png" alt=""></p>
 <p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509165611.png" alt=""></p>
 <p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509170805.png" alt=""></p>
@@ -390,525 +90,37 @@
 <p><strong>Vectorized read</strong><br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528103951.png" alt=""></p>
 <p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528104202.png" alt=""></p>
 <h2 id="code"><a href="#code" class="headerlink" title="code"></a>code</h2><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Reads `total` values from this columnReader into column.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">void readBatch(int total, <span class="type">WritableColumnVector</span> column) <span class="keyword">throws</span> <span class="type">IOException</span> &#123;</span><br><span class="line">  int rowId = <span class="number">0</span>;</span><br><span class="line">  <span class="type">WritableColumnVector</span> dictionaryIds = <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">if</span> (dictionary != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="comment">// SPARK-16334: We only maintain a single dictionary per row batch, so that it can be used to</span></span><br><span class="line">    <span class="comment">// decode all previous dictionary encoded pages if we ever encounter a non-dictionary encoded</span></span><br><span class="line">    <span class="comment">// page.</span></span><br><span class="line">    dictionaryIds = column.reserveDictionaryIds(total);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">while</span> (total &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// Compute the number of values we want to read in this page.</span></span><br><span class="line">    int leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    <span class="keyword">if</span> (leftInPage == <span class="number">0</span>) &#123;</span><br><span class="line">      readPage();</span><br><span class="line">      leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    &#125;</span><br><span class="line">    int num = <span class="type">Math</span>.min(total, leftInPage);</span><br><span class="line">    <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span> typeName =</span><br><span class="line">      descriptor.getPrimitiveType().getPrimitiveTypeName();</span><br><span class="line">    <span class="keyword">if</span> (isCurrentPageDictionaryEncoded) &#123;</span><br><span class="line">      <span class="comment">// Read and decode dictionary ids.</span></span><br><span class="line">      defColumn.readIntegers(</span><br><span class="line">          num, dictionaryIds, column, rowId, maxDefLevel, (<span class="type">VectorizedValuesReader</span>) dataColumn);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// TIMESTAMP_MILLIS encoded as INT64 can't be lazily decoded as we need to post process</span></span><br><span class="line">      <span class="comment">// the values to add microseconds precision.</span></span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() || (rowId == <span class="number">0</span> &amp;&amp;</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT32</span> ||</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT64</span> &amp;&amp;</span><br><span class="line">            originalType != <span class="type">OriginalType</span>.<span class="type">TIMESTAMP_MILLIS</span>) ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">FLOAT</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">DOUBLE</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">BINARY</span>))) &#123;</span><br><span class="line">        <span class="comment">// Column vector supports lazy decoding of dictionary values so just set the dictionary.</span></span><br><span class="line">        <span class="comment">// We can't do this if rowId != 0 AND the column doesn't have a dictionary (i.e. some</span></span><br><span class="line">        <span class="comment">// non-dictionary encoded values have already been added).</span></span><br><span class="line">        column.setDictionary(<span class="keyword">new</span> <span class="type">ParquetDictionary</span>(dictionary));</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        decodeDictionaryIds(rowId, num, column, dictionaryIds);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() &amp;&amp; rowId != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// This batch already has dictionary encoded values but this new page is not. The batch</span></span><br><span class="line">        <span class="comment">// does not support a mix of dictionary and not so we will decode the dictionary.</span></span><br><span class="line">        decodeDictionaryIds(<span class="number">0</span>, rowId, column, column.getDictionaryIds());</span><br><span class="line">      &#125;</span><br><span class="line">      column.setDictionary(<span class="literal">null</span>);</span><br><span class="line">      switch (typeName) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BOOLEAN</span>:</span><br><span class="line">          readBooleanBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT32</span>:</span><br><span class="line">          readIntBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT64</span>:</span><br><span class="line">          readLongBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT96</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FLOAT</span>:</span><br><span class="line">          readFloatBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">DOUBLE</span>:</span><br><span class="line">          readDoubleBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BINARY</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FIXED_LEN_BYTE_ARRAY</span>:</span><br><span class="line">          readFixedLenByteArrayBatch(</span><br><span class="line">            rowId, num, column, descriptor.getPrimitiveType().getTypeLength());</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IOException</span>(<span class="string">"Unsupported type: "</span> + typeName);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    valuesRead += num;</span><br><span class="line">    rowId += num;</span><br><span class="line">    total -= num;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-      
-    </div>
+  </section>
+  <footer class="post-footer">
+    <!--
+    <section class="author">
+      <h4>Aron Tao</h4>
+      <p></p>
+    </section>
+    -->
+  </footer>
+</article>
+
+<nav class="pagination" role="pagination">
     
+    <a class="newer-posts" href="/2019/06/09/Spark-bucketing-机制/">
+        ← prev <!--Spark bucketing 机制-->
+    </a>
     
+    <span class="page-number">•</span>
     
-
+    <a class="older-posts" href="/2019/01/26/Spark-Scheduler-Deep-Dive/">
+        <!--Spark Scheduler Deep Dive--> next →
+    </a>
     
+</nav>
 
-    
 
-    
-
-    <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/Parquet/" rel="tag"># Parquet</a>
-          
-        </div>
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/2019/01/26/Spark-Scheduler-Deep-Dive/" rel="next" title="Spark Scheduler Deep Dive">
-                <i class="fa fa-chevron-left"></i> Spark Scheduler Deep Dive
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2019/06/09/Spark-bucketing-机制/" rel="prev" title="Spark bucketing 机制">
-                Spark bucketing 机制 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
-  </div>
-
-
-          </div>
-          
-
-
-          
-
-  
-    <div class="comments" id="comments">
-    </div>
-  
-
-
-
-        </div>
-        
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
-
-      <section class="site-overview-wrap sidebar-panel">
-        <div class="site-overview">
-          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-            
-              <img class="site-author-image" itemprop="image" src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Aron Tao">
-            
-              <p class="site-author-name" itemprop="name">Aron Tao</p>
-              <p class="site-description motion-element" itemprop="description">Kyligence</p>
-          </div>
-
-          <nav class="site-state motion-element">
-
-            
-              <div class="site-state-item site-state-posts">
-              
-                <a href="/archives/">
-              
-                  <span class="site-state-item-count">25</span>
-                  <span class="site-state-item-name">日志</span>
-                </a>
-              </div>
-            
-
-            
-
-            
-              
-              
-              <div class="site-state-item site-state-tags">
-                <a href="/tags/index.html">
-                  <span class="site-state-item-count">12</span>
-                  <span class="site-state-item-name">标签</span>
-                </a>
-              </div>
-            
-
-          </nav>
-
-          
-
-          
-            <div class="links-of-author motion-element">
-                
-                  <span class="links-of-author-item">
-                    <a href="https://github.com/aaaaaaron" target="_blank" title="GitHub">
-                      
-                        <i class="fa fa-fw fa-github"></i>GitHub</a>
-                  </span>
-                
-            </div>
-          
-
-          
-          
-
-          
-          
-
-          
-
-        </div>
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#page"><span class="nav-number">1.</span> <span class="nav-text">page</span></a></li></ol><li class="nav-item nav-level-1"><a class="nav-link" href="#读"><span class="nav-number"></span> <span class="nav-text">读</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#原生-parquet"><span class="nav-number"></span> <span class="nav-text">原生 parquet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#spark"><span class="nav-number"></span> <span class="nav-text">spark</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#code"><span class="nav-number"></span> <span class="nav-text">code</span></a></li></ol></li></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
-      
-
-      
-
-    </div>
-  </aside>
-
-
-        
-      </div>
-    </main>
-
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
-  <span class="with-love">
-    <i class="fa fa-user"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">Aron Tao</span>
-
-  
-</div>
-
-
-  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
-
-
-
-  <span class="post-meta-divider">|</span>
-
-
-
-  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
-
-
-
-
-        
-
-
-
-
-
-
-
-        
-      </div>
-    </footer>
-
-    
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
-
-    
-
-  </div>
-
-  
-
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
-
-
-
-
-
-
-
-
-
-  
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
-  
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
-
-
-
-  
-  
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
-
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
-
-
-
-  
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
-  
-  <script type="text/javascript">
-    var GUEST = ['nick','mail','link'];
-    var guest = 'nick,mail,link';
-    guest = guest.split(',').filter(item=>{
-      return GUEST.indexOf(item)>-1;
-    });
-    new Valine({
-        el: '#comments' ,
-        verify: false,
-        notify: false,
-        appId: 'xUIDY0rxakumlhKmQqajlnUc-gzGzoHsz',
-        appKey: 'lrqs8UwcvY6z1has9clbxJWL',
-        placeholder: 'Just go go',
-        avatar:'mm',
-        guest_info:guest,
-        pageSize:'10' || 10,
-    });
-  </script>
-
-
-
-  
-
-
-
-
-
-  
-
-  
-  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
-  <script>AV.initialize("8XOG5IciFE9Tot0TjP2HVe9R-gzGzoHsz", "S0vOkjPeVIvuRtqdYiggJFt8");</script>
-  <script>
-    function showTime(Counter) {
-      var query = new AV.Query(Counter);
-      var entries = [];
-      var $visitors = $(".leancloud_visitors");
-
-      $visitors.each(function () {
-        entries.push( $(this).attr("id").trim() );
-      });
-
-      query.containedIn('url', entries);
-      query.find()
-        .done(function (results) {
-          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
-
-          if (results.length === 0) {
-            $visitors.find(COUNT_CONTAINER_REF).text(0);
-            return;
-          }
-
-          for (var i = 0; i < results.length; i++) {
-            var item = results[i];
-            var url = item.get('url');
-            var time = item.get('time');
-            var element = document.getElementById(url);
-
-            $(element).find(COUNT_CONTAINER_REF).text(time);
-          }
-          for(var i = 0; i < entries.length; i++) {
-            var url = entries[i];
-            var element = document.getElementById(url);
-            var countSpan = $(element).find(COUNT_CONTAINER_REF);
-            if( countSpan.text() == '') {
-              countSpan.text(0);
-            }
-          }
-        })
-        .fail(function (object, error) {
-          console.log("Error: " + error.code + " " + error.message);
-        });
-    }
-
-    function addCount(Counter) {
-      var $visitors = $(".leancloud_visitors");
-      var url = $visitors.attr('id').trim();
-      var title = $visitors.attr('data-flag-title').trim();
-      var query = new AV.Query(Counter);
-
-      query.equalTo("url", url);
-      query.find({
-        success: function(results) {
-          if (results.length > 0) {
-            var counter = results[0];
-            counter.fetchWhenSave(true);
-            counter.increment("time");
-            counter.save(null, {
-              success: function(counter) {
-                var $element = $(document.getElementById(url));
-                $element.find('.leancloud-visitors-count').text(counter.get('time'));
-              },
-              error: function(counter, error) {
-                console.log('Failed to save Visitor num, with error message: ' + error.message);
-              }
-            });
-          } else {
-            var newcounter = new Counter();
-            /* Set ACL */
-            var acl = new AV.ACL();
-            acl.setPublicReadAccess(true);
-            acl.setPublicWriteAccess(true);
-            newcounter.setACL(acl);
-            /* End Set ACL */
-            newcounter.set("title", title);
-            newcounter.set("url", url);
-            newcounter.set("time", 1);
-            newcounter.save(null, {
-              success: function(newcounter) {
-                var $element = $(document.getElementById(url));
-                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
-              },
-              error: function(newcounter, error) {
-                console.log('Failed to create');
-              }
-            });
-          }
-        },
-        error: function(error) {
-          console.log('Error:' + error.code + " " + error.message);
-        }
-      });
-    }
-
-    $(function() {
-      var Counter = AV.Object.extend("Counter");
-      if ($('.leancloud_visitors').length == 1) {
-        addCount(Counter);
-      } else if ($('.post-title-link').length > 1) {
-        showTime(Counter);
-      }
-    });
-  </script>
-
-
-
-  
-
-  
-
-  
-  
-
-  
-
-  
-
-  
-
-</body>
+        </main>
+        <footer id="footer">
+            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
+        </footer>
+    </body>
 </html>
+
+

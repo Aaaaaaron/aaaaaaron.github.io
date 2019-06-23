@@ -1,340 +1,59 @@
-<!DOCTYPE html>
-
-
-
-  
-
-
-<html class="theme-next mist use-motion" lang="zh-Hans">
-<head><meta name="generator" content="Hexo 3.8.0">
-  <meta charset="UTF-8">
-<meta http-equiv="X-UA-Compatible" content="IE=edge">
-<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
-<meta name="theme-color" content="#222">
-
-
-
-
-
-
-
-
-
-<meta http-equiv="Cache-Control" content="no-transform">
-<meta http-equiv="Cache-Control" content="no-siteapp">
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-  <link href="/lib/fancybox/source/jquery.fancybox.css?v=2.1.5" rel="stylesheet" type="text/css">
-
-
-
-
-
-
-
-<link href="/lib/font-awesome/css/font-awesome.min.css?v=4.6.2" rel="stylesheet" type="text/css">
-
-<link href="/css/main.css?v=5.1.4" rel="stylesheet" type="text/css">
-
-
-  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png?v=5.1.4">
-
-
-  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png?v=5.1.4">
-
-
-  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png?v=5.1.4">
-
-
-  <link rel="mask-icon" href="/images/logo.svg?v=5.1.4" color="#222">
-
-
-
-
-
-  <meta name="keywords" content="Elixir,">
-
-
-
-
-
-
-
-
-
-
-<meta name="description" content="0. 写在前面编程时应该关注数据装换用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据. 面向对象的一个缺点是 你想传入一个功能块(方法,函数),但是一定是要包在一个类里">
-<meta name="keywords" content="Elixir">
-<meta property="og:type" content="article">
-<meta property="og:title" content="Elixir 基础部分">
-<meta property="og:url" content="https://aaaaaaron.github.io/2018/07/19/Elixir/index.html">
-<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="0. 写在前面编程时应该关注数据装换用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据. 面向对象的一个缺点是 你想传入一个功能块(方法,函数),但是一定是要包在一个类里">
-<meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2018-10-24T14:49:18.405Z">
-<meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Elixir 基础部分">
-<meta name="twitter:description" content="0. 写在前面编程时应该关注数据装换用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据. 面向对象的一个缺点是 你想传入一个功能块(方法,函数),但是一定是要包在一个类里">
-
-
-
-<script type="text/javascript" id="hexo.configurations">
-  var NexT = window.NexT || {};
-  var CONFIG = {
-    root: '/',
-    scheme: 'Mist',
-    version: '5.1.4',
-    sidebar: {"position":"left","display":"hide","offset":12,"b2t":false,"scrollpercent":false,"onmobile":false},
-    fancybox: true,
-    tabs: true,
-    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
-    duoshuo: {
-      userId: '0',
-      author: '博主'
-    },
-    algolia: {
-      applicationID: '',
-      apiKey: '',
-      indexName: '',
-      hits: {"per_page":10},
-      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
-    }
-  };
-</script>
-
-
-
-  <link rel="canonical" href="https://aaaaaaron.github.io/2018/07/19/Elixir/">
-
-
-
-
-
-  <title>Elixir 基础部分 | Jiatao Tao's blog</title>
-  
-
-
-
-
-
-
-
-
-  
-  <script type="text/javascript" src="//cdn.bootcss.com/canvas-nest.js/1.0.0/canvas-nest.min.js"></script>
-  
-</head>
-
-<body itemscope="" itemtype="http://schema.org/WebPage" lang="zh-Hans">
-
-  
-  
+<!doctype html>
+<html lang="en">
+    <head><meta name="generator" content="Hexo 3.8.0">
+		
+        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+        <meta name="description" content="Kyligence">
+        <link rel="shortcut icon" href="/asset/guolin.png">
+        <link rel="canonical" href="http://guolinn.com/">
+        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
+        <title>Elixir 基础部分 | Jiatao Tao&#39;s blog</title>
+        <meta name="description" content="{{meta_description}}">
+
+        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
+        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
+        <meta name="HandheldFriendly" content="True">
+        <meta name="MobileOptimized" content="320">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
+        <!--[if lt IE 9]>
+        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
+        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
+        <![endif]-->
+
+    </head>
     
-  
+		<body class="post-template">
+	
 
-  <div class="container sidebar-position-left page-post-detail">
-    <div class="headband"></div>
-
-    <header id="header" class="header" itemscope="" itemtype="http://schema.org/WPHeader">
-      <div class="header-inner"><div class="site-brand-wrapper">
-  <div class="site-meta ">
-    
-
-    <div class="custom-logo-site-title">
-      <a href="/" class="brand" rel="start">
-        <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Jiatao Tao's blog</span>
-        <span class="logo-line-after"><i></i></span>
-      </a>
-    </div>
-      
-        <p class="site-subtitle"></p>
-      
+        <header id="header">
+            <a id="logo" href="/"><img src="/asset/guolin.png" alt="Jiatao Tao's blog"></a>
+            <h1><a href="/">Aron Tao</a></h1>
+            <p></p>
+            <div id="follow-icons">
+                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
   </div>
+<h6><a href="/about">About</a></h6>
+        </header>
 
-  <div class="site-nav-toggle">
-    <button>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-      <span class="btn-bar"></span>
-    </button>
-  </div>
-</div>
-
-<nav class="site-nav">
-  
-
-  
-    <ul id="menu" class="menu">
-      
+        <main id="content">
         
-        <li class="menu-item menu-item-tags">
-          <a href="/tags/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-tags"></i> <br>
-            
-            标签
-          </a>
-        </li>
-      
-        
-        <li class="menu-item menu-item-archives">
-          <a href="/archives/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-archive"></i> <br>
-            
-            归档
-          </a>
-        </li>
-      
-        
-        <li class="menu-item menu-item-about">
-          <a href="/about/" rel="section">
-            
-              <i class="menu-item-icon fa fa-fw fa-user"></i> <br>
-            
-            关于
-          </a>
-        </li>
-      
 
-      
-    </ul>
+<article class="post">
+  July 19, 2018
   
-
-  
-</nav>
-
-
-
- </div>
-    </header>
-
-    <main id="main" class="main">
-      <div class="main-inner">
-        <div class="content-wrap">
-          <div id="content" class="content">
-            
-
-  <div id="posts" class="posts-expand">
+    <span class="taglist">  &middot; 
     
-
-  
-
-  
-  
-  
-
-  <article class="post post-type-normal" itemscope="" itemtype="http://schema.org/Article">
-  
-  
-  
-  <div class="post-block">
-    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/07/19/Elixir/">
-
-    <span hidden itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-      <meta itemprop="name" content="Aron Tao">
-      <meta itemprop="description" content="">
-      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+    
+      <a href="/tags/Elixir/">Elixir</a> 
+    
     </span>
+  
 
-    <span hidden itemprop="publisher" itemscope="" itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiatao Tao's blog">
-    </span>
-
-    
-      <header class="post-header">
-
-        
-        
-          <h1 class="post-title" itemprop="name headline">Elixir 基础部分</h1>
-        
-
-        <div class="post-meta">
-          <span class="post-time">
-            
-              <span class="post-meta-item-icon">
-                <i class="fa fa-calendar-o"></i>
-              </span>
-              
-                <span class="post-meta-item-text">发表于</span>
-              
-              <time title="创建于" itemprop="dateCreated datePublished" datetime="2018-07-19T20:44:00+08:00">
-                2018-07-19
-              </time>
-            
-
-            
-
-            
-          </span>
-
-          
-
-          
-            
-              <span class="post-comments-count">
-                <span class="post-meta-divider">|</span>
-                <span class="post-meta-item-icon">
-                  <i class="fa fa-comment-o"></i>
-                </span>
-                <a href="/2018/07/19/Elixir/#comments" itemprop="discussionUrl">
-                  <span class="post-comments-count valine-comment-count" data-xid="/2018/07/19/Elixir/" itemprop="commentCount"></span>
-                </a>
-              </span>
-            
-          
-
-          
-          
-             <span id="/2018/07/19/Elixir/" class="leancloud_visitors" data-flag-title="Elixir 基础部分">
-               <span class="post-meta-divider">|</span>
-               <span class="post-meta-item-icon">
-                 <i class="fa fa-eye"></i>
-               </span>
-               
-                 <span class="post-meta-item-text">阅读次数&#58;</span>
-               
-                 <span class="leancloud-visitors-count"></span>
-             </span>
-          
-
-          
-
-          
-
-          
-
-        </div>
-      </header>
-    
-
-    
-    
-    
-    <div class="post-body" itemprop="articleBody">
-
-      
-      
-
-      
-        <h1 id="0-写在前面"><a href="#0-写在前面" class="headerlink" title="0. 写在前面"></a>0. 写在前面</h1><h2 id="编程时应该关注数据装换"><a href="#编程时应该关注数据装换" class="headerlink" title="编程时应该关注数据装换"></a>编程时应该关注数据装换</h2><p>用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据.</p>
+  <h1 class="post-title">Elixir 基础部分</h1>
+  <section class="post-content article-entry">
+    <h1 id="0-写在前面"><a href="#0-写在前面" class="headerlink" title="0. 写在前面"></a>0. 写在前面</h1><h2 id="编程时应该关注数据装换"><a href="#编程时应该关注数据装换" class="headerlink" title="编程时应该关注数据装换"></a>编程时应该关注数据装换</h2><p>用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据.</p>
 <p>面向对象的一个缺点是 你想传入一个功能块(方法,函数),但是一定是要包在一个类里面,虽然有匿名函数,但是写法还是很丑,把函数当做一等公民(基本数据类型),直接传入函数的方式是最佳的.</p>
 <p>真实世界里,并没有多少真正的层次结构,我们想要把事情搞定,而不是<strong>维护状态</strong>.我不要隐藏数据,我要转换数据.</p>
 <h2 id="借助管道来组合转换"><a href="#借助管道来组合转换" class="headerlink" title="借助管道来组合转换"></a>借助管道来组合转换</h2><p>UNIX的设计理念是将每个工具设计的小巧,功能单一,易于组合.每个工具都是获取输入,转换输入内容,并以下一个工具能使用的格式输出.这使得UNIX工具能一设计者预想不到的方式组合,而且这种模式还是高可靠的,每种工具之做好一件事,使之更容易测试.而且命令管道可以并行工作.</p>
@@ -557,525 +276,37 @@
 <h3 id="循环递归和栈"><a href="#循环递归和栈" class="headerlink" title="循环递归和栈"></a>循环递归和栈</h3><p><strong>尾递归优化:</strong> 函数的最后一件事是调用自己,就没有必要调用,只需要简单的跳到函数开始的地方,如果函数调用有参数,就把原始参数替换掉.,但是递归调用必须是最后一个执行的,下面的方式就不行.因为他还要将之后的结果*n.注释下面的是可以进行尾递归优化的(把乘法移到了递归里面),要增加一个累加器.</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">def factorial(0), do: 1</span><br><span class="line">def factorial(n), do: n * factorial(n-1)</span><br><span class="line">#############################</span><br><span class="line">def factorial(n), do: _fact(n, 1)</span><br><span class="line">defp _fact(0, acc), do: acc</span><br><span class="line">defp _fact(n, acc), do: _fact(n-1, acc*n)</span><br></pre></td></tr></table></figure>
 <h3 id="进程开销"><a href="#进程开销" class="headerlink" title="进程开销"></a>进程开销</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">defmodule Chain do</span><br><span class="line">  def counter( next_pid ) do</span><br><span class="line">    receive do</span><br><span class="line">     n -&gt;</span><br><span class="line">       send next_pid, n+1</span><br><span class="line">     end</span><br><span class="line">  end</span><br><span class="line"></span><br><span class="line">  def create_processes( n ) do</span><br><span class="line">    last = Enum.reduce 1..n, self,</span><br><span class="line">                  fn ( _, send_to ) -&gt;</span><br><span class="line">                    spawn(Chain, :counter, [ send_to ])</span><br><span class="line">                  end</span><br><span class="line"></span><br><span class="line">    send last, 0</span><br><span class="line"></span><br><span class="line">    recevie do</span><br><span class="line">      final_answer when is_integer( final_answer ) -&gt;</span><br><span class="line">        &quot;Result is #&#123; inspect( final_answer ) &#125;&quot;</span><br><span class="line">    end</span><br><span class="line">  end</span><br><span class="line"></span><br><span class="line">  def run( n ) do</span><br><span class="line">    IO.puts inspect :timer.tc(Chain, :create_processes, [n])</span><br><span class="line">  end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
-      
-    </div>
+  </section>
+  <footer class="post-footer">
+    <!--
+    <section class="author">
+      <h4>Aron Tao</h4>
+      <p></p>
+    </section>
+    -->
+  </footer>
+</article>
+
+<nav class="pagination" role="pagination">
     
+    <a class="newer-posts" href="/2018/07/19/Linux-IO-模型/">
+        ← prev <!--Linux IO 模型-->
+    </a>
     
+    <span class="page-number">•</span>
     
-
+    <a class="older-posts" href="/2018/07/19/Spark-Tungsten-Deep-Dive/">
+        <!--Spark Tungsten Deep Dive--> next →
+    </a>
     
+</nav>
 
-    
 
-    
-
-    <footer class="post-footer">
-      
-        <div class="post-tags">
-          
-            <a href="/tags/Elixir/" rel="tag"># Elixir</a>
-          
-        </div>
-      
-
-      
-      
-      
-
-      
-        <div class="post-nav">
-          <div class="post-nav-next post-nav-item">
-            
-              <a href="/2018/07/19/Spark-Tungsten-Deep-Dive/" rel="next" title="Spark Tungsten Deep Dive">
-                <i class="fa fa-chevron-left"></i> Spark Tungsten Deep Dive
-              </a>
-            
-          </div>
-
-          <span class="post-nav-divider"></span>
-
-          <div class="post-nav-prev post-nav-item">
-            
-              <a href="/2018/07/19/Linux-IO-模型/" rel="prev" title="Linux IO 模型">
-                Linux IO 模型 <i class="fa fa-chevron-right"></i>
-              </a>
-            
-          </div>
-        </div>
-      
-
-      
-      
-    </footer>
-  </div>
-  
-  
-  
-  </article>
-
-
-
-    <div class="post-spread">
-      
-    </div>
-  </div>
-
-
-          </div>
-          
-
-
-          
-
-  
-    <div class="comments" id="comments">
-    </div>
-  
-
-
-
-        </div>
-        
-          
-  
-  <div class="sidebar-toggle">
-    <div class="sidebar-toggle-line-wrap">
-      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
-      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
-    </div>
-  </div>
-
-  <aside id="sidebar" class="sidebar">
-    
-    <div class="sidebar-inner">
-
-      
-
-      
-        <ul class="sidebar-nav motion-element">
-          <li class="sidebar-nav-toc sidebar-nav-active" data-target="post-toc-wrap">
-            文章目录
-          </li>
-          <li class="sidebar-nav-overview" data-target="site-overview-wrap">
-            站点概览
-          </li>
-        </ul>
-      
-
-      <section class="site-overview-wrap sidebar-panel">
-        <div class="site-overview">
-          <div class="site-author motion-element" itemprop="author" itemscope="" itemtype="http://schema.org/Person">
-            
-              <img class="site-author-image" itemprop="image" src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Aron Tao">
-            
-              <p class="site-author-name" itemprop="name">Aron Tao</p>
-              <p class="site-description motion-element" itemprop="description">Kyligence</p>
-          </div>
-
-          <nav class="site-state motion-element">
-
-            
-              <div class="site-state-item site-state-posts">
-              
-                <a href="/archives/">
-              
-                  <span class="site-state-item-count">25</span>
-                  <span class="site-state-item-name">日志</span>
-                </a>
-              </div>
-            
-
-            
-
-            
-              
-              
-              <div class="site-state-item site-state-tags">
-                <a href="/tags/index.html">
-                  <span class="site-state-item-count">12</span>
-                  <span class="site-state-item-name">标签</span>
-                </a>
-              </div>
-            
-
-          </nav>
-
-          
-
-          
-            <div class="links-of-author motion-element">
-                
-                  <span class="links-of-author-item">
-                    <a href="https://github.com/aaaaaaron" target="_blank" title="GitHub">
-                      
-                        <i class="fa fa-fw fa-github"></i>GitHub</a>
-                  </span>
-                
-            </div>
-          
-
-          
-          
-
-          
-          
-
-          
-
-        </div>
-      </section>
-
-      
-      <!--noindex-->
-        <section class="post-toc-wrap motion-element sidebar-panel sidebar-panel-active">
-          <div class="post-toc">
-
-            
-              
-            
-
-            
-              <div class="post-toc-content"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-写在前面"><span class="nav-number">1.</span> <span class="nav-text">0. 写在前面</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#编程时应该关注数据装换"><span class="nav-number">1.1.</span> <span class="nav-text">编程时应该关注数据装换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#借助管道来组合转换"><span class="nav-number">1.2.</span> <span class="nav-text">借助管道来组合转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#函数是数据转换器"><span class="nav-number">1.3.</span> <span class="nav-text">函数是数据转换器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#换一种方式思考"><span class="nav-number">1.4.</span> <span class="nav-text">换一种方式思考</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-常规编程"><span class="nav-number">2.</span> <span class="nav-text">1. 常规编程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#模式匹配"><span class="nav-number">2.1.</span> <span class="nav-text">模式匹配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#用-下划线-忽略匹配值"><span class="nav-number">2.1.1.</span> <span class="nav-text">用_(下划线)忽略匹配值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#从另一个角度看等号"><span class="nav-number">2.2.</span> <span class="nav-text">从另一个角度看等号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#不可变性"><span class="nav-number">2.3.</span> <span class="nav-text">不可变性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#不可变数据才是已知的"><span class="nav-number">2.4.</span> <span class="nav-text">不可变数据才是已知的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#不可变性对性能的影响"><span class="nav-number">2.5.</span> <span class="nav-text">不可变性对性能的影响</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#复制数据"><span class="nav-number">2.5.1.</span> <span class="nav-text">复制数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#垃圾回收"><span class="nav-number">2.5.2.</span> <span class="nav-text">垃圾回收</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#elixir基础"><span class="nav-number">2.6.</span> <span class="nav-text">elixir基础</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#基本类型"><span class="nav-number">2.6.1.</span> <span class="nav-text">基本类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#匿名函数"><span class="nav-number">2.7.</span> <span class="nav-text">匿名函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#一个函数-多个函数体"><span class="nav-number">2.7.1.</span> <span class="nav-text">一个函数,多个函数体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#返回函数的函数"><span class="nav-number">2.7.2.</span> <span class="nav-text">返回函数的函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#记住原始环境的函数-闭包"><span class="nav-number">2.7.3.</span> <span class="nav-text">记住原始环境的函数(闭包)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#参数化函数"><span class="nav-number">2.7.4.</span> <span class="nav-text">参数化函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#将函数作为参数传递"><span class="nav-number">2.7.5.</span> <span class="nav-text">将函数作为参数传递</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#amp-运算符"><span class="nav-number">2.7.6.</span> <span class="nav-text">&amp;运算符</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#模块与函数"><span class="nav-number">2.8.</span> <span class="nav-text">模块与函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#函数体是代码块"><span class="nav-number">2.8.1.</span> <span class="nav-text">函数体是代码块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#函数调用与模式匹配"><span class="nav-number">2.8.2.</span> <span class="nav-text">函数调用与模式匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#哨兵子句"><span class="nav-number">2.8.3.</span> <span class="nav-text">哨兵子句</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#默认参数"><span class="nav-number">2.8.4.</span> <span class="nav-text">默认参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#私有函数"><span class="nav-number">2.8.5.</span> <span class="nav-text">私有函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gt-管道运算符"><span class="nav-number">2.8.6.</span> <span class="nav-text">|&gt; 管道运算符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#使用头部和尾部构造列表"><span class="nav-number">2.8.7.</span> <span class="nav-text">使用头部和尾部构造列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#创建映射函数-Map"><span class="nav-number">2.8.8.</span> <span class="nav-text">创建映射函数(Map)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#在递归过程中跟踪值"><span class="nav-number">2.8.9.</span> <span class="nav-text">在递归过程中跟踪值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reduce模式"><span class="nav-number">2.8.10.</span> <span class="nav-text">Reduce模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更复杂的列表模式"><span class="nav-number">2.8.11.</span> <span class="nav-text">更复杂的列表模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#列表中的列表"><span class="nav-number">2.8.12.</span> <span class="nav-text">列表中的列表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#复杂数据结构-Maps-Keyword-Lists-Sets-and-Structs"><span class="nav-number">2.9.</span> <span class="nav-text">复杂数据结构(Maps, Keyword Lists, Sets, and Structs)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#模式匹配和更新散列表"><span class="nav-number">2.9.1.</span> <span class="nav-text">模式匹配和更新散列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#番外-类型是什么"><span class="nav-number">2.9.2.</span> <span class="nav-text">番外:类型是什么</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#处理集合-Enum与Stream"><span class="nav-number">2.10.</span> <span class="nav-text">处理集合-Enum与Stream</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Actor综述"><span class="nav-number">3.</span> <span class="nav-text">Actor综述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#队列式信箱"><span class="nav-number">4.</span> <span class="nav-text">队列式信箱</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#管理进程"><span class="nav-number">5.</span> <span class="nav-text">管理进程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#系统进程"><span class="nav-number">5.1.</span> <span class="nav-text">系统进程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#错误处理内核模式-error-kernel"><span class="nav-number">6.</span> <span class="nav-text">错误处理内核模式(error-kernel)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#任其崩溃"><span class="nav-number">6.1.</span> <span class="nav-text">任其崩溃</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#小总结"><span class="nav-number">6.2.</span> <span class="nav-text">小总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OTP"><span class="nav-number">7.</span> <span class="nav-text">OTP</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#重启策略"><span class="nav-number">7.1.</span> <span class="nav-text">重启策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#复习"><span class="nav-number">7.2.</span> <span class="nav-text">复习</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#运用多线程"><span class="nav-number">8.</span> <span class="nav-text">运用多线程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#在进程间发送消息"><span class="nav-number">8.0.1.</span> <span class="nav-text">在进程间发送消息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#循环递归和栈"><span class="nav-number">8.0.2.</span> <span class="nav-text">循环递归和栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#进程开销"><span class="nav-number">8.0.3.</span> <span class="nav-text">进程开销</span></a></li></ol></li></ol></div>
-            
-
-          </div>
-        </section>
-      <!--/noindex-->
-      
-
-      
-
-    </div>
-  </aside>
-
-
-        
-      </div>
-    </main>
-
-    <footer id="footer" class="footer">
-      <div class="footer-inner">
-        <div class="copyright">&copy; <span itemprop="copyrightYear">2019</span>
-  <span class="with-love">
-    <i class="fa fa-user"></i>
-  </span>
-  <span class="author" itemprop="copyrightHolder">Aron Tao</span>
-
-  
-</div>
-
-
-  <div class="powered-by">由 <a class="theme-link" target="_blank" href="https://hexo.io">Hexo</a> 强力驱动</div>
-
-
-
-  <span class="post-meta-divider">|</span>
-
-
-
-  <div class="theme-info">主题 &mdash; <a class="theme-link" target="_blank" href="https://github.com/iissnan/hexo-theme-next">NexT.Mist</a> v5.1.4</div>
-
-
-
-
-        
-
-
-
-
-
-
-
-        
-      </div>
-    </footer>
-
-    
-      <div class="back-to-top">
-        <i class="fa fa-arrow-up"></i>
-        
-      </div>
-    
-
-    
-
-  </div>
-
-  
-
-<script type="text/javascript">
-  if (Object.prototype.toString.call(window.Promise) !== '[object Function]') {
-    window.Promise = null;
-  }
-</script>
-
-
-
-
-
-
-
-
-
-  
-
-
-  
-
-
-
-
-
-
-
-
-
-
-
-  
-  
-    <script type="text/javascript" src="/lib/jquery/index.js?v=2.1.3"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/fastclick/lib/fastclick.min.js?v=1.0.6"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/jquery_lazyload/jquery.lazyload.js?v=1.9.7"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/fancybox/source/jquery.fancybox.pack.js?v=2.1.5"></script>
-  
-
-  
-  
-    <script type="text/javascript" src="/lib/canvas-nest/canvas-nest.min.js"></script>
-  
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/utils.js?v=5.1.4"></script>
-
-  <script type="text/javascript" src="/js/src/motion.js?v=5.1.4"></script>
-
-
-
-  
-  
-
-  
-  <script type="text/javascript" src="/js/src/scrollspy.js?v=5.1.4"></script>
-<script type="text/javascript" src="/js/src/post-details.js?v=5.1.4"></script>
-
-
-
-  
-
-
-  <script type="text/javascript" src="/js/src/bootstrap.js?v=5.1.4"></script>
-
-
-
-  
-
-
-  
-
-
-
-
-	
-
-
-
-
-
-  
-
-
-
-
-
-  
-
-
-
-
-
-
-
-
-
-
-  <script src="//cdn1.lncld.net/static/js/3.0.4/av-min.js"></script>
-  <script src="//unpkg.com/valine/dist/Valine.min.js"></script>
-  
-  <script type="text/javascript">
-    var GUEST = ['nick','mail','link'];
-    var guest = 'nick,mail,link';
-    guest = guest.split(',').filter(item=>{
-      return GUEST.indexOf(item)>-1;
-    });
-    new Valine({
-        el: '#comments' ,
-        verify: false,
-        notify: false,
-        appId: 'xUIDY0rxakumlhKmQqajlnUc-gzGzoHsz',
-        appKey: 'lrqs8UwcvY6z1has9clbxJWL',
-        placeholder: 'Just go go',
-        avatar:'mm',
-        guest_info:guest,
-        pageSize:'10' || 10,
-    });
-  </script>
-
-
-
-  
-
-
-
-
-
-  
-
-  
-  <script src="https://cdn1.lncld.net/static/js/av-core-mini-0.6.4.js"></script>
-  <script>AV.initialize("8XOG5IciFE9Tot0TjP2HVe9R-gzGzoHsz", "S0vOkjPeVIvuRtqdYiggJFt8");</script>
-  <script>
-    function showTime(Counter) {
-      var query = new AV.Query(Counter);
-      var entries = [];
-      var $visitors = $(".leancloud_visitors");
-
-      $visitors.each(function () {
-        entries.push( $(this).attr("id").trim() );
-      });
-
-      query.containedIn('url', entries);
-      query.find()
-        .done(function (results) {
-          var COUNT_CONTAINER_REF = '.leancloud-visitors-count';
-
-          if (results.length === 0) {
-            $visitors.find(COUNT_CONTAINER_REF).text(0);
-            return;
-          }
-
-          for (var i = 0; i < results.length; i++) {
-            var item = results[i];
-            var url = item.get('url');
-            var time = item.get('time');
-            var element = document.getElementById(url);
-
-            $(element).find(COUNT_CONTAINER_REF).text(time);
-          }
-          for(var i = 0; i < entries.length; i++) {
-            var url = entries[i];
-            var element = document.getElementById(url);
-            var countSpan = $(element).find(COUNT_CONTAINER_REF);
-            if( countSpan.text() == '') {
-              countSpan.text(0);
-            }
-          }
-        })
-        .fail(function (object, error) {
-          console.log("Error: " + error.code + " " + error.message);
-        });
-    }
-
-    function addCount(Counter) {
-      var $visitors = $(".leancloud_visitors");
-      var url = $visitors.attr('id').trim();
-      var title = $visitors.attr('data-flag-title').trim();
-      var query = new AV.Query(Counter);
-
-      query.equalTo("url", url);
-      query.find({
-        success: function(results) {
-          if (results.length > 0) {
-            var counter = results[0];
-            counter.fetchWhenSave(true);
-            counter.increment("time");
-            counter.save(null, {
-              success: function(counter) {
-                var $element = $(document.getElementById(url));
-                $element.find('.leancloud-visitors-count').text(counter.get('time'));
-              },
-              error: function(counter, error) {
-                console.log('Failed to save Visitor num, with error message: ' + error.message);
-              }
-            });
-          } else {
-            var newcounter = new Counter();
-            /* Set ACL */
-            var acl = new AV.ACL();
-            acl.setPublicReadAccess(true);
-            acl.setPublicWriteAccess(true);
-            newcounter.setACL(acl);
-            /* End Set ACL */
-            newcounter.set("title", title);
-            newcounter.set("url", url);
-            newcounter.set("time", 1);
-            newcounter.save(null, {
-              success: function(newcounter) {
-                var $element = $(document.getElementById(url));
-                $element.find('.leancloud-visitors-count').text(newcounter.get('time'));
-              },
-              error: function(newcounter, error) {
-                console.log('Failed to create');
-              }
-            });
-          }
-        },
-        error: function(error) {
-          console.log('Error:' + error.code + " " + error.message);
-        }
-      });
-    }
-
-    $(function() {
-      var Counter = AV.Object.extend("Counter");
-      if ($('.leancloud_visitors').length == 1) {
-        addCount(Counter);
-      } else if ($('.post-title-link').length > 1) {
-        showTime(Counter);
-      }
-    });
-  </script>
-
-
-
-  
-
-  
-
-  
-  
-
-  
-
-  
-
-  
-
-</body>
+        </main>
+        <footer id="footer">
+            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
+        </footer>
+    </body>
 </html>
+
+
