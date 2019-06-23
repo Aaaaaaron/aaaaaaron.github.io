@@ -1,15 +1,39 @@
-
-
 <!DOCTYPE html>
-<html lang="zh-Hans">
-<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
-    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
-    <meta name="description" content="Kyligence">
-    <title>Spark Scheduler Deep Dive | Jiatao Tao&#39;s blog</title>
+<html lang="">
+  <head><meta name="generator" content="Hexo 3.8.0">
+    
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
 
-    <!-- Open Graph -->
-    <meta name="description" content="RDDscheduler 的调度主体. 1234567891011121314151617181920212223242526272829303132333435* Internally, each RDD is characterized by five main properties:**  - A list of partitions*  - A function for computing">
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+  <meta name="description" content="Spark Scheduler Deep Dive">
+
+
+
+
+
+
+
+
+  <link rel="alternate" href="/default" title="Jiatao Tao's blog">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1">
+
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2019/01/26/Spark-Scheduler-Deep-Dive/">
+
+
+<meta name="description" content="RDDscheduler 的调度主体. 1234567891011121314151617181920212223242526272829303132333435* Internally, each RDD is characterized by five main properties:**  - A list of partitions*  - A function for computing">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spark Scheduler Deep Dive">
 <meta property="og:url" content="https://aaaaaaron.github.io/2019/01/26/Spark-Scheduler-Deep-Dive/index.html">
@@ -26,127 +50,85 @@
 <meta name="twitter:description" content="RDDscheduler 的调度主体. 1234567891011121314151617181920212223242526272829303132333435* Internally, each RDD is characterized by five main properties:**  - A list of partitions*  - A function for computing">
 <meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190127121445.png">
 
-    <script type="application/ld+json">
-{
-  "@context": "http://schema.org",
-  "@type": "Person",
-  "email": "mailto:",
-  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
-  "name": "Aron Tao",
-  "url": "https://aaaaaaron.github.io"
-}
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
 </script>
-    <script>
-    var algoliaEnabled = false;
-    
-</script>
 
-    
 
-    
-    
-        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
-    
-    
-    
-        <!-- stylesheets list from config.yml -->
+
+
+  
+
+
+
+
+
+  
+
+
+    <title> Spark Scheduler Deep Dive - Jiatao Tao's blog </title>
+  </head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">Jiatao Tao's blog</a>
+    </h1>
+
+    <nav id="nav-top">
         
-        <link rel="stylesheet" href="/css/aloha.css">
-        
-        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
-        
-        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
-        
-    
-
-</head>
-<body id="body" style="margin-bottom: 0;" class="pushable">
-
-    <div class="ui top fixed menu">
-        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
-    </div>
-
-    <div id="menu-sidebar" class="ui left vertical sidebar menu">
-
-    <div id="sidebar-top">
-        <div class="content">
-            <h3>Jiatao Tao&#39;s blog</h3>
-        </div>
-    </div>
-    <div class="ui container sidebar-card">
-    <div class="ui people shape content">
-        <div class="active side">
-            <div class="ui card">
-                <div class="image">
-                    <img class="ui medium bordered image" src="/images/avatar.jpg">
-                </div>
-                <div class="content">
-                    <a class="header">Aron Tao</a>
-                    
-                </div>
-                <div class="extra content">
-                    <div class="ui list">
-                        
-                        
-                    </div>
-
-                </div>
-                <div class="extra content">
-                    <div class="ui list">
-                        
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-
-
-</div>
-
-    
-    
-
-    
-
-    
-    <a href="/index.html" class="item">
-        <i class="home icon"></i>
-        HOME
-    </a>
-
-    
-
-    
-</div>
-
-    <div class="pusher body-content">
-        <div id="content" class="ui main container">
-            <!--<div class="ui one column grid">-->
-                <!--<div class="column">-->
-                    <!--<div class="ui main container">-->
-                        <div id="post-Spark-Scheduler-Deep-Dive" class="ui main container article-type-post">
-
-    
-
-    <div class="ui divided grid">
-
-        <div class="two column row" id="article-content">
-
-            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+            <ul id="menu-top" class="nav-top-items">
                 
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
 
-<h1 class="ui header">
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Spark Scheduler Deep Dive
+        
+      </h1>
+
+      <time class="post-time">
+          Jan 26 2019
+      </time>
+    </header>
+
+
+
     
-    Spark Scheduler Deep Dive
-</h1>
-
-
-
-                <div class="article-inner">
-
-                    <div class="article-entry" itemprop="articleBody">
-                        
-                        <h1 id="RDD"><a href="#RDD" class="headerlink" title="RDD"></a>RDD</h1><p>scheduler 的调度主体.</p>
+            <div class="post-content">
+            <h1 id="RDD"><a href="#RDD" class="headerlink" title="RDD"></a>RDD</h1><p>scheduler 的调度主体.</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line">* <span class="type">Internally</span>, each <span class="type">RDD</span> is characterized by five main properties:</span><br><span class="line">*</span><br><span class="line">*  - <span class="type">A</span> list of partitions</span><br><span class="line">*  - <span class="type">A</span> function <span class="keyword">for</span> computing each split</span><br><span class="line">*  - <span class="type">A</span> list of dependencies on other <span class="type">RDDs</span></span><br><span class="line">*  - <span class="type">Optionally</span>, a <span class="type">Partitioner</span> <span class="keyword">for</span> key-value <span class="type">RDDs</span> (e.g. to say that the <span class="type">RDD</span> is hash-partitioned)</span><br><span class="line">*  - <span class="type">Optionally</span>, a list of preferred locations to compute each split on (e.g. block locations <span class="keyword">for</span></span><br><span class="line">*    an <span class="type">HDFS</span> file)</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * :: DeveloperApi ::</span></span><br><span class="line"><span class="comment">  * Implemented by subclasses to compute a given partition.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="meta">@DeveloperApi</span></span><br><span class="line"> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(split: <span class="type">Partition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[<span class="type">T</span>]</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Implemented by subclasses to return the set of partitions in this RDD. This method will only</span></span><br><span class="line"><span class="comment">  * be called once, so it is safe to implement a time-consuming computation in it.</span></span><br><span class="line"><span class="comment">  *</span></span><br><span class="line"><span class="comment">  * The partitions in this array must satisfy the following property:</span></span><br><span class="line"><span class="comment">  *   `rdd.partitions.zipWithIndex.forall &#123; case (partition, index) =&gt; partition.index == index &#125;`</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">getPartitions</span></span>: <span class="type">Array</span>[<span class="type">Partition</span>]</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Implemented by subclasses to return how this RDD depends on parent RDDs. This method will only</span></span><br><span class="line"><span class="comment">  * be called once, so it is safe to implement a time-consuming computation in it.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">getDependencies</span></span>: <span class="type">Seq</span>[<span class="type">Dependency</span>[_]] = deps</span><br><span class="line"></span><br><span class="line"> <span class="comment">/**</span></span><br><span class="line"><span class="comment">  * Optionally overridden by subclasses to specify placement preferences.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"> <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">getPreferredLocations</span></span>(split: <span class="type">Partition</span>): <span class="type">Seq</span>[<span class="type">String</span>] = <span class="type">Nil</span></span><br></pre></td></tr></table></figure>
 <h2 id="依赖"><a href="#依赖" class="headerlink" title="依赖"></a>依赖</h2><p>DAG中的各个RDD之间存在着依赖关系。换⾔之，正是RDD之间的依 赖关系构建了由RDD所组成的DAG。Spark使⽤Dependency来表⽰RDD之 间的依赖关系.</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Dependency</span>[<span class="type">T</span>] <span class="keyword">extends</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">rdd</span></span>: <span class="type">RDD</span>[<span class="type">T</span>]</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -176,100 +158,51 @@
 <h1 id="DAGScheduler"><a href="#DAGScheduler" class="headerlink" title="DAGScheduler"></a>DAGScheduler</h1><p>DAGScheduler实现了面向DAG的高层次调度，即将DAG中的各个RDD划分到不同的Stage。DAGScheduler可以通过计算将DAG中的一系列RDD划分到不同的Stage，然后构建这些Stage之间的父子关系，最后将每个Stage按照Partition切分为多个Task，并以Task集合（即TaskSet）的形式提交给底层的TaskScheduler。</p>
 <p>所有的组件都通过向DAGScheduler投递DAGSchedulerEvent来使用DAGScheduler。DAGScheduler内部的DAGSchedulerEventProcessLoop将处理这些DAGScheduler-Event，并调用DAGScheduler的不同方法。JobListener用于对作业中每个Task执行成功或失败进行监听，JobWaiter实现了JobListener并最终确定作业的成功与失败。在正式介绍DAGScheduler之前，我们先来看看DAGScheduler所依赖的组件DAGSchedulerEventProcessLoop、Job Listener及ActiveJob的实现。</p>
 
-                        
-                    </div>
-
-                    
-                    
-                    
-
-                    
-
-                </div>
-                
-                <div id="pagination" class="nav-web ui text container pagination">
-
-    <div class="ui stackable two column divided grid container">
-        <div class="row">
-            <div class="column nav-left">
-                
-
-                <a href="/2019/05/09/Parquet-乱弹/" class="ui tiny button">
-
-                    <i class="angle left icon"></i>
-                    
-                    Parquet 乱弹
-                    
-
-                </a>
-
-                
             </div>
-            <div class="column nav-right">
-                
+          
 
-                <a href="/2019/01/13/Spark-SchedulerPool-Deep-Div/" class="ui tiny button">
-                    
-                    Spark SchedulerPool Deep Dive
-                    
-                    <i class="angle right icon"></i></a>
-                
-            </div>
-        </div>
-    </div>
-
-</div>
-                
-            </div>
-
-            
-            <div class="three wide computer three wide tablet column">
-
-                <div class="ui sticky article-toc" id="article-toc">
-                    <!-- toc -->
-                    <ol class="ui ordered list"><li><a href="#RDD"><span>RDD</span></a><ol><li><a href="#依赖"><span>依赖</span></a><ol><li><a href="#窄依赖"><span>窄依赖</span></a></li><li><a href="#Shuffle-依赖"><span>Shuffle 依赖</span></a></li></ol></li><li><a href="#Partitioner"><span>Partitioner</span></a></li><li><a href="#Stage"><span>Stage</span></a><ol><li><a href="#ResultStage"><span>ResultStage</span></a></li><li><a href="#ShuffleMapStage"><span>ShuffleMapStage</span></a></li></ol></li></ol></li><li><a href="#DAGScheduler"><span>DAGScheduler</span></a></li></ol>
-                </div>
-
-            </div>
-            
-
-        </div>
-    </div>
-</div>
-
-
-                    <!--</div>-->
-                <!--</div>-->
-            <!--</div>-->
-        </div>
-        <div class="ui vertical footer segment">
-    <div class="ui center aligned container">
-        <div class="ui inverted section divider"></div>
-        &copy; 2019 <a href="/">Aron Tao</a>,
-        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
-    </div>
-</div>
+    
+  </article>
 
     </div>
 
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2012 -
+    
+    2019
+    <span class="footer-author">Aron Tao.</span>
+    <span class="power-by">
+        Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
 
 
 
-<!-- scripts list from theme config.yml -->
 
-<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
 
-<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+  
 
-<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
 
-<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
-
-<script src="/js/semantic-ui-algolia.js"></script>
-
-<script src="/js/aloha-events.js"></script>
-
-
-
-</body>
+  </body>
 </html>
