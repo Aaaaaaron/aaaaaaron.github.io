@@ -1,59 +1,150 @@
-<!doctype html>
-<html lang="en">
-    <head><meta name="generator" content="Hexo 3.8.0">
-		
-        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="Kyligence">
-        <link rel="shortcut icon" href="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-        <link rel="canonical" href="http://guolinn.com/">
-        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
-        <title>Java Streaming Deep Dive | Jiatao Tao&#39;s blog</title>
-        <meta name="description" content="{{meta_description}}">
 
-        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
-    </head>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="Kyligence">
+    <title>Java Streaming Deep Dive | Jiatao Tao&#39;s blog</title>
+
+    <!-- Open Graph -->
+    <meta name="description" content="Memory map filemap写到文件:123456789File f = File.createTempFile(&quot;dict&quot;, &quot;.dict&quot;);System.out.println(f.getAbsolutePath());f.deleteOnExit();try (DataOutputStream out = new DataOutputStream(new FileOutputSt">
+<meta name="keywords" content="Java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java Streaming Deep Dive">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/07/19/Java-Streaming-Deep-Dive/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="Memory map filemap写到文件:123456789File f = File.createTempFile(&quot;dict&quot;, &quot;.dict&quot;);System.out.println(f.getAbsolutePath());f.deleteOnExit();try (DataOutputStream out = new DataOutputStream(new FileOutputSt">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://www.ibm.com/developerworks/cn/java/j-lo-javaio/image015.jpg">
+<meta property="og:updated_time" content="2018-07-19T12:45:37.505Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java Streaming Deep Dive">
+<meta name="twitter:description" content="Memory map filemap写到文件:123456789File f = File.createTempFile(&quot;dict&quot;, &quot;.dict&quot;);System.out.println(f.getAbsolutePath());f.deleteOnExit();try (DataOutputStream out = new DataOutputStream(new FileOutputSt">
+<meta name="twitter:image" content="https://www.ibm.com/developerworks/cn/java/j-lo-javaio/image015.jpg">
+
+    <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Person",
+  "email": "mailto:",
+  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
+  "name": "Aron Tao",
+  "url": "https://aaaaaaron.github.io"
+}
+</script>
+    <script>
+    var algoliaEnabled = false;
     
-		<body class="post-template">
-	
+</script>
 
-        <header id="header">
-            <a id="logo" href="/"><img src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Jiatao Tao's blog"></a>
-            <h1><a href="/">Aron Tao</a></h1>
-            <p></p>
-            <div id="follow-icons">
-                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
-  </div>
-<h6><a href="/about">About</a></h6>
-        </header>
+    
 
-        <main id="content">
+    
+    
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    
+    
+    
+        <!-- stylesheets list from config.yml -->
         
+        <link rel="stylesheet" href="/css/aloha.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
+        
+    
 
-<article class="post">
-  July 19, 2018
-  
-    <span class="taglist">  &middot; 
-    
-    
-      <a href="/tags/Java/">Java</a> 
-    
-    </span>
-  
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
 
-  <h1 class="post-title">Java Streaming Deep Dive</h1>
-  <section class="post-content article-entry">
-    <h1 id="Memory-map-file"><a href="#Memory-map-file" class="headerlink" title="Memory map file"></a>Memory map file</h1><h2 id="map"><a href="#map" class="headerlink" title="map"></a>map</h2><p>写到文件:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">File f = File.createTempFile(<span class="string">"dict"</span>, <span class="string">".dict"</span>);</span><br><span class="line">System.out.println(f.getAbsolutePath());</span><br><span class="line">f.deleteOnExit();</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> (DataOutputStream out = <span class="keyword">new</span> DataOutputStream(<span class="keyword">new</span> FileOutputStream(f))) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; i++) &#123;</span><br><span class="line">        out.writeInt(i);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <div id="menu-sidebar" class="ui left vertical sidebar menu">
+
+    <div id="sidebar-top">
+        <div class="content">
+            <h3>Jiatao Tao&#39;s blog</h3>
+        </div>
+    </div>
+    <div class="ui container sidebar-card">
+    <div class="ui people shape content">
+        <div class="active side">
+            <div class="ui card">
+                <div class="image">
+                    <img class="ui medium bordered image" src="/images/avatar.jpg">
+                </div>
+                <div class="content">
+                    <a class="header">Aron Tao</a>
+                    
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                        
+                    </div>
+
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+    
+    
+
+    
+
+    
+    <a href="/index.html" class="item">
+        <i class="home icon"></i>
+        HOME
+    </a>
+
+    
+
+    
+</div>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <div id="post-Java-Streaming-Deep-Dive" class="ui main container article-type-post">
+
+    
+
+    <div class="ui divided grid">
+
+        <div class="two column row" id="article-content">
+
+            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+                
+
+<h1 class="ui header">
+    
+    Java Streaming Deep Dive
+</h1>
+
+
+
+                <div class="article-inner">
+
+                    <div class="article-entry" itemprop="articleBody">
+                        
+                        <h1 id="Memory-map-file"><a href="#Memory-map-file" class="headerlink" title="Memory map file"></a>Memory map file</h1><h2 id="map"><a href="#map" class="headerlink" title="map"></a>map</h2><p>写到文件:<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">File f = File.createTempFile(<span class="string">"dict"</span>, <span class="string">".dict"</span>);</span><br><span class="line">System.out.println(f.getAbsolutePath());</span><br><span class="line">f.deleteOnExit();</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> (DataOutputStream out = <span class="keyword">new</span> DataOutputStream(<span class="keyword">new</span> FileOutputStream(f))) &#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">1000</span>; i++) &#123;</span><br><span class="line">        out.writeInt(i);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">RandomAccessFile raf = <span class="keyword">new</span> RandomAccessFile(path, <span class="string">"r"</span>);</span><br><span class="line">File Channel fc = raf.getChannel();</span><br><span class="line">MappedByteBuffer byteBuffer = fc.map(FileChannel.MapMode.READ_ONLY, <span class="number">0</span>, fc.size());</span><br></pre></td></tr></table></figure>
 <h2 id="unmap"><a href="#unmap" class="headerlink" title="unmap"></a>unmap</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    fc.close();</span><br><span class="line">    raf.close();</span><br><span class="line">    Method m = FileChannelImpl.class.getDeclaredMethod(<span class="string">"unmap"</span>, MappedByteBuffer.class);</span><br><span class="line">    m.setAccessible(<span class="keyword">true</span>);</span><br><span class="line">    m.invoke(FileChannelImpl.class, byteBuffer);</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> RuntimeException(<span class="string">"Can not release file mapping memory."</span>, e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h1 id="DirectByteBuffer"><a href="#DirectByteBuffer" class="headerlink" title="DirectByteBuffer"></a>DirectByteBuffer</h1><p>ByteBuffer的所有的get/put都有两套, 一套用绝对地址, 一套用相对地址<br><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">* Relative &lt;i&gt;get&lt;/i&gt; method for reading an int value.</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* &lt;p&gt; Reads the next four bytes at this buffer's current position,</span></span><br><span class="line"><span class="comment">* composing them into an int value according to the current byte order,</span></span><br><span class="line"><span class="comment">* and then increments the position by four.  &lt;/p&gt;</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@return</span>  The int value at the buffer's current position</span></span><br><span class="line"><span class="comment">*</span></span><br><span class="line"><span class="comment">* <span class="doctag">@throws</span>  BufferUnderflowException</span></span><br><span class="line"><span class="comment">*          If there are fewer than four bytes</span></span><br><span class="line"><span class="comment">*          remaining in this buffer</span></span><br><span class="line"><span class="comment">*/</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">int</span> <span class="title">getInt</span><span class="params">()</span></span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Absolute &lt;i&gt;get&lt;/i&gt; method for reading an int value.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * &lt;p&gt; Reads four bytes at the given index, composing them into a</span></span><br><span class="line"><span class="comment"> * int value according to the current byte order.  &lt;/p&gt;</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span>  index</span></span><br><span class="line"><span class="comment"> *         The index from which the bytes will be read</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@return</span>  The int value at the given index</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@throws</span>  IndexOutOfBoundsException</span></span><br><span class="line"><span class="comment"> *          If &lt;tt&gt;index&lt;/tt&gt; is negative</span></span><br><span class="line"><span class="comment"> *          or not smaller than the buffer's limit,</span></span><br><span class="line"><span class="comment"> *          minus three</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="keyword">int</span> <span class="title">getInt</span><span class="params">(<span class="keyword">int</span> index)</span></span>;</span><br></pre></td></tr></table></figure></p>
@@ -64,37 +155,120 @@
 <p>FileInputStream 类都是操作一个文件的接口，注意到在创建一个 FileInputStream 对象时，会创建一个 FileDescriptor 对象，其实这个对象就是真正代表一个存在的文件对象的描述，当我们在操作一个文件对象时可以通过 getFD() 方法获取真正操作的与底层操作系统关联的文件描述。例如可以调用 FileDescriptor.sync() 方法将操作系统缓存中的数据强制刷新到物理磁盘中。</p>
 <p><img src="https://www.ibm.com/developerworks/cn/java/j-lo-javaio/image015.jpg" alt=""></p>
 
-  </section>
-  <footer class="post-footer">
-    <!--
-    <section class="author">
-      <h4>Aron Tao</h4>
-      <p></p>
-    </section>
-    -->
-  </footer>
-</article>
+                        
+                    </div>
 
-<nav class="pagination" role="pagination">
+                    
+                    
+                    
+
+                    <div class="description post-description">
+    <span class="post-description-item">
+        <time datetime="2018-07-19T10:12:38.000Z" itemprop="datePublished">2018-07-19</time>
+
+    </span>
+    <span class="post-description-item">
+        
+
+    <span>
+        <i class="tags icon"></i>
+    </span>
+
     
-    <a class="newer-posts" href="/2018/07/19/Spark-Catalyst-Deep-Dive/">
-        ← prev <!--Spark Catalyst Deep Dive-->
-    </a>
+    <span class="ui tiny label">
+        <a href="/tags/Java/">Java</a>
+    </span>
+
     
-    <span class="page-number">•</span>
-    
-    <a class="older-posts" href="/2018/07/19/Spark-DateType-Timestamp-cast-小结/">
-        <!--Spark DateType/Timestamp cast 小结--> next →
-    </a>
-    
-</nav>
+
+    </span>
+</div>
+
+                </div>
+                
+                <div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                
+
+                <a href="/2018/07/19/Spark-Catalyst-Deep-Dive/" class="ui tiny button">
+
+                    <i class="angle left icon"></i>
+                    
+                    Spark Catalyst Deep Dive
+                    
+
+                </a>
+
+                
+            </div>
+            <div class="column nav-right">
+                
+
+                <a href="/2018/07/19/Spark-DateType-Timestamp-cast-小结/" class="ui tiny button">
+                    
+                    Spark DateType/Timestamp cast 小结
+                    
+                    <i class="angle right icon"></i></a>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+                
+            </div>
+
+            
+            <div class="three wide computer three wide tablet column">
+
+                <div class="ui sticky article-toc" id="article-toc">
+                    <!-- toc -->
+                    <ol class="ui ordered list"><li><a href="#Memory-map-file"><span>Memory map file</span></a><ol><li><a href="#map"><span>map</span></a></li><li><a href="#unmap"><span>unmap</span></a></li></ol></li><li><a href="#DirectByteBuffer"><span>DirectByteBuffer</span></a></li><li><a href="#unsafe-操作"><span>unsafe 操作</span></a></li><li><a href="#番外-Delete-on-exit"><span>番外 : Delete on exit</span></a></li></ol>
+                </div>
+
+            </div>
+            
+
+        </div>
+    </div>
+</div>
 
 
-        </main>
-        <footer id="footer">
-            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
-        </footer>
-    </body>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+        <div class="ui inverted section divider"></div>
+        &copy; 2019 <a href="/">Aron Tao</a>,
+        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
+    </div>
+</div>
+
+    </div>
+
+
+
+
+<!-- scripts list from theme config.yml -->
+
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
+
+<script src="/js/semantic-ui-algolia.js"></script>
+
+<script src="/js/aloha-events.js"></script>
+
+
+
+</body>
 </html>
-
-

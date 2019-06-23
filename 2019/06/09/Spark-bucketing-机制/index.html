@@ -1,52 +1,147 @@
-<!doctype html>
-<html lang="en">
-    <head><meta name="generator" content="Hexo 3.8.0">
-		
-        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="Kyligence">
-        <link rel="shortcut icon" href="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-        <link rel="canonical" href="http://guolinn.com/">
-        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
-        <title>Spark bucketing 机制 | Jiatao Tao&#39;s blog</title>
-        <meta name="description" content="{{meta_description}}">
 
-        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
-    </head>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="Kyligence">
+    <title>Spark bucketing 机制 | Jiatao Tao&#39;s blog</title>
+
+    <!-- Open Graph -->
+    <meta name="description" content="0. 基础Spark 的 bucket 机制其实和 repartition 非常相似, 但是 Spark 的 repartition 在读取的时候不会做任何的 pruning, 而 bucket by 会 pruning 掉不必要的文件. bucket by 与 repartition 都是对于数据里每条记录通过一个 hash 函数得到一个值, 任何相同值的记录放到同一个文件中去. 对于点查, 例">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark bucketing 机制">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/06/09/Spark-bucketing-机制/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="0. 基础Spark 的 bucket 机制其实和 repartition 非常相似, 但是 Spark 的 repartition 在读取的时候不会做任何的 pruning, 而 bucket by 会 pruning 掉不必要的文件. bucket by 与 repartition 都是对于数据里每条记录通过一个 hash 函数得到一个值, 任何相同值的记录放到同一个文件中去. 对于点查, 例">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-06-23T11:34:54.477Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark bucketing 机制">
+<meta name="twitter:description" content="0. 基础Spark 的 bucket 机制其实和 repartition 非常相似, 但是 Spark 的 repartition 在读取的时候不会做任何的 pruning, 而 bucket by 会 pruning 掉不必要的文件. bucket by 与 repartition 都是对于数据里每条记录通过一个 hash 函数得到一个值, 任何相同值的记录放到同一个文件中去. 对于点查, 例">
+
+    <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Person",
+  "email": "mailto:",
+  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
+  "name": "Aron Tao",
+  "url": "https://aaaaaaron.github.io"
+}
+</script>
+    <script>
+    var algoliaEnabled = false;
     
-		<body class="post-template">
-	
+</script>
 
-        <header id="header">
-            <a id="logo" href="/"><img src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Jiatao Tao's blog"></a>
-            <h1><a href="/">Aron Tao</a></h1>
-            <p></p>
-            <div id="follow-icons">
-                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
-  </div>
-<h6><a href="/about">About</a></h6>
-        </header>
+    
 
-        <main id="content">
+    
+    
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    
+    
+    
+        <!-- stylesheets list from config.yml -->
         
+        <link rel="stylesheet" href="/css/aloha.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
+        
+    
 
-<article class="post">
-  June 9, 2019
-  
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
 
-  <h1 class="post-title">Spark bucketing 机制</h1>
-  <section class="post-content article-entry">
-    <h1 id="0-基础"><a href="#0-基础" class="headerlink" title="0. 基础"></a>0. 基础</h1><p>Spark 的 bucket 机制其实和 repartition 非常相似, 但是 Spark 的 repartition 在读取的时候不会做任何的 pruning, 而 bucket by 会 pruning 掉不必要的文件.</p>
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <div id="menu-sidebar" class="ui left vertical sidebar menu">
+
+    <div id="sidebar-top">
+        <div class="content">
+            <h3>Jiatao Tao&#39;s blog</h3>
+        </div>
+    </div>
+    <div class="ui container sidebar-card">
+    <div class="ui people shape content">
+        <div class="active side">
+            <div class="ui card">
+                <div class="image">
+                    <img class="ui medium bordered image" src="/images/avatar.jpg">
+                </div>
+                <div class="content">
+                    <a class="header">Aron Tao</a>
+                    
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                        
+                    </div>
+
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+    
+    
+
+    
+
+    
+    <a href="/index.html" class="item">
+        <i class="home icon"></i>
+        HOME
+    </a>
+
+    
+
+    
+</div>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <div id="post-Spark-bucketing-机制" class="ui main container article-type-post">
+
+    
+
+    <div class="ui divided grid">
+
+        <div class="two column row" id="article-content">
+
+            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+                
+
+<h1 class="ui header">
+    
+    Spark bucketing 机制
+</h1>
+
+
+
+                <div class="article-inner">
+
+                    <div class="article-entry" itemprop="articleBody">
+                        
+                        <h1 id="0-基础"><a href="#0-基础" class="headerlink" title="0. 基础"></a>0. 基础</h1><p>Spark 的 bucket 机制其实和 repartition 非常相似, 但是 Spark 的 repartition 在读取的时候不会做任何的 pruning, 而 bucket by 会 pruning 掉不必要的文件.</p>
 <p>bucket by 与 repartition 都是对于数据里每条记录通过一个 hash 函数得到一个值, 任何相同值的记录放到同一个文件中去. 对于点查, 例如 id=5, 那么可以把5当做一条记录的值, 然后算出它的 hash 值得到它的 bucket 是哪个, 那么我们只要扫这个 bucket 就可以了, 因为其他 bucket 里肯定没有5这个元素.</p>
 <p>bucket by 的写入比较特殊, 不能直接 write.parquet, 这里是一种写法: <code>df.write.format(&quot;parquet&quot;).option(&quot;path&quot;, &quot;/tmp/bueket&quot;).bucketBy(3, &quot;id&quot;).saveAsTable(&quot;t&quot;)</code>, buket 的列是 id, 分了三个桶, 最后产生出来的文件会小于等于3个(如果 id 只有一个值, 只会有一个文件). 如下, 文件名中<code>_</code>后的, 就是每个文件的 buckId(也是里面记录的 hash 值).</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">part-00000-39d128dc-69a1-4b91-8931-68e81c77c4ae_00000.c000.snappy.parquet</span><br><span class="line">part-00000-39d128dc-69a1-4b91-8931-68e81c77c4ae_00001.c000.snappy.parquet</span><br><span class="line">part-00000-39d128dc-69a1-4b91-8931-68e81c77c4ae_00002.c000.snappy.parquet</span><br></pre></td></tr></table></figure>
@@ -59,33 +154,101 @@
 <h1 id="2-Exec-部分"><a href="#2-Exec-部分" class="headerlink" title="2. Exec 部分"></a>2. Exec 部分</h1><p>Spark 的 Strategy 是用来构造 Exec 的, 在第一部分中, 我们得到了一个 <code>bucketSet</code>, 这个会作为一个参数传给 <code>FileSourceScanExec</code>. 如果有relation 上带了 bucket 的话, 会走到 <code>FileSourceScanExec#createBucketedReadRDD</code>, 在这里面会根据具体的文件名字去得到 bucketID <code>getBucketId</code>, 就是一个简单的正则, 那 <code>_</code> 后的值, 有了这个值, 只要找到 <code>bucketSet</code> 中与其匹配的值, 就选中了这个文件.</p>
 <p>在<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">val</span> bucketedFileName = <span class="string">""</span><span class="string">".*_(\d+)(?:\..*)?$"</span><span class="string">""</span>.r</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">getBucketId</span></span>(fileName: <span class="type">String</span>): <span class="type">Option</span>[<span class="type">Int</span>] = fileName <span class="keyword">match</span> &#123;</span><br><span class="line">  <span class="keyword">case</span> bucketedFileName(bucketId) =&gt; <span class="type">Some</span>(bucketId.toInt)</span><br><span class="line">  <span class="keyword">case</span> other =&gt; <span class="type">None</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Create an RDD for bucketed reads.</span></span><br><span class="line"><span class="comment"> * The non-bucketed variant of this function is [[createNonBucketedReadRDD]].</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * The algorithm is pretty simple: each RDD partition being returned should include all the files</span></span><br><span class="line"><span class="comment"> * with the same bucket id from all the given Hive partitions.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * @param bucketSpec the bucketing spec.</span></span><br><span class="line"><span class="comment"> * @param readFile a function to read each (part of a) file.</span></span><br><span class="line"><span class="comment"> * @param selectedPartitions Hive-style partition that are part of the read.</span></span><br><span class="line"><span class="comment"> * @param fsRelation [[HadoopFsRelation]] associated with the read.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">createBucketedReadRDD</span></span>(</span><br><span class="line">    bucketSpec: <span class="type">BucketSpec</span>,</span><br><span class="line">    readFile: (<span class="type">PartitionedFile</span>) =&gt; <span class="type">Iterator</span>[<span class="type">InternalRow</span>],</span><br><span class="line">    selectedPartitions: <span class="type">Seq</span>[<span class="type">PartitionDirectory</span>],</span><br><span class="line">    fsRelation: <span class="type">HadoopFsRelation</span>): <span class="type">RDD</span>[<span class="type">InternalRow</span>] = &#123;</span><br><span class="line">  logInfo(<span class="string">s"Planning with <span class="subst">$&#123;bucketSpec.numBuckets&#125;</span> buckets"</span>)</span><br><span class="line">  <span class="keyword">val</span> filesGroupedToBuckets =</span><br><span class="line">    selectedPartitions.flatMap &#123; p =&gt;</span><br><span class="line">      p.files.map &#123; f =&gt;</span><br><span class="line">        <span class="keyword">val</span> hosts = getBlockHosts(getBlockLocations(f), <span class="number">0</span>, f.getLen)</span><br><span class="line">        <span class="type">PartitionedFile</span>(p.values, f.getPath.toUri.toString, <span class="number">0</span>, f.getLen, hosts)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;.groupBy &#123; f =&gt;</span><br><span class="line">      <span class="type">BucketingUtils</span></span><br><span class="line">        .getBucketId(<span class="keyword">new</span> <span class="type">Path</span>(f.filePath).getName)</span><br><span class="line">        .getOrElse(sys.error(<span class="string">s"Invalid bucket file <span class="subst">$&#123;f.filePath&#125;</span>"</span>))</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> prunedFilesGroupedToBuckets = <span class="keyword">if</span> (optionalBucketSet.isDefined) &#123;</span><br><span class="line">    <span class="keyword">val</span> bucketSet = optionalBucketSet.get</span><br><span class="line">    filesGroupedToBuckets.filter &#123;</span><br><span class="line">      f =&gt; bucketSet.get(f._1)</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    filesGroupedToBuckets</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> filePartitions = <span class="type">Seq</span>.tabulate(bucketSpec.numBuckets) &#123; bucketId =&gt;</span><br><span class="line">    <span class="type">FilePartition</span>(bucketId, prunedFilesGroupedToBuckets.getOrElse(bucketId, <span class="type">Nil</span>))</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">new</span> <span class="type">FileScanRDD</span>(fsRelation.sparkSession, readFile, filePartitions)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 
-  </section>
-  <footer class="post-footer">
-    <!--
-    <section class="author">
-      <h4>Aron Tao</h4>
-      <p></p>
-    </section>
-    -->
-  </footer>
-</article>
+                        
+                    </div>
 
-<nav class="pagination" role="pagination">
-    
-    <span class="page-number">•</span>
-    
-    <a class="older-posts" href="/2019/05/09/Parquet-乱弹/">
-        <!--Parquet 乱弹--> next →
-    </a>
-    
-</nav>
+                    
+                    
+                    
+
+                    <div class="description post-description">
+    <span class="post-description-item">
+        <time datetime="2019-06-09T09:10:27.000Z" itemprop="datePublished">2019-06-09</time>
+
+    </span>
+    <span class="post-description-item">
+        
+    </span>
+</div>
+
+                </div>
+                
+                <div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                
+
+                <a class="ui tiny button disabled"><i class="angle left icon"></i>Previous</a>
+
+                
+            </div>
+            <div class="column nav-right">
+                
+
+                <a href="/2019/05/09/Parquet-乱弹/" class="ui tiny button">
+                    
+                    Parquet 乱弹
+                    
+                    <i class="angle right icon"></i></a>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+                
+            </div>
+
+            
+            <div class="three wide computer three wide tablet column">
+
+                <div class="ui sticky article-toc" id="article-toc">
+                    <!-- toc -->
+                    <ol class="ui ordered list"><li><a href="#0-基础"><span>0. 基础</span></a></li><li><a href="#1-Strategy-部分"><span>1. Strategy 部分</span></a></li><li><a href="#2-Exec-部分"><span>2. Exec 部分</span></a></li></ol>
+                </div>
+
+            </div>
+            
+
+        </div>
+    </div>
+</div>
 
 
-        </main>
-        <footer id="footer">
-            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
-        </footer>
-    </body>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+        <div class="ui inverted section divider"></div>
+        &copy; 2019 <a href="/">Aron Tao</a>,
+        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
+    </div>
+</div>
+
+    </div>
+
+
+
+
+<!-- scripts list from theme config.yml -->
+
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
+
+<script src="/js/semantic-ui-algolia.js"></script>
+
+<script src="/js/aloha-events.js"></script>
+
+
+
+</body>
 </html>
-
-

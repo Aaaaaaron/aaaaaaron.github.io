@@ -1,61 +1,156 @@
-<!doctype html>
-<html lang="en">
-    <head><meta name="generator" content="Hexo 3.8.0">
-		
-        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="Kyligence">
-        <link rel="shortcut icon" href="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-        <link rel="canonical" href="http://guolinn.com/">
-        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
-        <title>Druid Storage 原理 | Jiatao Tao&#39;s blog</title>
-        <meta name="description" content="{{meta_description}}">
 
-        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
-    </head>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="Kyligence">
+    <title>Druid Storage 原理 | Jiatao Tao&#39;s blog</title>
+
+    <!-- Open Graph -->
+    <meta name="description" content="转载自编程小梦, 该博主一系列文章质量都非常高 What is DruidDruid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：  列式存储 倒排索引 （基于 Bitmap 实现） 分布式的 Shared-Nothing 架构 （高可用，易扩展是 Druid 的设计目标） 实时摄入 （数据被 Druid 实时摄入后便可以立即查询）  Why Druid为了">
+<meta name="keywords" content="BigData,Druid">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Druid Storage 原理">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-原理/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="转载自编程小梦, 该博主一系列文章质量都非常高 What is DruidDruid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：  列式存储 倒排索引 （基于 Bitmap 实现） 分布式的 Shared-Nothing 架构 （高可用，易扩展是 Druid 的设计目标） 实时摄入 （数据被 Druid 实时摄入后便可以立即查询）  Why Druid为了">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-10-6/55283969.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-10-6/98456054.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-10-6/34009295.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-10-6/29577015.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-10-6/8107893.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-10-6/79137485.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-10-6/34569900.jpg">
+<meta property="og:updated_time" content="2018-11-18T04:25:40.002Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Druid Storage 原理">
+<meta name="twitter:description" content="转载自编程小梦, 该博主一系列文章质量都非常高 What is DruidDruid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：  列式存储 倒排索引 （基于 Bitmap 实现） 分布式的 Shared-Nothing 架构 （高可用，易扩展是 Druid 的设计目标） 实时摄入 （数据被 Druid 实时摄入后便可以立即查询）  Why Druid为了">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-10-6/55283969.jpg">
+
+    <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Person",
+  "email": "mailto:",
+  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
+  "name": "Aron Tao",
+  "url": "https://aaaaaaron.github.io"
+}
+</script>
+    <script>
+    var algoliaEnabled = false;
     
-		<body class="post-template">
-	
+</script>
 
-        <header id="header">
-            <a id="logo" href="/"><img src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Jiatao Tao's blog"></a>
-            <h1><a href="/">Aron Tao</a></h1>
-            <p></p>
-            <div id="follow-icons">
-                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
-  </div>
-<h6><a href="/about">About</a></h6>
-        </header>
+    
 
-        <main id="content">
+    
+    
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    
+    
+    
+        <!-- stylesheets list from config.yml -->
         
+        <link rel="stylesheet" href="/css/aloha.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
+        
+    
 
-<article class="post">
-  October 6, 2018
-  
-    <span class="taglist">  &middot; 
-    
-    
-      <a href="/tags/BigData/">BigData</a> 
-    
-      <a href="/tags/Druid/">Druid</a> 
-    
-    </span>
-  
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
 
-  <h1 class="post-title">Druid Storage 原理</h1>
-  <section class="post-content article-entry">
-    <p>转载自<a href="https://blog.bcmeng.com/post/druid-storage.html" target="_blank" rel="noopener">编程小梦</a>, 该博主一系列文章质量都非常高</p>
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <div id="menu-sidebar" class="ui left vertical sidebar menu">
+
+    <div id="sidebar-top">
+        <div class="content">
+            <h3>Jiatao Tao&#39;s blog</h3>
+        </div>
+    </div>
+    <div class="ui container sidebar-card">
+    <div class="ui people shape content">
+        <div class="active side">
+            <div class="ui card">
+                <div class="image">
+                    <img class="ui medium bordered image" src="/images/avatar.jpg">
+                </div>
+                <div class="content">
+                    <a class="header">Aron Tao</a>
+                    
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                        
+                    </div>
+
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+    
+    
+
+    
+
+    
+    <a href="/index.html" class="item">
+        <i class="home icon"></i>
+        HOME
+    </a>
+
+    
+
+    
+</div>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <div id="post-Druid-Storage-原理" class="ui main container article-type-post">
+
+    
+
+    <div class="ui divided grid">
+
+        <div class="two column row" id="article-content">
+
+            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+                
+
+<h1 class="ui header">
+    
+    Druid Storage 原理
+</h1>
+
+
+
+                <div class="article-inner">
+
+                    <div class="article-entry" itemprop="articleBody">
+                        
+                        <p>转载自<a href="https://blog.bcmeng.com/post/druid-storage.html" target="_blank" rel="noopener">编程小梦</a>, 该博主一系列文章质量都非常高</p>
 <h3 id="What-is-Druid"><a href="#What-is-Druid" class="headerlink" title="What is Druid"></a>What is Druid</h3><p>Druid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：</p>
 <ol>
 <li>列式存储</li>
@@ -155,37 +250,125 @@
 <p>其实编码和压缩本质上是一个东西，一切熵增的编码都是压缩。 在计算机领域，我们一般把针对特定类型的编码称之为编码，针对任意类型的通用编码称之为压缩。</p>
 <p>编码和压缩的本质就是让每一个 bit 尽可能带有更多的信息。</p>
 
-  </section>
-  <footer class="post-footer">
-    <!--
-    <section class="author">
-      <h4>Aron Tao</h4>
-      <p></p>
-    </section>
-    -->
-  </footer>
-</article>
+                        
+                    </div>
 
-<nav class="pagination" role="pagination">
+                    
+                    
+                    
+
+                    <div class="description post-description">
+    <span class="post-description-item">
+        <time datetime="2018-10-06T12:49:18.000Z" itemprop="datePublished">2018-10-06</time>
+
+    </span>
+    <span class="post-description-item">
+        
+
+    <span>
+        <i class="tags icon"></i>
+    </span>
+
     
-    <a class="newer-posts" href="/2018/10/16/Spark-map-vs-mapPartitions/">
-        ← prev <!--Spark map vs mapPartitions-->
-    </a>
+    <span class="ui tiny label">
+        <a href="/tags/BigData/">BigData</a>
+    </span>
+
     
-    <span class="page-number">•</span>
+    <span class="ui tiny label">
+        <a href="/tags/Druid/">Druid</a>
+    </span>
+
     
-    <a class="older-posts" href="/2018/09/14/Maven-打包趟坑与解法/">
-        <!--Maven 打包趟坑与解法--> next →
-    </a>
-    
-</nav>
+
+    </span>
+</div>
+
+                </div>
+                
+                <div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                
+
+                <a href="/2018/10/16/Spark-map-vs-mapPartitions/" class="ui tiny button">
+
+                    <i class="angle left icon"></i>
+                    
+                    Spark map vs mapPartitions
+                    
+
+                </a>
+
+                
+            </div>
+            <div class="column nav-right">
+                
+
+                <a href="/2018/09/14/Maven-打包趟坑与解法/" class="ui tiny button">
+                    
+                    Maven 打包趟坑与解法
+                    
+                    <i class="angle right icon"></i></a>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+                
+            </div>
+
+            
+            <div class="three wide computer three wide tablet column">
+
+                <div class="ui sticky article-toc" id="article-toc">
+                    <!-- toc -->
+                    <ol class="ui ordered list"><li><a href="#What-is-Druid"><span>What is Druid</span></a></li><li><a href="#Why-Druid"><span>Why Druid</span></a></li><li><a href="#Druid-架构"><span>Druid 架构</span></a><ol><li><a href="#Historical-Nodes"><span>Historical Nodes</span></a></li><li><a href="#Broker-Nodes"><span>Broker Nodes</span></a></li><li><a href="#Coordinator-Nodes"><span>Coordinator Nodes</span></a></li><li><a href="#Real-time-Node"><span>Real-time Node</span></a></li><li><a href="#Zookeeper"><span>Zookeeper</span></a></li><li><a href="#Metadata-Storage"><span>Metadata Storage</span></a></li><li><a href="#Deep-Storage"><span>Deep Storage</span></a></li></ol></li><li><a href="#Column"><span>Column</span></a></li><li><a href="#Segment"><span>Segment</span></a></li><li><a href="#Segment-的存储格式"><span>Segment 的存储格式</span></a></li><li><a href="#指标列的存储格式"><span>指标列的存储格式</span></a><ol><li><a href="#Long-型指标"><span>Long 型指标</span></a></li><li><a href="#Float-型指标"><span>Float 型指标</span></a></li><li><a href="#Complex-型指标"><span>Complex 型指标</span></a></li></ol></li><li><a href="#String-维度的存储格式"><span>String 维度的存储格式</span></a></li><li><a href="#Segment-生成过程"><span>Segment 生成过程</span></a></li><li><a href="#Segment-load-过程"><span>Segment load 过程</span></a></li><li><a href="#Segment-Query-过程"><span>Segment Query 过程</span></a></li><li><a href="#Druid-的编码和压缩"><span>Druid 的编码和压缩</span></a></li></ol>
+                </div>
+
+            </div>
+            
+
+        </div>
+    </div>
+</div>
 
 
-        </main>
-        <footer id="footer">
-            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
-        </footer>
-    </body>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+        <div class="ui inverted section divider"></div>
+        &copy; 2019 <a href="/">Aron Tao</a>,
+        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
+    </div>
+</div>
+
+    </div>
+
+
+
+
+<!-- scripts list from theme config.yml -->
+
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
+
+<script src="/js/semantic-ui-algolia.js"></script>
+
+<script src="/js/aloha-events.js"></script>
+
+
+
+</body>
 </html>
-
-

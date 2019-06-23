@@ -1,52 +1,147 @@
-<!doctype html>
-<html lang="en">
-    <head><meta name="generator" content="Hexo 3.8.0">
-		
-        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="Kyligence">
-        <link rel="shortcut icon" href="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-        <link rel="canonical" href="http://guolinn.com/">
-        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
-        <title>Linux 初养成 | Jiatao Tao&#39;s blog</title>
-        <meta name="description" content="{{meta_description}}">
 
-        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
-    </head>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="Kyligence">
+    <title>Linux 初养成 | Jiatao Tao&#39;s blog</title>
+
+    <!-- Open Graph -->
+    <meta name="description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 初养成">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/01/05/Linux-初养成/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-06-23T11:51:06.338Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux 初养成">
+<meta name="twitter:description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
+
+    <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Person",
+  "email": "mailto:",
+  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
+  "name": "Aron Tao",
+  "url": "https://aaaaaaron.github.io"
+}
+</script>
+    <script>
+    var algoliaEnabled = false;
     
-		<body class="post-template">
-	
+</script>
 
-        <header id="header">
-            <a id="logo" href="/"><img src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Jiatao Tao's blog"></a>
-            <h1><a href="/">Aron Tao</a></h1>
-            <p></p>
-            <div id="follow-icons">
-                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
-  </div>
-<h6><a href="/about">About</a></h6>
-        </header>
+    
 
-        <main id="content">
+    
+    
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    
+    
+    
+        <!-- stylesheets list from config.yml -->
         
+        <link rel="stylesheet" href="/css/aloha.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
+        
+    
 
-<article class="post">
-  January 5, 2019
-  
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
 
-  <h1 class="post-title">Linux 初养成</h1>
-  <section class="post-content article-entry">
-    <h1 id="shell-基础知识"><a href="#shell-基础知识" class="headerlink" title="shell 基础知识"></a>shell 基础知识</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$@</span>  传递给脚本或函数的所有参数</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -f  file ]    如果文件存在</span><br><span class="line"><span class="keyword">if</span> [ -d ...   ]    如果目录存在</span><br><span class="line"><span class="keyword">if</span> [ -s file  ]    如果文件存在且非空 </span><br><span class="line"><span class="keyword">if</span> [ -r file  ]    如果文件存在且可读</span><br><span class="line"><span class="keyword">if</span> [ -w file  ]    如果文件存在且可写</span><br><span class="line"><span class="keyword">if</span> [ -x file  ]    如果文件存在且可执行   </span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>  [ -n <span class="variable">$string</span>  ]             如果string 非空(非0），返回0(<span class="literal">true</span>)  </span><br><span class="line"><span class="keyword">if</span>  [ -z <span class="variable">$string</span>  ]             如果string 为空</span><br><span class="line"><span class="keyword">if</span>  [ <span class="variable">$sting</span> ]                  如果string 非空，返回0 (和-n类似)    </span><br><span class="line"></span><br><span class="line">``</span><br><span class="line"></span><br><span class="line">|meta字符| meta字符作用|</span><br><span class="line">|--------|-------------|</span><br><span class="line">|= |设定变量|</span><br><span class="line">|$ | 作变量或运算替换(请不要与`shell prompt`混淆)|命令</span><br><span class="line">|&gt;| 输出重定向(重定向stdout)|</span><br><span class="line">|&lt;|输入重定向(重定向stdin)|</span><br><span class="line">|\||命令管道|</span><br><span class="line">|&amp;|重定向file descriptor或将命令至于后台(<span class="built_in">bg</span>)运行|</span><br><span class="line">|()|将其内部的命令置于nested subshell执行，或用于运算或变量替换|</span><br><span class="line">|&#123;&#125;|将其内的命令置于non-named <span class="keyword">function</span>中执行，或用在变量替换的界定范围|</span><br><span class="line">|;|在前一个命令执行结束时，而忽略其返回值，继续执行下一个命令|</span><br><span class="line">|&amp;&amp;|在前一个命令执行结束时，若返回值为<span class="literal">true</span>，继续执行下一个命令|</span><br><span class="line">|\|\||在前一个命令执行结束时，若返回值为<span class="literal">false</span>，继续执行下一个命令|</span><br><span class="line">|!|执行histroy列表中的命令|</span><br><span class="line">|... | ...|</span><br><span class="line"></span><br><span class="line"><span class="comment">## snipaste</span></span><br><span class="line"></span><br><span class="line">```sh</span><br><span class="line">DIR=<span class="string">"<span class="variable">$( cd "$(dirname "$0")</span>"</span> ; <span class="built_in">pwd</span> -P )<span class="string">"</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"><span class="variable">$0</span> 类似于python中的sys.argv[0]等。 <span class="variable">$0</span>指的是Shell本身的文件名。类似的有如果运行脚本的时候带参数，那么<span class="variable">$1</span> 就是第一个参数，依此类推。 </span></span><br><span class="line"><span class="string">dirname 用于取指定路径所在的目录 ，如 dirname /home/ikidou 结果为 /home。 </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">$ 返回该命令的结果 </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">pwd -P 如果目录是链接时，格式：pwd -P 显示出实际路径，而非使用连接（link）路径。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">############################################################################</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">dir=<span class="variable">$(cd -P -- "$(dirname -- "$0")</span>"</span> &amp;&amp; <span class="built_in">pwd</span> -P)</span><br><span class="line">会 <span class="built_in">cd</span> 到脚本所在的目录</span><br><span class="line"></span><br><span class="line">Note: A double dash (--) is used <span class="keyword">in</span> commands to signify the end of <span class="built_in">command</span> options, so files containing dashes or other special characters won<span class="string">'t break the command.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Always use `-P` flag with `cd` command, alias cd='</span><span class="built_in">cd</span> -P<span class="string">'</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">若将一个文件夹自己的快捷方式放到文件夹里,这样写脚本的时候就有可能会出现无限循环,当前路径名就会变得无限长,但是加上了-P命令后就可以避免无限循环的情况.</span></span><br></pre></td></tr></table></figure>
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <div id="menu-sidebar" class="ui left vertical sidebar menu">
+
+    <div id="sidebar-top">
+        <div class="content">
+            <h3>Jiatao Tao&#39;s blog</h3>
+        </div>
+    </div>
+    <div class="ui container sidebar-card">
+    <div class="ui people shape content">
+        <div class="active side">
+            <div class="ui card">
+                <div class="image">
+                    <img class="ui medium bordered image" src="/images/avatar.jpg">
+                </div>
+                <div class="content">
+                    <a class="header">Aron Tao</a>
+                    
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                        
+                    </div>
+
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+    
+    
+
+    
+
+    
+    <a href="/index.html" class="item">
+        <i class="home icon"></i>
+        HOME
+    </a>
+
+    
+
+    
+</div>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <div id="post-Linux-初养成" class="ui main container article-type-post">
+
+    
+
+    <div class="ui divided grid">
+
+        <div class="two column row" id="article-content">
+
+            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+                
+
+<h1 class="ui header">
+    
+    Linux 初养成
+</h1>
+
+
+
+                <div class="article-inner">
+
+                    <div class="article-entry" itemprop="articleBody">
+                        
+                        <h1 id="shell-基础知识"><a href="#shell-基础知识" class="headerlink" title="shell 基础知识"></a>shell 基础知识</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$@</span>  传递给脚本或函数的所有参数</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -f  file ]    如果文件存在</span><br><span class="line"><span class="keyword">if</span> [ -d ...   ]    如果目录存在</span><br><span class="line"><span class="keyword">if</span> [ -s file  ]    如果文件存在且非空 </span><br><span class="line"><span class="keyword">if</span> [ -r file  ]    如果文件存在且可读</span><br><span class="line"><span class="keyword">if</span> [ -w file  ]    如果文件存在且可写</span><br><span class="line"><span class="keyword">if</span> [ -x file  ]    如果文件存在且可执行   </span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>  [ -n <span class="variable">$string</span>  ]             如果string 非空(非0），返回0(<span class="literal">true</span>)  </span><br><span class="line"><span class="keyword">if</span>  [ -z <span class="variable">$string</span>  ]             如果string 为空</span><br><span class="line"><span class="keyword">if</span>  [ <span class="variable">$sting</span> ]                  如果string 非空，返回0 (和-n类似)    </span><br><span class="line"></span><br><span class="line">``</span><br><span class="line"></span><br><span class="line">|meta字符| meta字符作用|</span><br><span class="line">|--------|-------------|</span><br><span class="line">|= |设定变量|</span><br><span class="line">|$ | 作变量或运算替换(请不要与`shell prompt`混淆)|命令</span><br><span class="line">|&gt;| 输出重定向(重定向stdout)|</span><br><span class="line">|&lt;|输入重定向(重定向stdin)|</span><br><span class="line">|\||命令管道|</span><br><span class="line">|&amp;|重定向file descriptor或将命令至于后台(<span class="built_in">bg</span>)运行|</span><br><span class="line">|()|将其内部的命令置于nested subshell执行，或用于运算或变量替换|</span><br><span class="line">|&#123;&#125;|将其内的命令置于non-named <span class="keyword">function</span>中执行，或用在变量替换的界定范围|</span><br><span class="line">|;|在前一个命令执行结束时，而忽略其返回值，继续执行下一个命令|</span><br><span class="line">|&amp;&amp;|在前一个命令执行结束时，若返回值为<span class="literal">true</span>，继续执行下一个命令|</span><br><span class="line">|\|\||在前一个命令执行结束时，若返回值为<span class="literal">false</span>，继续执行下一个命令|</span><br><span class="line">|!|执行histroy列表中的命令|</span><br><span class="line">|... | ...|</span><br><span class="line"></span><br><span class="line"><span class="comment">## snipaste</span></span><br><span class="line"></span><br><span class="line">```sh</span><br><span class="line">DIR=<span class="string">"<span class="variable">$( cd "$(dirname "$0")</span>"</span> ; <span class="built_in">pwd</span> -P )<span class="string">"</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"><span class="variable">$0</span> 类似于python中的sys.argv[0]等。 <span class="variable">$0</span>指的是Shell本身的文件名。类似的有如果运行脚本的时候带参数，那么<span class="variable">$1</span> 就是第一个参数，依此类推。 </span></span><br><span class="line"><span class="string">dirname 用于取指定路径所在的目录 ，如 dirname /home/ikidou 结果为 /home。 </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">$ 返回该命令的结果 </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">pwd -P 如果目录是链接时，格式：pwd -P 显示出实际路径，而非使用连接（link）路径。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">############################################################################</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">dir=<span class="variable">$(cd -P -- "$(dirname -- "$0")</span>"</span> &amp;&amp; <span class="built_in">pwd</span> -P)</span><br><span class="line">会 <span class="built_in">cd</span> 到脚本所在的目录</span><br><span class="line"></span><br><span class="line">Note: A double dash (--) is used <span class="keyword">in</span> commands to signify the end of <span class="built_in">command</span> options, so files containing dashes or other special characters won<span class="string">'t break the command.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Always use `-P` flag with `cd` command, alias cd='</span><span class="built_in">cd</span> -P<span class="string">'</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">若将一个文件夹自己的快捷方式放到文件夹里,这样写脚本的时候就有可能会出现无限循环,当前路径名就会变得无限长,但是加上了-P命令后就可以避免无限循环的情况.</span></span><br></pre></td></tr></table></figure>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">A</span><br><span class="line">&gt; ./myscript</span><br><span class="line"></span><br><span class="line">B</span><br><span class="line">&gt; source myscript</span><br><span class="line"></span><br><span class="line">Short answer: sourcing will run the commands in the current shell process. executing will run the commands in a new shell process.</span><br></pre></td></tr></table></figure>
 <h2 id="variable"><a href="#variable" class="headerlink" title="variable"></a>variable</h2><p>若从技术的细节来看，shell会依据IFS(Internal Field Seperator) 将command line所输入的文字拆解为”字段”(word/field)。 然后再针对特殊字符(meta)先作处理，最后重组整行command line。</p>
 <p>变量替换(substitution) shell 之所以强大，其中的一个因素是它可以在命令行中对变量作 替换(substitution)处理。 在命令行中使用者可以使用$符号加上变量名称(除了用=定义变量名称之外)， 将变量值给替换出来，然后再重新组建命令行。</p>
@@ -111,37 +206,108 @@
 <h3 id="设置文件打开数目和用户最大进程数"><a href="#设置文件打开数目和用户最大进程数" class="headerlink" title="设置文件打开数目和用户最大进程数"></a>设置文件打开数目和用户最大进程数</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">查看文件打开数目</span><br><span class="line">ulimit -a</span><br><span class="line">查看用户最大进程数</span><br><span class="line">ulimit -u</span><br><span class="line">设置用户最大进程数</span><br><span class="line">vim /etc/security/limits.conf</span><br><span class="line"></span><br><span class="line">结尾添加以下内容</span><br><span class="line">*       soft    nofile          32768</span><br><span class="line">*       hard    nofile          1048576</span><br><span class="line">*       soft    nproc           65536</span><br><span class="line">*       hard    nproc           unlimited</span><br><span class="line">*       soft    memlock         unlimited</span><br><span class="line">*       hard    memlock         unlimited</span><br></pre></td></tr></table></figure>
 <h3 id="percol"><a href="#percol" class="headerlink" title="percol"></a>percol</h3><p>brew install percol</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">function exists &#123; which $1 &amp;&gt; /dev/null &#125;</span><br><span class="line"></span><br><span class="line">if exists percol; then</span><br><span class="line">    function percol_select_history() &#123;</span><br><span class="line">        local tac</span><br><span class="line">        exists gtac &amp;&amp; tac=&quot;gtac&quot; || &#123; exists tac &amp;&amp; tac=&quot;tac&quot; || &#123; tac=&quot;tail -r&quot; &#125; &#125;</span><br><span class="line">        BUFFER=$(fc -l -n 1 | eval $tac | percol --query &quot;$LBUFFER&quot;)</span><br><span class="line">        CURSOR=$#BUFFER         # move cursor</span><br><span class="line">        zle -R -c               # refresh</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    zle -N percol_select_history</span><br><span class="line">    bindkey &apos;^R&apos; percol_select_history</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
-  </section>
-  <footer class="post-footer">
-    <!--
-    <section class="author">
-      <h4>Aron Tao</h4>
-      <p></p>
-    </section>
-    -->
-  </footer>
-</article>
+                        
+                    </div>
 
-<nav class="pagination" role="pagination">
-    
-    <a class="newer-posts" href="/2019/01/13/Spark-SchedulerPool-Deep-Div/">
-        ← prev <!--Spark SchedulerPool Deep Dive-->
-    </a>
-    
-    <span class="page-number">•</span>
-    
-    <a class="older-posts" href="/2018/12/19/Spark-PRC/">
-        <!--Spark PRC--> next →
-    </a>
-    
-</nav>
+                    
+                    
+                    
+
+                    <div class="description post-description">
+    <span class="post-description-item">
+        <time datetime="2019-01-05T02:32:31.000Z" itemprop="datePublished">2019-01-05</time>
+
+    </span>
+    <span class="post-description-item">
+        
+    </span>
+</div>
+
+                </div>
+                
+                <div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                
+
+                <a href="/2019/01/13/Spark-SchedulerPool-Deep-Div/" class="ui tiny button">
+
+                    <i class="angle left icon"></i>
+                    
+                    Spark SchedulerPool Deep Dive
+                    
+
+                </a>
+
+                
+            </div>
+            <div class="column nav-right">
+                
+
+                <a href="/2018/12/19/Spark-PRC/" class="ui tiny button">
+                    
+                    Spark PRC
+                    
+                    <i class="angle right icon"></i></a>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+                
+            </div>
+
+            
+            <div class="three wide computer three wide tablet column">
+
+                <div class="ui sticky article-toc" id="article-toc">
+                    <!-- toc -->
+                    <ol class="ui ordered list"><li><a href="#shell-基础知识"><span>shell 基础知识</span></a><ol><li><a href="#variable"><span>variable</span></a><ol><li><a href="#export"><span>export</span></a></li></ol></li><li><a href="#与-差在哪？"><span>()与{}差在哪？</span></a></li></ol></li><li><a href="#Shell-snipaste"><span>Shell-snipaste</span></a><ol><li><a href="#Java"><span>Java</span></a></li></ol></li><li><a href="#装机必备"><span>装机必备</span></a><ol><li><a href="#git"><span>git</span></a></li><li><a href="#zsh"><span>zsh</span></a></li><li><a href="#htop"><span>htop</span></a></li><li><a href="#设置文件打开数目和用户最大进程数"><span>设置文件打开数目和用户最大进程数</span></a></li><li><a href="#percol"><span>percol</span></a></li></ol></li></ol>
+                </div>
+
+            </div>
+            
+
+        </div>
+    </div>
+</div>
 
 
-        </main>
-        <footer id="footer">
-            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
-        </footer>
-    </body>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+        <div class="ui inverted section divider"></div>
+        &copy; 2019 <a href="/">Aron Tao</a>,
+        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
+    </div>
+</div>
+
+    </div>
+
+
+
+
+<!-- scripts list from theme config.yml -->
+
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
+
+<script src="/js/semantic-ui-algolia.js"></script>
+
+<script src="/js/aloha-events.js"></script>
+
+
+
+</body>
 </html>
-
-

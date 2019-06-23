@@ -1,61 +1,148 @@
-<!doctype html>
-<html lang="en">
-    <head><meta name="generator" content="Hexo 3.8.0">
-		
-        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="Kyligence">
-        <link rel="shortcut icon" href="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-        <link rel="canonical" href="http://guolinn.com/">
-        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
-        <title>Spark Parquet file split | Jiatao Tao&#39;s blog</title>
-        <meta name="description" content="{{meta_description}}">
 
-        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
-    </head>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="Kyligence">
+    <title>Spark Parquet file split | Jiatao Tao&#39;s blog</title>
+
+    <!-- Open Graph -->
+    <meta name="description" content="问题在实际使用 Spark + Parquet 的时候, 遇到了两个不解的地方:  我们只有一个 Parquet 文件(小于 HDFS block size), 但是 Spark 在某个 stage 生成了4个 tasks 来处理. 4个 tasks 中只有一个 task 处理了所有数据, 其他几个都没有在处理数据.  这两个问题牵涉到对于 Parquet, Spark 是如何来进行切分 part">
+<meta name="keywords" content="BigData,Spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark Parquet file split">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/10/22/Spark-Parquet-file-split/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="问题在实际使用 Spark + Parquet 的时候, 遇到了两个不解的地方:  我们只有一个 Parquet 文件(小于 HDFS block size), 但是 Spark 在某个 stage 生成了4个 tasks 来处理. 4个 tasks 中只有一个 task 处理了所有数据, 其他几个都没有在处理数据.  这两个问题牵涉到对于 Parquet, Spark 是如何来进行切分 part">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2018-10-31T03:18:56.050Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark Parquet file split">
+<meta name="twitter:description" content="问题在实际使用 Spark + Parquet 的时候, 遇到了两个不解的地方:  我们只有一个 Parquet 文件(小于 HDFS block size), 但是 Spark 在某个 stage 生成了4个 tasks 来处理. 4个 tasks 中只有一个 task 处理了所有数据, 其他几个都没有在处理数据.  这两个问题牵涉到对于 Parquet, Spark 是如何来进行切分 part">
+
+    <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Person",
+  "email": "mailto:",
+  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
+  "name": "Aron Tao",
+  "url": "https://aaaaaaron.github.io"
+}
+</script>
+    <script>
+    var algoliaEnabled = false;
     
-		<body class="post-template">
-	
+</script>
 
-        <header id="header">
-            <a id="logo" href="/"><img src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Jiatao Tao's blog"></a>
-            <h1><a href="/">Aron Tao</a></h1>
-            <p></p>
-            <div id="follow-icons">
-                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
-  </div>
-<h6><a href="/about">About</a></h6>
-        </header>
+    
 
-        <main id="content">
+    
+    
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    
+    
+    
+        <!-- stylesheets list from config.yml -->
         
+        <link rel="stylesheet" href="/css/aloha.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
+        
+    
 
-<article class="post">
-  October 22, 2018
-  
-    <span class="taglist">  &middot; 
-    
-    
-      <a href="/tags/BigData/">BigData</a> 
-    
-      <a href="/tags/Spark/">Spark</a> 
-    
-    </span>
-  
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
 
-  <h1 class="post-title">Spark Parquet file split</h1>
-  <section class="post-content article-entry">
-    <h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>在实际使用 Spark + Parquet 的时候, 遇到了两个不解的地方:</p>
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <div id="menu-sidebar" class="ui left vertical sidebar menu">
+
+    <div id="sidebar-top">
+        <div class="content">
+            <h3>Jiatao Tao&#39;s blog</h3>
+        </div>
+    </div>
+    <div class="ui container sidebar-card">
+    <div class="ui people shape content">
+        <div class="active side">
+            <div class="ui card">
+                <div class="image">
+                    <img class="ui medium bordered image" src="/images/avatar.jpg">
+                </div>
+                <div class="content">
+                    <a class="header">Aron Tao</a>
+                    
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                        
+                    </div>
+
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+    
+    
+
+    
+
+    
+    <a href="/index.html" class="item">
+        <i class="home icon"></i>
+        HOME
+    </a>
+
+    
+
+    
+</div>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <div id="post-Spark-Parquet-file-split" class="ui main container article-type-post">
+
+    
+
+    <div class="ui divided grid">
+
+        <div class="two column row" id="article-content">
+
+            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+                
+
+<h1 class="ui header">
+    
+    Spark Parquet file split
+</h1>
+
+
+
+                <div class="article-inner">
+
+                    <div class="article-entry" itemprop="articleBody">
+                        
+                        <h3 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h3><p>在实际使用 Spark + Parquet 的时候, 遇到了两个不解的地方:</p>
 <ol>
 <li>我们只有一个 Parquet 文件(小于 HDFS block size), 但是 Spark 在某个 stage 生成了4个 tasks 来处理.</li>
 <li>4个 tasks 中只有一个 task 处理了所有数据, 其他几个都没有在处理数据.</li>
@@ -89,37 +176,125 @@
 <p>FileScanRDD<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">FileScanRDD</span>(<span class="params"></span></span></span><br><span class="line"><span class="class"><span class="params">    @transient private val sparkSession: <span class="type">SparkSession</span>,</span></span></span><br><span class="line"><span class="class"><span class="params">    readFunction: (<span class="type">PartitionedFile</span></span>) <span class="title">=&gt;</span> <span class="title">Iterator</span>[<span class="type">InternalRow</span>],</span></span><br><span class="line"><span class="class">    <span class="title">@transient</span> <span class="title">val</span> <span class="title">filePartitions</span></span>: <span class="type">Seq</span>[<span class="type">FilePartition</span>])</span><br><span class="line">  <span class="keyword">extends</span> <span class="type">RDD</span>[<span class="type">InternalRow</span>](sparkSession.sparkContext, <span class="type">Nil</span>) &#123;</span><br><span class="line"></span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">compute</span></span>(split: <span class="type">RDDPartition</span>, context: <span class="type">TaskContext</span>): <span class="type">Iterator</span>[<span class="type">InternalRow</span>] = &#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">val</span> files = split.asInstanceOf[<span class="type">FilePartition</span>].files.toIterator</span><br><span class="line">    <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">var</span> currentFile: <span class="type">PartitionedFile</span> = <span class="literal">null</span> <span class="comment">// 根据 currentFile = files.next() 来的, 具体实现我就不贴了 有兴趣的可以自己看下.</span></span><br><span class="line">    ...</span><br><span class="line">    readFunction(currentFile)</span><br><span class="line">    ...</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h3 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h3><p>提升一个 Parquet 中的 row group 中的行数阈值, 籍此提示 Spark 并行度.</p>
 
-  </section>
-  <footer class="post-footer">
-    <!--
-    <section class="author">
-      <h4>Aron Tao</h4>
-      <p></p>
-    </section>
-    -->
-  </footer>
-</article>
+                        
+                    </div>
 
-<nav class="pagination" role="pagination">
+                    
+                    
+                    
+
+                    <div class="description post-description">
+    <span class="post-description-item">
+        <time datetime="2018-10-22T12:14:43.000Z" itemprop="datePublished">2018-10-22</time>
+
+    </span>
+    <span class="post-description-item">
+        
+
+    <span>
+        <i class="tags icon"></i>
+    </span>
+
     
-    <a class="newer-posts" href="/2018/10/24/Spark-Shuffle/">
-        ← prev <!--Shuffle-->
-    </a>
+    <span class="ui tiny label">
+        <a href="/tags/BigData/">BigData</a>
+    </span>
+
     
-    <span class="page-number">•</span>
+    <span class="ui tiny label">
+        <a href="/tags/Spark/">Spark</a>
+    </span>
+
     
-    <a class="older-posts" href="/2018/10/16/Spark-map-vs-mapPartitions/">
-        <!--Spark map vs mapPartitions--> next →
-    </a>
-    
-</nav>
+
+    </span>
+</div>
+
+                </div>
+                
+                <div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                
+
+                <a href="/2018/10/24/Spark-Shuffle/" class="ui tiny button">
+
+                    <i class="angle left icon"></i>
+                    
+                    Shuffle
+                    
+
+                </a>
+
+                
+            </div>
+            <div class="column nav-right">
+                
+
+                <a href="/2018/10/16/Spark-map-vs-mapPartitions/" class="ui tiny button">
+                    
+                    Spark map vs mapPartitions
+                    
+                    <i class="angle right icon"></i></a>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+                
+            </div>
+
+            
+            <div class="three wide computer three wide tablet column">
+
+                <div class="ui sticky article-toc" id="article-toc">
+                    <!-- toc -->
+                    <ol class="ui ordered list"><li><a href="#问题"><span>问题</span></a></li><li><a href="#处理流程"><span>处理流程</span></a><ol><li><a href="#1-根据-Parquet-按文件大小切块生成-partitions"><span>1. 根据 Parquet 按文件大小切块生成 partitions:</span></a></li><li><a href="#2-使用-ParquetInputSplit-构造-reader"><span>2. 使用 ParquetInputSplit 构造 reader:</span></a></li><li><a href="#3-划分-Parquet-的-row-groups-到不同的Spark-partitions-中去"><span>3. 划分 Parquet 的 row groups 到不同的Spark partitions 中去</span></a></li><li><a href="#画外"><span>画外:</span></a></li></ol></li><li><a href="#结论"><span>结论</span></a></li></ol>
+                </div>
+
+            </div>
+            
+
+        </div>
+    </div>
+</div>
 
 
-        </main>
-        <footer id="footer">
-            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
-        </footer>
-    </body>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+        <div class="ui inverted section divider"></div>
+        &copy; 2019 <a href="/">Aron Tao</a>,
+        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
+    </div>
+</div>
+
+    </div>
+
+
+
+
+<!-- scripts list from theme config.yml -->
+
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
+
+<script src="/js/semantic-ui-algolia.js"></script>
+
+<script src="/js/aloha-events.js"></script>
+
+
+
+</body>
 </html>
-
-

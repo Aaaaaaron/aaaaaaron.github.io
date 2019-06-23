@@ -1,59 +1,157 @@
-<!doctype html>
-<html lang="en">
-    <head><meta name="generator" content="Hexo 3.8.0">
-		
-        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="Kyligence">
-        <link rel="shortcut icon" href="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-        <link rel="canonical" href="http://guolinn.com/">
-        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
-        <title>Designing Data-Intensive Applications(Storage) | Jiatao Tao&#39;s blog</title>
-        <meta name="description" content="{{meta_description}}">
 
-        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
-    </head>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="Kyligence">
+    <title>Designing Data-Intensive Applications(Storage) | Jiatao Tao&#39;s blog</title>
+
+    <!-- Open Graph -->
+    <meta name="description" content="Index 基础log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的. log 文件是 append only, 而且一旦生成就不可变, 所以对并发和崩溃恢复很友好. 如果用 update 方式来修改值的话, 崩溃时会有很多不可预期的行为. 核心, 就是要减少扫的数据量. full scan (O(n)) 肯定最慢, 扫的时间和数据量成正比. index 的">
+<meta name="keywords" content="BigData">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Designing Data-Intensive Applications(Storage)">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="Index 基础log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的. log 文件是 append only, 而且一旦生成就不可变, 所以对并发和崩溃恢复很友好. 如果用 update 方式来修改值的话, 崩溃时会有很多不可预期的行为. 核心, 就是要减少扫的数据量. full scan (O(n)) 肯定最慢, 扫的时间和数据量成正比. index 的">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-24/893370.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-24/39145451.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-24/13193271.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-24/65990847.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-24/28391204.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-24/89272936.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-24/30223544.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-9-1/37827590.jpg">
+<meta property="og:updated_time" content="2018-11-18T04:08:01.328Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Designing Data-Intensive Applications(Storage)">
+<meta name="twitter:description" content="Index 基础log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的. log 文件是 append only, 而且一旦生成就不可变, 所以对并发和崩溃恢复很友好. 如果用 update 方式来修改值的话, 崩溃时会有很多不可预期的行为. 核心, 就是要减少扫的数据量. full scan (O(n)) 肯定最慢, 扫的时间和数据量成正比. index 的">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-24/893370.jpg">
+
+    <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Person",
+  "email": "mailto:",
+  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
+  "name": "Aron Tao",
+  "url": "https://aaaaaaron.github.io"
+}
+</script>
+    <script>
+    var algoliaEnabled = false;
     
-		<body class="post-template">
-	
+</script>
 
-        <header id="header">
-            <a id="logo" href="/"><img src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Jiatao Tao's blog"></a>
-            <h1><a href="/">Aron Tao</a></h1>
-            <p></p>
-            <div id="follow-icons">
-                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
-  </div>
-<h6><a href="/about">About</a></h6>
-        </header>
+    
 
-        <main id="content">
+    
+    
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    
+    
+    
+        <!-- stylesheets list from config.yml -->
         
+        <link rel="stylesheet" href="/css/aloha.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
+        
+    
 
-<article class="post">
-  August 26, 2018
-  
-    <span class="taglist">  &middot; 
-    
-    
-      <a href="/tags/BigData/">BigData</a> 
-    
-    </span>
-  
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
 
-  <h1 class="post-title">Designing Data-Intensive Applications(Storage)</h1>
-  <section class="post-content article-entry">
-    <h1 id="Index-基础"><a href="#Index-基础" class="headerlink" title="Index 基础"></a>Index 基础</h1><p>log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的.</p>
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <div id="menu-sidebar" class="ui left vertical sidebar menu">
+
+    <div id="sidebar-top">
+        <div class="content">
+            <h3>Jiatao Tao&#39;s blog</h3>
+        </div>
+    </div>
+    <div class="ui container sidebar-card">
+    <div class="ui people shape content">
+        <div class="active side">
+            <div class="ui card">
+                <div class="image">
+                    <img class="ui medium bordered image" src="/images/avatar.jpg">
+                </div>
+                <div class="content">
+                    <a class="header">Aron Tao</a>
+                    
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                        
+                    </div>
+
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+    
+    
+
+    
+
+    
+    <a href="/index.html" class="item">
+        <i class="home icon"></i>
+        HOME
+    </a>
+
+    
+
+    
+</div>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <div id="post-Designing-Data-Intensive-Applications-Storage" class="ui main container article-type-post">
+
+    
+
+    <div class="ui divided grid">
+
+        <div class="two column row" id="article-content">
+
+            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+                
+
+<h1 class="ui header">
+    
+    Designing Data-Intensive Applications(Storage)
+</h1>
+
+
+
+                <div class="article-inner">
+
+                    <div class="article-entry" itemprop="articleBody">
+                        
+                        <h1 id="Index-基础"><a href="#Index-基础" class="headerlink" title="Index 基础"></a>Index 基础</h1><p>log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的.</p>
 <p>log 文件是 append only, 而且一旦生成就不可变, 所以对并发和崩溃恢复很友好. 如果用 update 方式来修改值的话, 崩溃时会有很多不可预期的行为.</p>
 <p>核心, 就是要减少扫的数据量. full scan (O(n)) 肯定最慢, 扫的时间和数据量成正比.</p>
 <p>index 的也就是存出一些额外的信息, 这样的话帮助你定位到你的数据. 管理额外的信息是有开销的:存储(写入) 管理(更新), 所以 db 不会索引所有值.</p>
@@ -132,37 +230,120 @@
 <h1 id="列存储"><a href="#列存储" class="headerlink" title="列存储"></a>列存储</h1><p>如果一列的值, count 很大, 但是基数不大, 可以使用 bit map. 可以很高效的压缩.<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-9-1/37827590.jpg" alt=""></p>
 <h2 id="vectorized-process"><a href="#vectorized-process" class="headerlink" title="vectorized process"></a>vectorized process</h2><p>除了减少需要从磁盘加载的数据量以外, 面向列的存储布局也可以有效利用 CPU 周期. 例如 query engine 可以把一块(chunk) 的  compressed column data(为了单位信息密度更大) 放到 CPU 的 L1 cache. 前面说的按位与/或可以直接 apply 到这些 chunk 上.</p>
 
-  </section>
-  <footer class="post-footer">
-    <!--
-    <section class="author">
-      <h4>Aron Tao</h4>
-      <p></p>
-    </section>
-    -->
-  </footer>
-</article>
+                        
+                    </div>
 
-<nav class="pagination" role="pagination">
+                    
+                    
+                    
+
+                    <div class="description post-description">
+    <span class="post-description-item">
+        <time datetime="2018-08-26T11:30:40.000Z" itemprop="datePublished">2018-08-26</time>
+
+    </span>
+    <span class="post-description-item">
+        
+
+    <span>
+        <i class="tags icon"></i>
+    </span>
+
     
-    <a class="newer-posts" href="/2018/09/14/Maven-打包趟坑与解法/">
-        ← prev <!--Maven 打包趟坑与解法-->
-    </a>
+    <span class="ui tiny label">
+        <a href="/tags/BigData/">BigData</a>
+    </span>
+
     
-    <span class="page-number">•</span>
-    
-    <a class="older-posts" href="/2018/08/22/Parquet-encoding-definitions-official/">
-        <!--Parquet encoding definitions(official)--> next →
-    </a>
-    
-</nav>
+
+    </span>
+</div>
+
+                </div>
+                
+                <div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                
+
+                <a href="/2018/09/14/Maven-打包趟坑与解法/" class="ui tiny button">
+
+                    <i class="angle left icon"></i>
+                    
+                    Maven 打包趟坑与解法
+                    
+
+                </a>
+
+                
+            </div>
+            <div class="column nav-right">
+                
+
+                <a href="/2018/08/22/Parquet-encoding-definitions-official/" class="ui tiny button">
+                    
+                    Parquet encoding definitions(official)
+                    
+                    <i class="angle right icon"></i></a>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+                
+            </div>
+
+            
+            <div class="three wide computer three wide tablet column">
+
+                <div class="ui sticky article-toc" id="article-toc">
+                    <!-- toc -->
+                    <ol class="ui ordered list"><li><a href="#Index-基础"><span>Index 基础</span></a><ol><li><a href="#Hash-Index"><span>Hash Index</span></a><ol><li><a href="#局限"><span>局限</span></a></li></ol></li><li><a href="#SSLTables-and-LSM-Trees"><span>SSLTables and LSM-Trees</span></a><ol><li><a href="#优势"><span>优势</span></a></li><li><a href="#维护和构建-SSTables"><span>维护和构建 SSTables</span></a><ol><li><a href="#工作流"><span>工作流</span></a><ol><li><a href="#性能优化"><span>性能优化</span></a></li><li><a href="#问题-amp-解决"><span>问题&解决</span></a></li></ol></li></ol></li></ol></li><li><a href="#B-Trees"><span>B-Trees</span></a><ol><li><a href="#问题"><span>问题</span></a></li><li><a href="#优化"><span>优化</span></a></li><li><a href="#LSM-Tree-VS-B-Tree"><span>LSM Tree VS B Tree</span></a><ol><li><a href="#LSM"><span>LSM</span></a></li><li><a href="#B-Tree"><span>B Tree</span></a></li></ol></li></ol></li></ol></li><li><a href="#列存储"><span>列存储</span></a><ol><li><a href="#vectorized-process"><span>vectorized process</span></a></li></ol></li></ol>
+                </div>
+
+            </div>
+            
+
+        </div>
+    </div>
+</div>
 
 
-        </main>
-        <footer id="footer">
-            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
-        </footer>
-    </body>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+        <div class="ui inverted section divider"></div>
+        &copy; 2019 <a href="/">Aron Tao</a>,
+        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
+    </div>
+</div>
+
+    </div>
+
+
+
+
+<!-- scripts list from theme config.yml -->
+
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
+
+<script src="/js/semantic-ui-algolia.js"></script>
+
+<script src="/js/aloha-events.js"></script>
+
+
+
+</body>
 </html>
-
-

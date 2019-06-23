@@ -1,59 +1,157 @@
-<!doctype html>
-<html lang="en">
-    <head><meta name="generator" content="Hexo 3.8.0">
-		
-        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="Kyligence">
-        <link rel="shortcut icon" href="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-        <link rel="canonical" href="http://guolinn.com/">
-        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
-        <title>Shuffle | Jiatao Tao&#39;s blog</title>
-        <meta name="description" content="{{meta_description}}">
 
-        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
-    </head>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="Kyligence">
+    <title>Shuffle | Jiatao Tao&#39;s blog</title>
+
+    <!-- Open Graph -->
+    <meta name="description" content="Shuffle 过程介绍MapReduce 的 Shuffle 过程介绍Shuffle 的本义是洗牌、混洗，把一组有一定规则的数据尽量转换成一组无规则的数据，越随机越好。MapReduce 中的 shuffle 更像是洗牌的逆过程，把一组无规则的数据尽量转换成一组具有一定规则的数据。 为什么 MapReduce 计算模型需要 shuffle 过程？我们都知道 MapReduce 计算模型一般包括两">
+<meta name="keywords" content="BigData">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Shuffle">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/10/24/Spark-Shuffle/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="Shuffle 过程介绍MapReduce 的 Shuffle 过程介绍Shuffle 的本义是洗牌、混洗，把一组有一定规则的数据尽量转换成一组无规则的数据，越随机越好。MapReduce 中的 shuffle 更像是洗牌的逆过程，把一组无规则的数据尽量转换成一组具有一定规则的数据。 为什么 MapReduce 计算模型需要 shuffle 过程？我们都知道 MapReduce 计算模型一般包括两">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="http://data.qq.com/resource/imgcache/uploads/2014/07/image001.jpg">
+<meta property="og:image" content="http://data.qq.com/resource/imgcache/uploads/2014/07/image002.png">
+<meta property="og:image" content="http://data.qq.com/resource/imgcache/uploads/2014/07/image003.png">
+<meta property="og:image" content="http://data.qq.com/resource/imgcache/uploads/2014/07/image004.png">
+<meta property="og:image" content="http://data.qq.com/resource/imgcache/uploads/2014/07/image005.png">
+<meta property="og:image" content="http://data.qq.com/resource/imgcache/uploads/2014/07/image006.png">
+<meta property="og:image" content="http://data.qq.com/resource/imgcache/uploads/2014/07/image007.png">
+<meta property="og:image" content="http://data.qq.com/resource/imgcache/uploads/2014/07/image008.png">
+<meta property="og:updated_time" content="2018-10-24T14:52:49.951Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Shuffle">
+<meta name="twitter:description" content="Shuffle 过程介绍MapReduce 的 Shuffle 过程介绍Shuffle 的本义是洗牌、混洗，把一组有一定规则的数据尽量转换成一组无规则的数据，越随机越好。MapReduce 中的 shuffle 更像是洗牌的逆过程，把一组无规则的数据尽量转换成一组具有一定规则的数据。 为什么 MapReduce 计算模型需要 shuffle 过程？我们都知道 MapReduce 计算模型一般包括两">
+<meta name="twitter:image" content="http://data.qq.com/resource/imgcache/uploads/2014/07/image001.jpg">
+
+    <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Person",
+  "email": "mailto:",
+  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
+  "name": "Aron Tao",
+  "url": "https://aaaaaaron.github.io"
+}
+</script>
+    <script>
+    var algoliaEnabled = false;
     
-		<body class="post-template">
-	
+</script>
 
-        <header id="header">
-            <a id="logo" href="/"><img src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Jiatao Tao's blog"></a>
-            <h1><a href="/">Aron Tao</a></h1>
-            <p></p>
-            <div id="follow-icons">
-                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
-  </div>
-<h6><a href="/about">About</a></h6>
-        </header>
+    
 
-        <main id="content">
+    
+    
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    
+    
+    
+        <!-- stylesheets list from config.yml -->
         
+        <link rel="stylesheet" href="/css/aloha.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
+        
+    
 
-<article class="post">
-  October 24, 2018
-  
-    <span class="taglist">  &middot; 
-    
-    
-      <a href="/tags/BigData/">BigData</a> 
-    
-    </span>
-  
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
 
-  <h1 class="post-title">Shuffle</h1>
-  <section class="post-content article-entry">
-    <h1 id="Shuffle-过程介绍"><a href="#Shuffle-过程介绍" class="headerlink" title="Shuffle 过程介绍"></a><strong>Shuffle 过程介绍</strong></h1><h2 id="MapReduce-的-Shuffle-过程介绍"><a href="#MapReduce-的-Shuffle-过程介绍" class="headerlink" title="MapReduce 的 Shuffle 过程介绍"></a><strong>MapReduce 的 Shuffle 过程介绍</strong></h2><p>Shuffle 的本义是洗牌、混洗，把一组有一定规则的数据尽量转换成一组无规则的数据，越随机越好。MapReduce 中的 shuffle 更像是洗牌的逆过程，把一组无规则的数据尽量转换成一组具有一定规则的数据。</p>
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <div id="menu-sidebar" class="ui left vertical sidebar menu">
+
+    <div id="sidebar-top">
+        <div class="content">
+            <h3>Jiatao Tao&#39;s blog</h3>
+        </div>
+    </div>
+    <div class="ui container sidebar-card">
+    <div class="ui people shape content">
+        <div class="active side">
+            <div class="ui card">
+                <div class="image">
+                    <img class="ui medium bordered image" src="/images/avatar.jpg">
+                </div>
+                <div class="content">
+                    <a class="header">Aron Tao</a>
+                    
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                        
+                    </div>
+
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+    
+    
+
+    
+
+    
+    <a href="/index.html" class="item">
+        <i class="home icon"></i>
+        HOME
+    </a>
+
+    
+
+    
+</div>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <div id="post-Spark-Shuffle" class="ui main container article-type-post">
+
+    
+
+    <div class="ui divided grid">
+
+        <div class="two column row" id="article-content">
+
+            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+                
+
+<h1 class="ui header">
+    
+    Shuffle
+</h1>
+
+
+
+                <div class="article-inner">
+
+                    <div class="article-entry" itemprop="articleBody">
+                        
+                        <h1 id="Shuffle-过程介绍"><a href="#Shuffle-过程介绍" class="headerlink" title="Shuffle 过程介绍"></a><strong>Shuffle 过程介绍</strong></h1><h2 id="MapReduce-的-Shuffle-过程介绍"><a href="#MapReduce-的-Shuffle-过程介绍" class="headerlink" title="MapReduce 的 Shuffle 过程介绍"></a><strong>MapReduce 的 Shuffle 过程介绍</strong></h2><p>Shuffle 的本义是洗牌、混洗，把一组有一定规则的数据尽量转换成一组无规则的数据，越随机越好。MapReduce 中的 shuffle 更像是洗牌的逆过程，把一组无规则的数据尽量转换成一组具有一定规则的数据。</p>
 <p>为什么 MapReduce 计算模型需要 shuffle 过程？我们都知道 MapReduce 计算模型一般包括两个重要的阶段：map 是映射，负责数据的过滤分发；reduce 是规约，负责数据的计算归并。Reduce 的数据来源于 map，map 的输出即是 reduce 的输入，reduce 需要通过 shuffle 来获取数据。</p>
 <p>从 map 输出到 reduce 输入的整个过程可以广义地称为 shuffle。Shuffle 横跨 map 端和 reduce 端，在 map 端包括 spill 过程，在 reduce 端包括 copy 和 sort 过程，如图所示：</p>
 <p><img src="http://data.qq.com/resource/imgcache/uploads/2014/07/image001.jpg" alt="image001"></p>
@@ -170,37 +268,120 @@
 </ul>
 <p>摘自: <a href="http://data.qq.com/article?id=543" target="_blank" rel="noopener">腾讯大数据博客</a></p>
 
-  </section>
-  <footer class="post-footer">
-    <!--
-    <section class="author">
-      <h4>Aron Tao</h4>
-      <p></p>
-    </section>
-    -->
-  </footer>
-</article>
+                        
+                    </div>
 
-<nav class="pagination" role="pagination">
+                    
+                    
+                    
+
+                    <div class="description post-description">
+    <span class="post-description-item">
+        <time datetime="2018-10-24T06:09:16.000Z" itemprop="datePublished">2018-10-24</time>
+
+    </span>
+    <span class="post-description-item">
+        
+
+    <span>
+        <i class="tags icon"></i>
+    </span>
+
     
-    <a class="newer-posts" href="/2018/10/24/Spark-executor-log/">
-        ← prev <!--寻找 Spark executor 日志-->
-    </a>
+    <span class="ui tiny label">
+        <a href="/tags/BigData/">BigData</a>
+    </span>
+
     
-    <span class="page-number">•</span>
-    
-    <a class="older-posts" href="/2018/10/22/Spark-Parquet-file-split/">
-        <!--Spark Parquet file split--> next →
-    </a>
-    
-</nav>
+
+    </span>
+</div>
+
+                </div>
+                
+                <div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                
+
+                <a href="/2018/10/24/Spark-executor-log/" class="ui tiny button">
+
+                    <i class="angle left icon"></i>
+                    
+                    寻找 Spark executor 日志
+                    
+
+                </a>
+
+                
+            </div>
+            <div class="column nav-right">
+                
+
+                <a href="/2018/10/22/Spark-Parquet-file-split/" class="ui tiny button">
+                    
+                    Spark Parquet file split
+                    
+                    <i class="angle right icon"></i></a>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+                
+            </div>
+
+            
+            <div class="three wide computer three wide tablet column">
+
+                <div class="ui sticky article-toc" id="article-toc">
+                    <!-- toc -->
+                    <ol class="ui ordered list"><li><a href="#Shuffle-过程介绍"><span>Shuffle 过程介绍</span></a><ol><li><a href="#MapReduce-的-Shuffle-过程介绍"><span>MapReduce 的 Shuffle 过程介绍</span></a><ol><li><a href="#Map-Shuffle-Spill-过程"><span>Map Shuffle (Spill 过程)</span></a><ol><li><a href="#Collect"><span>Collect</span></a></li><li><a href="#Sort"><span>Sort</span></a></li><li><a href="#Spill"><span>Spill</span></a></li><li><a href="#Merge"><span>Merge</span></a></li></ol></li><li><a href="#Reduce-shuffle"><span>Reduce shuffle</span></a><ol><li><a href="#Copy"><span>Copy</span></a></li><li><a href="#Merge-Sort"><span>Merge Sort</span></a></li></ol></li></ol></li><li><a href="#Spark-的-Shuffle-过程介绍"><span>Spark 的 Shuffle 过程介绍</span></a><ol><li><a href="#Shuffle-Writer"><span>Shuffle Writer</span></a></li><li><a href="#Shuffle-Fetcher"><span>Shuffle Fetcher</span></a></li></ol></li><li><a href="#MapReduce-和-Spark-的-Shuffle-过程对比"><span>MapReduce 和 Spark 的 Shuffle 过程对比</span></a></li><li><a href="#Shuffle-后续优化方向"><span>Shuffle 后续优化方向</span></a><ol><li><a href="#MapReduce-Shuffle-后续优化方向"><span>MapReduce Shuffle 后续优化方向</span></a></li><li><a href="#Spark-Shuffle-后续优化方向"><span>Spark Shuffle 后续优化方向</span></a></li></ol></li></ol></li></ol>
+                </div>
+
+            </div>
+            
+
+        </div>
+    </div>
+</div>
 
 
-        </main>
-        <footer id="footer">
-            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
-        </footer>
-    </body>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+        <div class="ui inverted section divider"></div>
+        &copy; 2019 <a href="/">Aron Tao</a>,
+        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
+    </div>
+</div>
+
+    </div>
+
+
+
+
+<!-- scripts list from theme config.yml -->
+
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
+
+<script src="/js/semantic-ui-algolia.js"></script>
+
+<script src="/js/aloha-events.js"></script>
+
+
+
+</body>
 </html>
-
-

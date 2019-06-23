@@ -1,59 +1,152 @@
-<!doctype html>
-<html lang="en">
-    <head><meta name="generator" content="Hexo 3.8.0">
-		
-        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="Kyligence">
-        <link rel="shortcut icon" href="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-        <link rel="canonical" href="http://guolinn.com/">
-        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
-        <title>Learning Parquet | Jiatao Tao&#39;s blog</title>
-        <meta name="description" content="{{meta_description}}">
 
-        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
-    </head>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="Kyligence">
+    <title>Learning Parquet | Jiatao Tao&#39;s blog</title>
+
+    <!-- Open Graph -->
+    <meta name="description" content="Glossary Row group: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column i">
+<meta name="keywords" content="Parquet">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Learning Parquet">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="Glossary Row group: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column i">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/FileLayout.gif">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/FileFormat.gif">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/Parquet%20%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F.png">
+<meta property="og:updated_time" content="2019-06-23T11:49:20.765Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Learning Parquet">
+<meta name="twitter:description" content="Glossary Row group: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column i">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/FileLayout.gif">
+
+    <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Person",
+  "email": "mailto:",
+  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
+  "name": "Aron Tao",
+  "url": "https://aaaaaaron.github.io"
+}
+</script>
+    <script>
+    var algoliaEnabled = false;
     
-		<body class="post-template">
-	
+</script>
 
-        <header id="header">
-            <a id="logo" href="/"><img src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Jiatao Tao's blog"></a>
-            <h1><a href="/">Aron Tao</a></h1>
-            <p></p>
-            <div id="follow-icons">
-                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
-  </div>
-<h6><a href="/about">About</a></h6>
-        </header>
+    
 
-        <main id="content">
+    
+    
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    
+    
+    
+        <!-- stylesheets list from config.yml -->
         
+        <link rel="stylesheet" href="/css/aloha.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
+        
+    
 
-<article class="post">
-  October 30, 2018
-  
-    <span class="taglist">  &middot; 
-    
-    
-      <a href="/tags/Parquet/">Parquet</a> 
-    
-    </span>
-  
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
 
-  <h1 class="post-title">Learning Parquet</h1>
-  <section class="post-content article-entry">
-    <h1 id="Glossary"><a href="#Glossary" class="headerlink" title="Glossary"></a>Glossary</h1><ul>
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <div id="menu-sidebar" class="ui left vertical sidebar menu">
+
+    <div id="sidebar-top">
+        <div class="content">
+            <h3>Jiatao Tao&#39;s blog</h3>
+        </div>
+    </div>
+    <div class="ui container sidebar-card">
+    <div class="ui people shape content">
+        <div class="active side">
+            <div class="ui card">
+                <div class="image">
+                    <img class="ui medium bordered image" src="/images/avatar.jpg">
+                </div>
+                <div class="content">
+                    <a class="header">Aron Tao</a>
+                    
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                        
+                    </div>
+
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+    
+    
+
+    
+
+    
+    <a href="/index.html" class="item">
+        <i class="home icon"></i>
+        HOME
+    </a>
+
+    
+
+    
+</div>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <div id="post-Learning-Parquet" class="ui main container article-type-post">
+
+    
+
+    <div class="ui divided grid">
+
+        <div class="two column row" id="article-content">
+
+            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+                
+
+<h1 class="ui header">
+    
+    Learning Parquet
+</h1>
+
+
+
+                <div class="article-inner">
+
+                    <div class="article-entry" itemprop="articleBody">
+                        
+                        <h1 id="Glossary"><a href="#Glossary" class="headerlink" title="Glossary"></a>Glossary</h1><ul>
 <li><p>Row group: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column in the dataset.</p>
 </li>
 <li><p>Column chunk: A chunk of the data for a particular column. These live in a particular row group and is guaranteed to be contiguous in the file.</p>
@@ -82,37 +175,120 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * The data for a column chunk</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">Chunk</span> </span>&#123;&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">   * Builder to concatenate the buffers of the discontinuous parts for the same column. These parts are generated as a</span></span><br><span class="line"><span class="comment">   * result of the column-index based filtering when some pages might be skipped at reading.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChunkListBuilder</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChunkData</span> </span>&#123;</span><br><span class="line">      <span class="keyword">final</span> List&lt;ByteBuffer&gt; buffers = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">      OffsetIndex offsetIndex;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;ChunkDescriptor, ChunkData&gt; map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">    <span class="keyword">private</span> ChunkDescriptor lastDescriptor;</span><br><span class="line">    <span class="keyword">private</span> SeekableInputStream f;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * PageReader for a single column chunk. A column chunk contains</span></span><br><span class="line"><span class="comment">   * several pages, which are yielded one by one in order.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * This implementation is provided with a list of pages, each of which</span></span><br><span class="line"><span class="comment">   * is decompressed and passed through.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ColumnChunkPageReader</span> <span class="keyword">implements</span> <span class="title">PageReader</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> BytesInputDecompressor decompressor;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> valueCount;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;DataPage&gt; compressedPages;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> DictionaryPage compressedDictionaryPage;</span><br><span class="line">    <span class="comment">// null means no page synchronization is required; firstRowIndex will not be returned by the pages</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> OffsetIndex offsetIndex;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> rowCount;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> pageIndex = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    ColumnChunkPageReader(BytesInputDecompressor decompressor, List&lt;DataPage&gt; compressedPages,</span><br><span class="line">        DictionaryPage compressedDictionaryPage, OffsetIndex offsetIndex, <span class="keyword">long</span> rowCount) &#123;</span><br><span class="line">      <span class="keyword">this</span>.decompressor = decompressor;</span><br><span class="line">      <span class="keyword">this</span>.compressedPages = <span class="keyword">new</span> LinkedList&lt;DataPage&gt;(compressedPages);</span><br><span class="line">      <span class="keyword">this</span>.compressedDictionaryPage = compressedDictionaryPage;</span><br><span class="line">      <span class="keyword">long</span> count = <span class="number">0</span>;</span><br><span class="line">      <span class="keyword">for</span> (DataPage p : compressedPages) &#123;</span><br><span class="line">        count += p.getValueCount();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">this</span>.valueCount = count;</span><br><span class="line">      <span class="keyword">this</span>.offsetIndex = offsetIndex;</span><br><span class="line">      <span class="keyword">this</span>.rowCount = rowCount;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-  </section>
-  <footer class="post-footer">
-    <!--
-    <section class="author">
-      <h4>Aron Tao</h4>
-      <p></p>
-    </section>
-    -->
-  </footer>
-</article>
+                        
+                    </div>
 
-<nav class="pagination" role="pagination">
+                    
+                    
+                    
+
+                    <div class="description post-description">
+    <span class="post-description-item">
+        <time datetime="2018-10-30T11:09:46.000Z" itemprop="datePublished">2018-10-30</time>
+
+    </span>
+    <span class="post-description-item">
+        
+
+    <span>
+        <i class="tags icon"></i>
+    </span>
+
     
-    <a class="newer-posts" href="/2018/11/01/Spark-Parquet-Deep-Dive/">
-        ← prev <!--Spark Parquet Deep Dive-->
-    </a>
+    <span class="ui tiny label">
+        <a href="/tags/Parquet/">Parquet</a>
+    </span>
+
     
-    <span class="page-number">•</span>
-    
-    <a class="older-posts" href="/2018/10/26/Spark-submit/">
-        <!--提交 Spark 应用--> next →
-    </a>
-    
-</nav>
+
+    </span>
+</div>
+
+                </div>
+                
+                <div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                
+
+                <a href="/2018/11/01/Spark-Parquet-Deep-Dive/" class="ui tiny button">
+
+                    <i class="angle left icon"></i>
+                    
+                    Spark Parquet Deep Dive
+                    
+
+                </a>
+
+                
+            </div>
+            <div class="column nav-right">
+                
+
+                <a href="/2018/10/26/Spark-submit/" class="ui tiny button">
+                    
+                    提交 Spark 应用
+                    
+                    <i class="angle right icon"></i></a>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+                
+            </div>
+
+            
+            <div class="three wide computer three wide tablet column">
+
+                <div class="ui sticky article-toc" id="article-toc">
+                    <!-- toc -->
+                    <ol class="ui ordered list"><li><a href="#Glossary"><span>Glossary</span></a><ol><li><a href="#Unit-of-parallelization"><span>Unit of parallelization</span></a></li></ol></li><li><a href="#Deep"><span>Deep</span></a></li></ol>
+                </div>
+
+            </div>
+            
+
+        </div>
+    </div>
+</div>
 
 
-        </main>
-        <footer id="footer">
-            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
-        </footer>
-    </body>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+        <div class="ui inverted section divider"></div>
+        &copy; 2019 <a href="/">Aron Tao</a>,
+        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
+    </div>
+</div>
+
+    </div>
+
+
+
+
+<!-- scripts list from theme config.yml -->
+
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
+
+<script src="/js/semantic-ui-algolia.js"></script>
+
+<script src="/js/aloha-events.js"></script>
+
+
+
+</body>
 </html>
-
-

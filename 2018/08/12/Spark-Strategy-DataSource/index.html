@@ -1,61 +1,150 @@
-<!doctype html>
-<html lang="en">
-    <head><meta name="generator" content="Hexo 3.8.0">
-		
-        <meta http-equiv="Content-Type" content="text/html" charset="UTF-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <meta name="description" content="Kyligence">
-        <link rel="shortcut icon" href="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
-        <link rel="canonical" href="http://guolinn.com/">
-        <link rel="alternate" type="application/rss+xml" title="Aron Tao" href="/atom.xml">
-        <title>Spark Strategy:DataSource | Jiatao Tao&#39;s blog</title>
-        <meta name="description" content="{{meta_description}}">
 
-        <link href="//cdn.bootcss.com/font-awesome/4.6.3/css/font-awesome.min.css" rel="stylesheet">
-        <link rel="stylesheet" type="text/css" href="/styles/crisp.css">
-        <meta name="HandheldFriendly" content="True">
-        <meta name="MobileOptimized" content="320">
-        <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <!-- HTML5 shim and Respond.js IE8 support of HTML5 elements and media queries -->
-        <!--[if lt IE 9]>
-        <script src="https://oss.maxcdn.com/libs/html5shiv/3.7.0/html5shiv.js"></script>
-        <script src="https://oss.maxcdn.com/libs/respond.js/1.4.2/respond.min.js"></script>
-        <![endif]-->
 
-    </head>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head prefix="og: http://ogp.me/ns#"><meta name="generator" content="Hexo 3.8.0">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="Kyligence">
+    <title>Spark Strategy:DataSource | Jiatao Tao&#39;s blog</title>
+
+    <!-- Open Graph -->
+    <meta name="description" content="DataFrameReader#format(&amp;quot;json&amp;quot;).load(paths : _*) 返回一个 DataFrame, 我们来看看背后发生了什么事情. 首先 load会进入到:123456789DataFrameReader#sparkSession.baseRelationToDataFrame(      DataSource.apply(        spark">
+<meta name="keywords" content="BigData,Spark">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark Strategy:DataSource">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/08/12/Spark-Strategy-DataSource/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="DataFrameReader#format(&amp;quot;json&amp;quot;).load(paths : _*) 返回一个 DataFrame, 我们来看看背后发生了什么事情. 首先 load会进入到:123456789DataFrameReader#sparkSession.baseRelationToDataFrame(      DataSource.apply(        spark">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-19/37558220.jpg">
+<meta property="og:updated_time" content="2018-11-18T04:25:39.281Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark Strategy:DataSource">
+<meta name="twitter:description" content="DataFrameReader#format(&amp;quot;json&amp;quot;).load(paths : _*) 返回一个 DataFrame, 我们来看看背后发生了什么事情. 首先 load会进入到:123456789DataFrameReader#sparkSession.baseRelationToDataFrame(      DataSource.apply(        spark">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-19/37558220.jpg">
+
+    <script type="application/ld+json">
+{
+  "@context": "http://schema.org",
+  "@type": "Person",
+  "email": "mailto:",
+  "image": "https://gitee.com/Meldoy/image/raw/master/life/head.jpg",
+  "name": "Aron Tao",
+  "url": "https://aaaaaaron.github.io"
+}
+</script>
+    <script>
+    var algoliaEnabled = false;
     
-		<body class="post-template">
-	
+</script>
 
-        <header id="header">
-            <a id="logo" href="/"><img src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg" alt="Jiatao Tao's blog"></a>
-            <h1><a href="/">Aron Tao</a></h1>
-            <p></p>
-            <div id="follow-icons">
-                  <a href="/atom.xml"><i class="fa fa-rss-square fa-2x"></i></a>
-  </div>
-<h6><a href="/about">About</a></h6>
-        </header>
+    
 
-        <main id="content">
+    
+    
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    
+    
+    
+        <!-- stylesheets list from config.yml -->
         
+        <link rel="stylesheet" href="/css/aloha.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.css">
+        
+        <link rel="stylesheet" href="//cdn.bootcss.com/magnific-popup.js/1.1.0/magnific-popup.min.css">
+        
+    
 
-<article class="post">
-  August 12, 2018
-  
-    <span class="taglist">  &middot; 
-    
-    
-      <a href="/tags/BigData/">BigData</a> 
-    
-      <a href="/tags/Spark/">Spark</a> 
-    
-    </span>
-  
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
 
-  <h1 class="post-title">Spark Strategy:DataSource</h1>
-  <section class="post-content article-entry">
-    <p><code>DataFrameReader#format(&quot;json&quot;).load(paths : _*)</code> 返回一个 DataFrame, 我们来看看背后发生了什么事情.</p>
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <div id="menu-sidebar" class="ui left vertical sidebar menu">
+
+    <div id="sidebar-top">
+        <div class="content">
+            <h3>Jiatao Tao&#39;s blog</h3>
+        </div>
+    </div>
+    <div class="ui container sidebar-card">
+    <div class="ui people shape content">
+        <div class="active side">
+            <div class="ui card">
+                <div class="image">
+                    <img class="ui medium bordered image" src="/images/avatar.jpg">
+                </div>
+                <div class="content">
+                    <a class="header">Aron Tao</a>
+                    
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                        
+                    </div>
+
+                </div>
+                <div class="extra content">
+                    <div class="ui list">
+                        
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+</div>
+
+    
+    
+
+    
+
+    
+    <a href="/index.html" class="item">
+        <i class="home icon"></i>
+        HOME
+    </a>
+
+    
+
+    
+</div>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <div id="post-Spark-Strategy-DataSource" class="ui main container article-type-post">
+
+    
+
+    <div class="ui divided grid">
+
+        <div class="two column row" id="article-content">
+
+            <div class="thirteen wide computer thirteen wide tablet sixteen wide mobile column">
+                
+
+<h1 class="ui header">
+    
+    Spark Strategy:DataSource
+</h1>
+
+
+
+                <div class="article-inner">
+
+                    <div class="article-entry" itemprop="articleBody">
+                        
+                        <p><code>DataFrameReader#format(&quot;json&quot;).load(paths : _*)</code> 返回一个 DataFrame, 我们来看看背后发生了什么事情.</p>
 <p>首先 <code>load</code>会进入到:<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">DataFrameReader</span>#</span><br><span class="line"></span><br><span class="line">sparkSession.baseRelationToDataFrame(</span><br><span class="line">      <span class="type">DataSource</span>.apply(</span><br><span class="line">        sparkSession,</span><br><span class="line">        paths = paths,</span><br><span class="line">        userSpecifiedSchema = userSpecifiedSchema,</span><br><span class="line">        className = source,</span><br><span class="line">        options = extraOptions.toMap).resolveRelation())</span><br></pre></td></tr></table></figure></p>
 <p>resolveRelation 会生成一个 Resolved BaseRelation , 如果你看执行计划, 会发现 table scan 那里的执行树节点就是 Relation.</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="type">JsonDataSource</span>#</span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">inferFromDataset</span></span>(json: <span class="type">Dataset</span>[<span class="type">String</span>], parsedOptions: <span class="type">JSONOptions</span>): <span class="type">StructType</span> = &#123;</span><br><span class="line">  <span class="keyword">val</span> sampled: <span class="type">Dataset</span>[<span class="type">String</span>] = <span class="type">JsonUtils</span>.sample(json, parsedOptions)</span><br><span class="line">  <span class="keyword">val</span> rdd: <span class="type">RDD</span>[<span class="type">UTF8String</span>] = sampled.queryExecution.toRdd.map(_.getUTF8String(<span class="number">0</span>))</span><br><span class="line">  <span class="type">JsonInferSchema</span>.infer(rdd, parsedOptions, <span class="type">CreateJacksonParser</span>.utf8String)</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
@@ -75,37 +164,125 @@
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">trait</span> <span class="title">CodegenSupport</span> <span class="keyword">extends</span> <span class="title">SparkPlan</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Returns Java source code to process the rows from input RDD.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">produce</span></span>(ctx: <span class="type">CodegenContext</span>, parent: <span class="type">CodegenSupport</span>): <span class="type">String</span> = executeQuery &#123;</span><br><span class="line">    <span class="keyword">this</span>.parent = parent</span><br><span class="line">    ctx.freshNamePrefix = variablePrefix</span><br><span class="line">    <span class="string">s""</span><span class="string">"</span></span><br><span class="line"><span class="string">       |$&#123;ctx.registerComment(s"</span><span class="type">PRODUCE</span>: $&#123;<span class="keyword">this</span>.simpleString&#125;<span class="string">")&#125;</span></span><br><span class="line"><span class="string">       |$&#123;doProduce(ctx)&#125;</span></span><br><span class="line"><span class="string">     "</span><span class="string">""</span>.stripMargin</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Generate the Java source code to process, should be overridden by subclass to support codegen.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * doProduce() usually generate the framework, for example, aggregation could generate this:</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   *   if (!initialized) &#123;</span></span><br><span class="line"><span class="comment">   *     # create a hash map, then build the aggregation hash map</span></span><br><span class="line"><span class="comment">   *     # call child.produce()</span></span><br><span class="line"><span class="comment">   *     initialized = true;</span></span><br><span class="line"><span class="comment">   *   &#125;</span></span><br><span class="line"><span class="comment">   *   while (hashmap.hasNext()) &#123;</span></span><br><span class="line"><span class="comment">   *     row = hashmap.next();</span></span><br><span class="line"><span class="comment">   *     # build the aggregation results</span></span><br><span class="line"><span class="comment">   *     # create variables for results</span></span><br><span class="line"><span class="comment">   *     # call consume(), which will call parent.doConsume()</span></span><br><span class="line"><span class="comment">   *      if (shouldStop()) return;</span></span><br><span class="line"><span class="comment">   *   &#125;</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">protected</span> <span class="function"><span class="keyword">def</span> <span class="title">doProduce</span></span>(ctx: <span class="type">CodegenContext</span>): <span class="type">String</span></span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Consume the generated columns or row from current SparkPlan, call its parent's `doConsume()`.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">final</span> <span class="function"><span class="keyword">def</span> <span class="title">consume</span></span>(ctx: <span class="type">CodegenContext</span>, outputVars: <span class="type">Seq</span>[<span class="type">ExprCode</span>], row: <span class="type">String</span> = <span class="literal">null</span>): <span class="type">String</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> inputVars =</span><br><span class="line">      <span class="keyword">if</span> (row != <span class="literal">null</span>) &#123;</span><br><span class="line">        ctx.currentVars = <span class="literal">null</span></span><br><span class="line">        ctx.<span class="type">INPUT_ROW</span> = row</span><br><span class="line">        output.zipWithIndex.map &#123; <span class="keyword">case</span> (attr, i) =&gt;</span><br><span class="line">          <span class="type">BoundReference</span>(i, attr.dataType, attr.nullable).genCode(ctx)</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        assert(outputVars != <span class="literal">null</span>)</span><br><span class="line">        assert(outputVars.length == output.length)</span><br><span class="line">        <span class="comment">// outputVars will be used to generate the code for UnsafeRow, so we should copy them</span></span><br><span class="line">        outputVars.map(_.copy())</span><br><span class="line">      &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">val</span> rowVar = <span class="keyword">if</span> (row != <span class="literal">null</span>) &#123;</span><br><span class="line">      <span class="type">ExprCode</span>(<span class="string">""</span>, <span class="string">"false"</span>, row)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (outputVars.nonEmpty) &#123;</span><br><span class="line">        <span class="keyword">val</span> colExprs = output.zipWithIndex.map &#123; <span class="keyword">case</span> (attr, i) =&gt;</span><br><span class="line">          <span class="type">BoundReference</span>(i, attr.dataType, attr.nullable)</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">val</span> evaluateInputs = evaluateVariables(outputVars)</span><br><span class="line">        <span class="comment">// generate the code to create a UnsafeRow</span></span><br><span class="line">        ctx.<span class="type">INPUT_ROW</span> = row</span><br><span class="line">        ctx.currentVars = outputVars</span><br><span class="line">        <span class="keyword">val</span> ev = <span class="type">GenerateUnsafeProjection</span>.createCode(ctx, colExprs, <span class="literal">false</span>)</span><br><span class="line">        <span class="keyword">val</span> code = <span class="string">s""</span><span class="string">"</span></span><br><span class="line"><span class="string">          |$evaluateInputs</span></span><br><span class="line"><span class="string">          |$&#123;ev.code.trim&#125;</span></span><br><span class="line"><span class="string">         "</span><span class="string">""</span>.stripMargin.trim</span><br><span class="line">        <span class="type">ExprCode</span>(code, <span class="string">"false"</span>, ev.value)</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// There is no columns</span></span><br><span class="line">        <span class="type">ExprCode</span>(<span class="string">""</span>, <span class="string">"false"</span>, <span class="string">"unsafeRow"</span>)</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ctx.freshNamePrefix = parent.variablePrefix</span><br><span class="line">    <span class="keyword">val</span> evaluated = evaluateRequiredVariables(output, inputVars, parent.usedInputs)</span><br><span class="line">    <span class="string">s""</span><span class="string">"</span></span><br><span class="line"><span class="string">       |$&#123;ctx.registerComment(s"</span><span class="type">CONSUME</span>: $&#123;parent.simpleString&#125;<span class="string">")&#125;</span></span><br><span class="line"><span class="string">       |$evaluated</span></span><br><span class="line"><span class="string">       |$&#123;parent.doConsume(ctx, inputVars, rowVar)&#125;</span></span><br><span class="line"><span class="string">     "</span><span class="string">""</span>.stripMargin</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * Generate the Java source code to process the rows from child SparkPlan.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * This should be override by subclass to support codegen.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * For example, Filter will generate the code like this:</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   *   # code to evaluate the predicate expression, result is isNull1 and value2</span></span><br><span class="line"><span class="comment">   *   if (isNull1 || !value2) continue;</span></span><br><span class="line"><span class="comment">   *   # call consume(), which will call parent.doConsume()</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * Note: A plan can either consume the rows as UnsafeRow (row), or a list of variables (input).</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">doConsume</span></span>(ctx: <span class="type">CodegenContext</span>, input: <span class="type">Seq</span>[<span class="type">ExprCode</span>], row: <span class="type">ExprCode</span>): <span class="type">String</span> = &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">UnsupportedOperationException</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * WholeStageCodegen compile a subtree of plans that support codegen together into single Java</span></span><br><span class="line"><span class="comment"> * function.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Here is the call graph of to generate Java source (plan A support codegen, but plan B does not):</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> *   WholeStageCodegen       Plan A               FakeInput        Plan B</span></span><br><span class="line"><span class="comment"> * =========================================================================</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * -&gt; execute()</span></span><br><span class="line"><span class="comment"> *     |</span></span><br><span class="line"><span class="comment"> *  doExecute() ---------&gt;   inputRDDs() -------&gt; inputRDDs() ------&gt; execute()</span></span><br><span class="line"><span class="comment"> *     |</span></span><br><span class="line"><span class="comment"> *     +-----------------&gt;   produce()</span></span><br><span class="line"><span class="comment"> *                             |</span></span><br><span class="line"><span class="comment"> *                          doProduce()  -------&gt; produce()</span></span><br><span class="line"><span class="comment"> *                                                   |</span></span><br><span class="line"><span class="comment"> *                                                doProduce()</span></span><br><span class="line"><span class="comment"> *                                                   |</span></span><br><span class="line"><span class="comment"> *                         doConsume() &lt;--------- consume()</span></span><br><span class="line"><span class="comment"> *                             |</span></span><br><span class="line"><span class="comment"> *  doConsume()  &lt;--------  consume()</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * SparkPlan A should override doProduce() and doConsume().</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * doCodeGen() will create a CodeGenContext, which will hold a list of variables for input,</span></span><br><span class="line"><span class="comment"> * used to generated code for BoundReference.</span></span><br><span class="line"><span class="comment"> */</span></span><br></pre></td></tr></table></figure>
 
-  </section>
-  <footer class="post-footer">
-    <!--
-    <section class="author">
-      <h4>Aron Tao</h4>
-      <p></p>
-    </section>
-    -->
-  </footer>
-</article>
+                        
+                    </div>
 
-<nav class="pagination" role="pagination">
+                    
+                    
+                    
+
+                    <div class="description post-description">
+    <span class="post-description-item">
+        <time datetime="2018-08-12T14:32:25.000Z" itemprop="datePublished">2018-08-12</time>
+
+    </span>
+    <span class="post-description-item">
+        
+
+    <span>
+        <i class="tags icon"></i>
+    </span>
+
     
-    <a class="newer-posts" href="/2018/08/21/Parquet-in-Spark/">
-        ← prev <!--Parquet in Spark-->
-    </a>
+    <span class="ui tiny label">
+        <a href="/tags/BigData/">BigData</a>
+    </span>
+
     
-    <span class="page-number">•</span>
+    <span class="ui tiny label">
+        <a href="/tags/Spark/">Spark</a>
+    </span>
+
     
-    <a class="older-posts" href="/2018/07/19/Linux-IO-模型/">
-        <!--Linux IO 模型--> next →
-    </a>
-    
-</nav>
+
+    </span>
+</div>
+
+                </div>
+                
+                <div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                
+
+                <a href="/2018/08/21/Parquet-in-Spark/" class="ui tiny button">
+
+                    <i class="angle left icon"></i>
+                    
+                    Parquet in Spark
+                    
+
+                </a>
+
+                
+            </div>
+            <div class="column nav-right">
+                
+
+                <a href="/2018/07/19/Linux-IO-模型/" class="ui tiny button">
+                    
+                    Linux IO 模型
+                    
+                    <i class="angle right icon"></i></a>
+                
+            </div>
+        </div>
+    </div>
+
+</div>
+                
+            </div>
+
+            
+            <div class="three wide computer three wide tablet column">
+
+                <div class="ui sticky article-toc" id="article-toc">
+                    <!-- toc -->
+                    
+                </div>
+
+            </div>
+            
+
+        </div>
+    </div>
+</div>
 
 
-        </main>
-        <footer id="footer">
-            <section id="footer-message">&copy; 2019 Aron Tao. All rights reserved. Powered by <a href="http://hexo.io/" target="_blank">Hexo</a>. <a href="https://github.com/guolin/crisp-hexo-theme" target="_blank">crisp</a> theme by <a href="guolin.github.io" target="_blank">Guo Lin</a>.</section>
-        </footer>
-    </body>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <div class="ui vertical footer segment">
+    <div class="ui center aligned container">
+        <div class="ui inverted section divider"></div>
+        &copy; 2019 <a href="/">Aron Tao</a>,
+        Powered by <a href="https://github.com/henryhuang/hexo-theme-aloha" target="_blank">Aloha</a> and <a href="http://hexo.io/" target="_blank">Hexo</a>.
+    </div>
+</div>
+
+    </div>
+
+
+
+
+<!-- scripts list from theme config.yml -->
+
+<script src="//cdn.bootcss.com/jquery/3.1.0/jquery.min.js"></script>
+
+<script src="//cdn.bootcss.com/semantic-ui/2.2.4/semantic.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch/3.18.1/algoliasearch.min.js"></script>
+
+<script src="//cdn.bootcss.com/algoliasearch-helper-js/2.13.0/algoliasearch.helper.min.js"></script>
+
+<script src="/js/semantic-ui-algolia.js"></script>
+
+<script src="/js/aloha-events.js"></script>
+
+
+
+</body>
 </html>
-
-
