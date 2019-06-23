@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="">
+  <head><meta name="generator" content="Hexo 3.8.0">
+    
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+  <meta name="description" content="Linux 初养成">
+
+
+
+
+
+
+
+
+  <link rel="alternate" href="/default" title="Jiatao Tao's blog">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1">
+
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2019/01/05/Linux-初养成/">
+
+
+<meta name="description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 初养成">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/01/05/Linux-初养成/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-06-23T11:51:06.338Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Linux 初养成">
+<meta name="twitter:description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+    <title> Linux 初养成 - Jiatao Tao's blog </title>
+  </head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">Jiatao Tao's blog</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Linux 初养成
+        
+      </h1>
+
+      <time class="post-time">
+          Jan 5 2019
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <h1 id="shell-基础知识"><a href="#shell-基础知识" class="headerlink" title="shell 基础知识"></a>shell 基础知识</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$@</span>  传递给脚本或函数的所有参数</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -f  file ]    如果文件存在</span><br><span class="line"><span class="keyword">if</span> [ -d ...   ]    如果目录存在</span><br><span class="line"><span class="keyword">if</span> [ -s file  ]    如果文件存在且非空 </span><br><span class="line"><span class="keyword">if</span> [ -r file  ]    如果文件存在且可读</span><br><span class="line"><span class="keyword">if</span> [ -w file  ]    如果文件存在且可写</span><br><span class="line"><span class="keyword">if</span> [ -x file  ]    如果文件存在且可执行   </span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>  [ -n <span class="variable">$string</span>  ]             如果string 非空(非0），返回0(<span class="literal">true</span>)  </span><br><span class="line"><span class="keyword">if</span>  [ -z <span class="variable">$string</span>  ]             如果string 为空</span><br><span class="line"><span class="keyword">if</span>  [ <span class="variable">$sting</span> ]                  如果string 非空，返回0 (和-n类似)    </span><br><span class="line"></span><br><span class="line">``</span><br><span class="line"></span><br><span class="line">|meta字符| meta字符作用|</span><br><span class="line">|--------|-------------|</span><br><span class="line">|= |设定变量|</span><br><span class="line">|$ | 作变量或运算替换(请不要与`shell prompt`混淆)|命令</span><br><span class="line">|&gt;| 输出重定向(重定向stdout)|</span><br><span class="line">|&lt;|输入重定向(重定向stdin)|</span><br><span class="line">|\||命令管道|</span><br><span class="line">|&amp;|重定向file descriptor或将命令至于后台(<span class="built_in">bg</span>)运行|</span><br><span class="line">|()|将其内部的命令置于nested subshell执行，或用于运算或变量替换|</span><br><span class="line">|&#123;&#125;|将其内的命令置于non-named <span class="keyword">function</span>中执行，或用在变量替换的界定范围|</span><br><span class="line">|;|在前一个命令执行结束时，而忽略其返回值，继续执行下一个命令|</span><br><span class="line">|&amp;&amp;|在前一个命令执行结束时，若返回值为<span class="literal">true</span>，继续执行下一个命令|</span><br><span class="line">|\|\||在前一个命令执行结束时，若返回值为<span class="literal">false</span>，继续执行下一个命令|</span><br><span class="line">|!|执行histroy列表中的命令|</span><br><span class="line">|... | ...|</span><br><span class="line"></span><br><span class="line"><span class="comment">## snipaste</span></span><br><span class="line"></span><br><span class="line">```sh</span><br><span class="line">DIR=<span class="string">"<span class="variable">$( cd "$(dirname "$0")</span>"</span> ; <span class="built_in">pwd</span> -P )<span class="string">"</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string"><span class="variable">$0</span> 类似于python中的sys.argv[0]等。 <span class="variable">$0</span>指的是Shell本身的文件名。类似的有如果运行脚本的时候带参数，那么<span class="variable">$1</span> 就是第一个参数，依此类推。 </span></span><br><span class="line"><span class="string">dirname 用于取指定路径所在的目录 ，如 dirname /home/ikidou 结果为 /home。 </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">$ 返回该命令的结果 </span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">pwd -P 如果目录是链接时，格式：pwd -P 显示出实际路径，而非使用连接（link）路径。</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">############################################################################</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">dir=<span class="variable">$(cd -P -- "$(dirname -- "$0")</span>"</span> &amp;&amp; <span class="built_in">pwd</span> -P)</span><br><span class="line">会 <span class="built_in">cd</span> 到脚本所在的目录</span><br><span class="line"></span><br><span class="line">Note: A double dash (--) is used <span class="keyword">in</span> commands to signify the end of <span class="built_in">command</span> options, so files containing dashes or other special characters won<span class="string">'t break the command.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Always use `-P` flag with `cd` command, alias cd='</span><span class="built_in">cd</span> -P<span class="string">'</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">若将一个文件夹自己的快捷方式放到文件夹里,这样写脚本的时候就有可能会出现无限循环,当前路径名就会变得无限长,但是加上了-P命令后就可以避免无限循环的情况.</span></span><br></pre></td></tr></table></figure>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">A</span><br><span class="line">&gt; ./myscript</span><br><span class="line"></span><br><span class="line">B</span><br><span class="line">&gt; source myscript</span><br><span class="line"></span><br><span class="line">Short answer: sourcing will run the commands in the current shell process. executing will run the commands in a new shell process.</span><br></pre></td></tr></table></figure>
+<h2 id="variable"><a href="#variable" class="headerlink" title="variable"></a>variable</h2><p>若从技术的细节来看，shell会依据IFS(Internal Field Seperator) 将command line所输入的文字拆解为”字段”(word/field)。 然后再针对特殊字符(meta)先作处理，最后重组整行command line。</p>
+<p>变量替换(substitution) shell 之所以强大，其中的一个因素是它可以在命令行中对变量作 替换(substitution)处理。 在命令行中使用者可以使用$符号加上变量名称(除了用=定义变量名称之外)， 将变量值给替换出来，然后再重新组建命令行。</p>
+<p>比方:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ A=ls</span><br><span class="line">$ B=la</span><br><span class="line">$ C=/tmp</span><br><span class="line">$ $A -$B $C</span><br></pre></td></tr></table></figure>
+<p>会得到:<code>ls -la /tmp</code></p>
+<p>echo命令只单纯将其argument送至”标准输出”(stdout, 通常是我们的屏幕)<br><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ echo $A -$B $C</span><br><span class="line">&gt;&gt; ls -la /tmp</span><br><span class="line"></span><br><span class="line">$ echo $&#123;C&#125;</span><br><span class="line">&gt;&gt; /tmp</span><br></pre></td></tr></table></figure></p>
+<h3 id="export"><a href="#export" class="headerlink" title="export"></a>export</h3><p>严格来说，我们在当前shell中所定义的变量，均属于 “本地变量”(local variable), 只有经过export命令的 “输出”处理，才能成为”环境变量”(environment variable)：</p>
+<h2 id="与-差在哪？"><a href="#与-差在哪？" class="headerlink" title="()与{}差在哪？"></a>()与{}差在哪？</h2><p>要从一些命令执行的先后次序中得到结果， 如算术运算的2*(3+4)那样, 这时候，我们就可以引入”命令群组”(command group) 的概念：将许多命令集中处理。</p>
+<ul>
+<li><code>()</code> 将<code>command group</code>置于<code>sub-shell</code>(<code>子shell</code>)中去执行，也称 <code>nested sub-shell</code>。</li>
+<li><code>{}</code> 则是在同一个<code>shell</code>内完成，也称<code>non-named command group</code>。</li>
+</ul>
+<p>在bash shell中, $()与<code></code>(反引号)都是用来做 命令替换(command substitution)的。</p>
+<h1 id="Shell-snipaste"><a href="#Shell-snipaste" class="headerlink" title="Shell-snipaste"></a>Shell-snipaste</h1><ol>
+<li><code>!$</code> : 代表上条命令的最后一个参数.</li>
+<li><code>ssh-copy-id -i ~/.ssh/id_rsa.pub root@host</code>: 快速与root@host建立免密连接</li>
+<li><code>lsof -i :7070 | awk &#39;NR==2 {print $2}&#39; | xargs kill -9</code> : 杀死占用端口为7070的进程</li>
+<li><code>for i in {1..10}; do ll | wc -l; sleep 2; done</code> : 打印当前系统中句柄的打开数量</li>
+<li><code>ll | awk &#39;{print $9}&#39;</code> : 只取文件名</li>
+<li><code>find * | grep .DS_Store |xargs rm -rf</code> : 删除所有 .DS_Store</li>
+<li><code>ln -s /usr/share/zoneinfo/Asia/Shanghai /etc/localtime</code> : 切换时区</li>
+<li><code>pbcopy &lt; ~/.ssh/id_rsa.pub</code> : 将公钥内容复制到剪切板</li>
+<li><code>du -hsx * | sort -rh | head -n</code> : 打印当前目录下占磁盘空间最多的n个文件</li>
+<li><code>/var/log</code> : 各个组件的 log, /var/log/messages 内核日志在这里.</li>
+<li><p>CPU占用最多的前10个进程：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ps auxw|head -1;ps auxw|sort -rn -k3|head -10</span><br><span class="line">top （然后按下M，注意大写）</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>内存消耗最多的前10个进程</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ps auxw|head -1;ps auxw|sort -rn -k4|head -10</span><br><span class="line">top （然后按下P，注意大写）</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>虚拟内存使用最多的前10个进程<br><code>ps auxw|head -1;ps auxw|sort -rn -k5|head -10</code></p>
+</li>
+<li><p>配置 Linux 自启动 :<br>a. 把命令加到 <code>/etc/rc.local</code><br>b. 将脚本放到目录 /etc/profile.d/ 下，系统启动后就会自动执行该目录下的所有shell脚本<br>c. cp启动文件到 /etc/init.d/或者/etc/rc.d/init.d/（前者是后者的软连接）, <code>chkconfig --add cloudera-scm-agent</code>, <code>chkconfig cloudera-scm-agent on</code>, <code>chkconfig --list cloudera-scm-agent</code></p>
+</li>
+<li><p>关闭防火墙 : <code>service iptables status</code>, <code>service iptables stop</code>, <code>chkconfig iptables off</code>, <code>service iptables status</code></p>
+</li>
+<li><p>卸载 rpm 包 :</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">rpm -qa|grep -i java</span><br><span class="line">rpm -e --nodeps xxx yyy zzz</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>du -sh, du -h –max-depth=1, df -h</p>
+</li>
+<li><p><code>find / -type f -name &quot;*.log&quot; | xargs grep &quot;ERROR&quot;</code> : 统计所有的log文件中，包含Error字符的行</p>
+</li>
+<li><p><code>ps -efL | grep [PID] | wc -l</code> : 查看某个进程创建的线程数</p>
+</li>
+<li><p>nohub</p>
+</li>
+<li><p>mount</p>
+</li>
+<li><p><code>find .-name *iso &gt;/tmp/res.txt &amp;</code>, 加&amp;放到后台执行, <code>bg</code> 可以查看后台运行的任务, <code>fg  %进程id</code> 放到前台执行</p>
+</li>
+</ol>
+<h2 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h2><ol>
+<li>jstat -gc [pid] : 查看gc情况</li>
+<li>jmap -histo [pid] : 按照对象内存大小排序, 注意会导致full gc</li>
+<li>jstack -l pid : 用于查看线程是否存在死锁</li>
+</ol>
+<h1 id="装机必备"><a href="#装机必备" class="headerlink" title="装机必备"></a>装机必备</h1><h3 id="git"><a href="#git" class="headerlink" title="git"></a>git</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install git-core</span><br></pre></td></tr></table></figure>
+<h3 id="zsh"><a href="#zsh" class="headerlink" title="zsh"></a>zsh</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">yum install zsh</span><br><span class="line">git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh (sh -c &quot;$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)&quot;</span><br><span class="line">)</span><br><span class="line">git clone git://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions</span><br></pre></td></tr></table></figure>
+<h3 id="htop"><a href="#htop" class="headerlink" title="htop"></a>htop</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wget http://pkgs.repoforge.org/htop/htop-1.0.2-1.el6.rf.x86_64.rpm</span><br><span class="line">yum install -y epel-release</span><br><span class="line">yum install -y htop</span><br></pre></td></tr></table></figure>
+<h3 id="设置文件打开数目和用户最大进程数"><a href="#设置文件打开数目和用户最大进程数" class="headerlink" title="设置文件打开数目和用户最大进程数"></a>设置文件打开数目和用户最大进程数</h3><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">查看文件打开数目</span><br><span class="line">ulimit -a</span><br><span class="line">查看用户最大进程数</span><br><span class="line">ulimit -u</span><br><span class="line">设置用户最大进程数</span><br><span class="line">vim /etc/security/limits.conf</span><br><span class="line"></span><br><span class="line">结尾添加以下内容</span><br><span class="line">*       soft    nofile          32768</span><br><span class="line">*       hard    nofile          1048576</span><br><span class="line">*       soft    nproc           65536</span><br><span class="line">*       hard    nproc           unlimited</span><br><span class="line">*       soft    memlock         unlimited</span><br><span class="line">*       hard    memlock         unlimited</span><br></pre></td></tr></table></figure>
+<h3 id="percol"><a href="#percol" class="headerlink" title="percol"></a>percol</h3><p>brew install percol</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">function exists &#123; which $1 &amp;&gt; /dev/null &#125;</span><br><span class="line"></span><br><span class="line">if exists percol; then</span><br><span class="line">    function percol_select_history() &#123;</span><br><span class="line">        local tac</span><br><span class="line">        exists gtac &amp;&amp; tac=&quot;gtac&quot; || &#123; exists tac &amp;&amp; tac=&quot;tac&quot; || &#123; tac=&quot;tail -r&quot; &#125; &#125;</span><br><span class="line">        BUFFER=$(fc -l -n 1 | eval $tac | percol --query &quot;$LBUFFER&quot;)</span><br><span class="line">        CURSOR=$#BUFFER         # move cursor</span><br><span class="line">        zle -R -c               # refresh</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    zle -N percol_select_history</span><br><span class="line">    bindkey &apos;^R&apos; percol_select_history</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+            </div>
+          
+
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2012 -
+    
+    2019
+    <span class="footer-author">Aron Tao.</span>
+    <span class="power-by">
+        Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

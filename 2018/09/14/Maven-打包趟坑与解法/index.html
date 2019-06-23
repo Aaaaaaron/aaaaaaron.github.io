@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="">
+  <head><meta name="generator" content="Hexo 3.8.0">
+    
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+  <meta name="description" content="Maven 打包趟坑与解法">
+
+
+
+
+  <meta name="keywords" content="Java,Maven,">
+
+
+
+
+
+  <link rel="alternate" href="/default" title="Jiatao Tao's blog">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1">
+
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/09/14/Maven-打包趟坑与解法/">
+
+
+<meta name="description" content="基础首先明确:  当你使用 Maven 对项目打包时，你需要了解以下 3 个打包 plugin，它们分别是     plugin function     maven-jar-plugin maven 默认打包插件，用来创建 project jar   maven-shade-plugin 用来打可执行包，executable(fat) jar   maven-assembly-plugin 支持">
+<meta name="keywords" content="Java,Maven">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Maven 打包趟坑与解法">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/09/14/Maven-打包趟坑与解法/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="基础首先明确:  当你使用 Maven 对项目打包时，你需要了解以下 3 个打包 plugin，它们分别是     plugin function     maven-jar-plugin maven 默认打包插件，用来创建 project jar   maven-shade-plugin 用来打可执行包，executable(fat) jar   maven-assembly-plugin 支持">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/50973815.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/29736635.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/57385130.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/5.png">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11871540974627_.pic_hd.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11861540974584_.pic.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/76336665.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/65076854.jpg">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-9-14/40098244.jpg">
+<meta property="og:updated_time" content="2019-06-23T12:20:11.210Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Maven 打包趟坑与解法">
+<meta name="twitter:description" content="基础首先明确:  当你使用 Maven 对项目打包时，你需要了解以下 3 个打包 plugin，它们分别是     plugin function     maven-jar-plugin maven 默认打包插件，用来创建 project jar   maven-shade-plugin 用来打可执行包，executable(fat) jar   maven-assembly-plugin 支持">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/50973815.jpg">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+    <title> Maven 打包趟坑与解法 - Jiatao Tao's blog </title>
+  </head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">Jiatao Tao's blog</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Maven 打包趟坑与解法
+        
+      </h1>
+
+      <time class="post-time">
+          Sep 14 2018
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <h3 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h3><p>首先明确:</p>
+<ol start="0">
+<li>当你使用 Maven 对项目打包时，你需要了解以下 3 个打包 plugin，它们分别是</li>
+</ol>
+<table>
+<thead>
+<tr>
+<th>plugin</th>
+<th>function</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>maven-jar-plugin</td>
+<td>maven 默认打包插件，用来创建 project jar</td>
+</tr>
+<tr>
+<td>maven-shade-plugin</td>
+<td>用来打可执行包，executable(fat) jar</td>
+</tr>
+<tr>
+<td>maven-assembly-plugin</td>
+<td>支持定制化打包方式，例如 apache 项目的打包方式</td>
+</tr>
+</tbody>
+</table>
+<p>不管你 dependences 里的 scope 设置为什么, mvn package 出来的 你 src 的 jar 包里, 只会有你的 class 文件, 不会有所依赖的 jar 包, 可以通过 maven assembly 插件来做这个事情. 但是如果打成 war 包, 是会包含 compile scope 的依赖的. 而 provided 是要容器提供, 比如说 Tomcat, 会到 Tomcat 的 <code>$liferay-tomcat-home\webapps\ROOT\WEB-INF\lib</code> 目录下找.</p>
+<ol>
+<li><p>mvn install 出来的 jar 包只会包含自己的 src 的 classes. 即使你是 compile 的依赖, 也不会进去, 但是如果打成 war 包, 是会包含 compile scope 的依赖的. 而 provided 是要容器提供, 比如说 Tomcat, 会到 Tomcat 的 <code>$liferay-tomcat-home\webapps\ROOT\WEB-INF\lib</code> 目录下找. 而且 compile 的依赖是传递的, provided 的不传递.</p>
+</li>
+<li><p>可以通过 assembly/shade 插件把依赖的 jar 包打到一个 assembly.jar 包中去. 和源码的 jar 包可以是独立的, 也可以打到一起. 如果你一个依赖(D1)有两个版本(在父/子pom 中都有定义, 但是版本不一样), 在打出的 jar 包里只会有一个版本, 因为路径里不带版本的. 所以会出现各种 NoSuchMethodError 等等问题, 因为编译的时候都是各自用的正确的 D1 编译的出的 class. 但是运行时用到的 D1 只会有一个版本, 会有不匹配.</p>
+</li>
+</ol>
+<p>所以, 不要在一个项目里, 不同 pom 里面尝试使用不同 version 的依赖. 来看个实例:</p>
+<p>parquet-column 里会 shade 一个 fasttuil, 你 jar -tf parquet-column.jar 看他 里面会有这个 fastutil.</p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/50973815.jpg" alt=""></p>
+<p>可以看到有两个 jar 包, 一个 origin 不带 shade 的 fastutil, 另外一个是带着的, 也是放到 maven 仓库的 jar 包.<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/29736635.jpg" alt=""></p>
+<p>jar -tf 确认<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/57385130.jpg" alt=""></p>
+<h3 id="问题定位一般方法"><a href="#问题定位一般方法" class="headerlink" title="问题定位一般方法"></a>问题定位一般方法</h3><ol start="0">
+<li><p>当你遇到 <code>java.lang.NoClassDefFoundError</code> 等错误的时候, 如果是在 IDEA 里运行的, 很有可能是是 provided 依赖. 具体可以先看 IDEA 中打出的 classpath 里有没有依赖的包,<img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/5.png" alt="">, 然后看看 iml 里的 scope <img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11871540974627_.pic_hd.jpg" alt="">. 解决方法是 把 iml 里的都改成 compile 或者在 IDEA 中勾选上这个:<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/11861540974584_.pic.jpg" alt=""></p>
+</li>
+<li><p>如果有遇到什么 NoSuchMethodError, ClassNotFoundException 等等的, 先看看打印出来的 classpath. IDEA 里可以直接看:<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/76336665.jpg" alt=""></p>
+</li>
+<li><p>然后可以 double shift, 搜下出问题的类, 一般会跳出来多个:<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-11-8/65076854.jpg" alt=""></p>
+</li>
+<li><p>然后再用 <code>mvn dependency:tree</code> 看下当前 model 用的哪个版本的依赖</p>
+</li>
+</ol>
+<p>然后就可以做相应的操作, 一般有以下几种:</p>
+<pre><code>1. exclusive 相应依赖
+2. 写死用一个版本的
+3. 把 dependency 的依赖做 external 模块, 然后 shade + reloaction, 可以参见 spark 的 external model.
+</code></pre><h3 id="实战"><a href="#实战" class="headerlink" title="实战"></a>实战</h3><p>程序里报错<code>Caused by: java.lang.NoSuchMethodError: com.fasterxml.jackson.databind.ObjectMapper.canSerialize(Ljava/lang/Class;Ljava/util/concurrent/atomic/AtomicReference;)Z</code></p>
+<p>但是无论从<code>mvn dependency:tree</code>, 还是运行时加载的 jar 包来看, 都是用了正确的 <code>jackson-databind-2.6.5.jar</code>. 问题就刁钻在它用的这个类, 其实不是 <code>jackson-databind</code> 里的, 而是其他的包里 shaed 但是又没有 relocation 的. 除非你把这个包给从依赖李去掉, 在这个包的里面的依赖里去掉, 或者最外面加正确版本的<code>jackson-databind-2.6.5.jar</code>都是没有用的, 见下图:</p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-9-14/40098244.jpg" alt=""></p>
+<p>所以画框里他 exclusive 也是没有用的. 解决方法就是我们做成 external 的, 并且 exclude 掉.</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">project</span> <span class="attr">xmlns</span>=<span class="string">"http://maven.apache.org/POM/4.0.0"</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xmlns:xsi</span>=<span class="string">"http://www.w3.org/2001/XMLSchema-instance"</span></span></span><br><span class="line"><span class="tag">         <span class="attr">xsi:schemaLocation</span>=<span class="string">"http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">modelVersion</span>&gt;</span>4.0.0<span class="tag">&lt;/<span class="name">modelVersion</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>external-influxdb<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">packaging</span>&gt;</span>jar<span class="tag">&lt;/<span class="name">packaging</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">name</span>&gt;</span>External-InfluxDB<span class="tag">&lt;/<span class="name">name</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">url</span>&gt;</span>http://kyligence.io<span class="tag">&lt;/<span class="name">url</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">description</span>&gt;</span>Curator for KAP<span class="tag">&lt;/<span class="name">description</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">parent</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>apache<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>kylin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">version</span>&gt;</span>3.0.0-SNAPSHOT<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">relativePath</span>&gt;</span>../../../pom.xml<span class="tag">&lt;/<span class="name">relativePath</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">parent</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">properties</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">project.build.sourceEncoding</span>&gt;</span>UTF-8<span class="tag">&lt;/<span class="name">project.build.sourceEncoding</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">shadeBase</span>&gt;</span>org.apache.kylin.shaded.influxdb<span class="tag">&lt;/<span class="name">shadeBase</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">shaded.curator.version</span>&gt;</span>2.12.0<span class="tag">&lt;/<span class="name">shaded.curator.version</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">properties</span>&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">dependencies</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.influxdb<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>influxdb-java<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>2.5<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">scope</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>com.google.guava<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>guava<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">version</span>&gt;</span>20.0<span class="tag">&lt;/<span class="name">version</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">scope</span>&gt;</span>compile<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="comment">&lt;!-- cover log4j from parent pom--&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>log4j<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>log4j<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">scope</span>&gt;</span>provided<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.slf4j<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>slf4j-log4j12<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">scope</span>&gt;</span>provided<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.slf4j<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>jcl-over-slf4j<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">scope</span>&gt;</span>provided<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">dependency</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.slf4j<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>slf4j-api<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">scope</span>&gt;</span>provided<span class="tag">&lt;/<span class="name">scope</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">dependency</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">dependencies</span>&gt;</span></span><br><span class="line">    <span class="comment">&lt;!--overwrite parent, need to upgrade this when upgrade grpc--&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">build</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">plugins</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;<span class="name">plugin</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">groupId</span>&gt;</span>org.apache.maven.plugins<span class="tag">&lt;/<span class="name">groupId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">artifactId</span>&gt;</span>maven-shade-plugin<span class="tag">&lt;/<span class="name">artifactId</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;<span class="name">executions</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;<span class="name">execution</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">phase</span>&gt;</span>package<span class="tag">&lt;/<span class="name">phase</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">goals</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;<span class="name">goal</span>&gt;</span>shade<span class="tag">&lt;/<span class="name">goal</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;/<span class="name">goals</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;<span class="name">configuration</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;<span class="name">artifactSet</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;<span class="name">includes</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">include</span>&gt;</span>*:*<span class="tag">&lt;/<span class="name">include</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;/<span class="name">includes</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;<span class="name">excludes</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">exclude</span>&gt;</span>log4j:*<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">exclude</span>&gt;</span>org.slf4j:*<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;/<span class="name">excludes</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;/<span class="name">artifactSet</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;<span class="name">relocations</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>org.influxdb<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">shadedPattern</span>&gt;</span>$&#123;shadeBase&#125;.org.influxdb<span class="tag">&lt;/<span class="name">shadedPattern</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;/<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>com.squareup.moshi<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">shadedPattern</span>&gt;</span>$&#123;shadeBase&#125;.com.squareup.moshi<span class="tag">&lt;/<span class="name">shadedPattern</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;/<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>okhttp3<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">shadedPattern</span>&gt;</span>$&#123;shadeBase&#125;.okhttp3<span class="tag">&lt;/<span class="name">shadedPattern</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;/<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>okio<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">shadedPattern</span>&gt;</span>$&#123;shadeBase&#125;.okio<span class="tag">&lt;/<span class="name">shadedPattern</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;/<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>retrofit2<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">shadedPattern</span>&gt;</span>$&#123;shadeBase&#125;.retrofit2<span class="tag">&lt;/<span class="name">shadedPattern</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;/<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;<span class="name">relocation</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">pattern</span>&gt;</span>com.google<span class="tag">&lt;/<span class="name">pattern</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">shadedPattern</span>&gt;</span>$&#123;shadeBase&#125;.com.google.common<span class="tag">&lt;/<span class="name">shadedPattern</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;/<span class="name">relocation</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;/<span class="name">relocations</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;<span class="name">filters</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;<span class="name">filter</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">artifact</span>&gt;</span>*:*<span class="tag">&lt;/<span class="name">artifact</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;<span class="name">excludes</span>&gt;</span></span><br><span class="line">                                        <span class="tag">&lt;<span class="name">exclude</span>&gt;</span>META-INF/*.SF<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">                                        <span class="tag">&lt;<span class="name">exclude</span>&gt;</span>META-INF/*.DSA<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">                                        <span class="tag">&lt;<span class="name">exclude</span>&gt;</span>META-INF/*.RSA<span class="tag">&lt;/<span class="name">exclude</span>&gt;</span></span><br><span class="line">                                    <span class="tag">&lt;/<span class="name">excludes</span>&gt;</span></span><br><span class="line">                                <span class="tag">&lt;/<span class="name">filter</span>&gt;</span></span><br><span class="line">                            <span class="tag">&lt;/<span class="name">filters</span>&gt;</span></span><br><span class="line">                        <span class="tag">&lt;/<span class="name">configuration</span>&gt;</span></span><br><span class="line">                    <span class="tag">&lt;/<span class="name">execution</span>&gt;</span></span><br><span class="line">                <span class="tag">&lt;/<span class="name">executions</span>&gt;</span></span><br><span class="line">            <span class="tag">&lt;/<span class="name">plugin</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;/<span class="name">plugins</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">build</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">project</span>&gt;</span></span><br></pre></td></tr></table></figure>
+<h4 id="番外"><a href="#番外" class="headerlink" title="番外"></a>番外</h4><p>maven 的不同 scope 的官方定义:</p>
+<ul>
+<li><p>compile</p>
+<p>  This is the default scope. Compile dependencies are available in all classpaths of a project. Furthermore, those dependencies are propagated to dependent projects(会有依赖传递).</p>
+</li>
+<li><p>provided</p>
+<p>  This is much like compile, but indicates you expect the JDK or a container to provide the dependency at runtime. For example, when building a web application for the Java Enterprise Edition, you would set the dependency on the Servlet API and related Java EE APIs to scope provided because the web container provides those classes. This scope is only available on the compilation and test classpath, and is not transitive.</p>
+</li>
+</ul>
+<p>我们经常回用到 <code>-pl :moduleName</code>, 看着很奇怪, 其实:前面省略的是 groupId.</p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+        <div class="post-tags">
+          
+            <a href="/tags/Java/">Java</a>
+          
+            <a href="/tags/Maven/">Maven</a>
+          
+        </div>
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/2018/10/06/Druid-Storage-原理/">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Druid Storage 原理</span>
+        <span class="prev-text nav-mobile">Prev</span>
+      </a>
+    
+    
+      <a class="next" href="/2018/08/26/Designing-Data-Intensive-Applications-Storage/">
+        <span class="next-text nav-default">Designing Data-Intensive Applications(Storage)</span>
+        <span class="prev-text nav-mobile">Next</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2012 -
+    
+    2019
+    <span class="footer-author">Aron Tao.</span>
+    <span class="power-by">
+        Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

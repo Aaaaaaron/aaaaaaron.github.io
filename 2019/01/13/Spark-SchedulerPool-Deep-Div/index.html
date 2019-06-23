@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="">
+  <head><meta name="generator" content="Hexo 3.8.0">
+    
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+  <meta name="description" content="Spark SchedulerPool Deep Dive">
+
+
+
+
+
+
+
+
+  <link rel="alternate" href="/default" title="Jiatao Tao's blog">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1">
+
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2019/01/13/Spark-SchedulerPool-Deep-Div/">
+
+
+<meta name="description" content="初始化在 TaskSchedulerImpl 的initialize 方法里 schedulableBuilder.buildPools初始化了 scheuler pool.其中有两种SchedulingMode[FIFO,FAIR] 1234567891011121314151617181920212223242526272829303132333435363738394041424344454">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark SchedulerPool Deep Dive">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/01/13/Spark-SchedulerPool-Deep-Div/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="初始化在 TaskSchedulerImpl 的initialize 方法里 schedulableBuilder.buildPools初始化了 scheuler pool.其中有两种SchedulingMode[FIFO,FAIR] 1234567891011121314151617181920212223242526272829303132333435363738394041424344454">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-01-13T07:44:04.891Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Spark SchedulerPool Deep Dive">
+<meta name="twitter:description" content="初始化在 TaskSchedulerImpl 的initialize 方法里 schedulableBuilder.buildPools初始化了 scheuler pool.其中有两种SchedulingMode[FIFO,FAIR] 1234567891011121314151617181920212223242526272829303132333435363738394041424344454">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+    <title> Spark SchedulerPool Deep Dive - Jiatao Tao's blog </title>
+  </head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">Jiatao Tao's blog</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          Spark SchedulerPool Deep Dive
+        
+      </h1>
+
+      <time class="post-time">
+          Jan 13 2019
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <h1 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h1><p>在 <code>TaskSchedulerImpl</code> 的<code>initialize</code> 方法里 <code>schedulableBuilder.buildPools</code>初始化了 scheuler pool.其中有两种SchedulingMode[FIFO,FAIR]</p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An interface for schedulable entities.</span></span><br><span class="line"><span class="comment"> * there are two type of Schedulable entities(Pools and TaskSetManagers)</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">trait</span> <span class="title">Schedulable</span> </span>&#123;</span><br><span class="line">  <span class="keyword">var</span> parent: <span class="type">Pool</span></span><br><span class="line">  <span class="comment">// child queues</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">schedulableQueue</span></span>: <span class="type">ConcurrentLinkedQueue</span>[<span class="type">Schedulable</span>]</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">schedulingMode</span></span>: <span class="type">SchedulingMode</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">weight</span></span>: <span class="type">Int</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">minShare</span></span>: <span class="type">Int</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">runningTasks</span></span>: <span class="type">Int</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">priority</span></span>: <span class="type">Int</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">stageId</span></span>: <span class="type">Int</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">name</span></span>: <span class="type">String</span></span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">addSchedulable</span></span>(schedulable: <span class="type">Schedulable</span>): <span class="type">Unit</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">removeSchedulable</span></span>(schedulable: <span class="type">Schedulable</span>): <span class="type">Unit</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">getSchedulableByName</span></span>(name: <span class="type">String</span>): <span class="type">Schedulable</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">executorLost</span></span>(executorId: <span class="type">String</span>, host: <span class="type">String</span>, reason: <span class="type">ExecutorLossReason</span>): <span class="type">Unit</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">checkSpeculatableTasks</span></span>(minTimeToSpeculation: <span class="type">Int</span>): <span class="type">Boolean</span></span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">getSortedTaskSetQueue</span></span>: <span class="type">ArrayBuffer</span>[<span class="type">TaskSetManager</span>]</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An interface for sort algorithm</span></span><br><span class="line"><span class="comment"> * FIFO: FIFO algorithm between TaskSetManagers</span></span><br><span class="line"><span class="comment"> * FS: FS algorithm between Pools, and FIFO or FS within Pools</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">trait</span> <span class="title">SchedulingAlgorithm</span> </span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">def</span> <span class="title">comparator</span></span>(s1: <span class="type">Schedulable</span>, s2: <span class="type">Schedulable</span>): <span class="type">Boolean</span></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">class</span> <span class="title">FIFOSchedulingAlgorithm</span> <span class="keyword">extends</span> <span class="title">SchedulingAlgorithm</span> </span>&#123;</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">comparator</span></span>(s1: <span class="type">Schedulable</span>, s2: <span class="type">Schedulable</span>): <span class="type">Boolean</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> priority1 = s1.priority</span><br><span class="line">    <span class="keyword">val</span> priority2 = s2.priority</span><br><span class="line">    <span class="keyword">var</span> res = math.signum(priority1 - priority2)</span><br><span class="line">    <span class="keyword">if</span> (res == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="keyword">val</span> stageId1 = s1.stageId</span><br><span class="line">      <span class="keyword">val</span> stageId2 = s2.stageId</span><br><span class="line">      res = math.signum(stageId1 - stageId2)</span><br><span class="line">    &#125;</span><br><span class="line">    res &lt; <span class="number">0</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>[spark] <span class="class"><span class="keyword">class</span> <span class="title">FairSchedulingAlgorithm</span> <span class="keyword">extends</span> <span class="title">SchedulingAlgorithm</span> </span>&#123;</span><br><span class="line">  <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">comparator</span></span>(s1: <span class="type">Schedulable</span>, s2: <span class="type">Schedulable</span>): <span class="type">Boolean</span> = &#123;</span><br><span class="line">    <span class="keyword">val</span> minShare1 = s1.minShare</span><br><span class="line">    <span class="keyword">val</span> minShare2 = s2.minShare</span><br><span class="line">    <span class="keyword">val</span> runningTasks1 = s1.runningTasks</span><br><span class="line">    <span class="keyword">val</span> runningTasks2 = s2.runningTasks</span><br><span class="line">    <span class="keyword">val</span> s1Needy = runningTasks1 &lt; minShare1</span><br><span class="line">    <span class="keyword">val</span> s2Needy = runningTasks2 &lt; minShare2</span><br><span class="line">    <span class="keyword">val</span> minShareRatio1 = runningTasks1.toDouble / math.max(minShare1, <span class="number">1.0</span>)</span><br><span class="line">    <span class="keyword">val</span> minShareRatio2 = runningTasks2.toDouble / math.max(minShare2, <span class="number">1.0</span>)</span><br><span class="line">    <span class="keyword">val</span> taskToWeightRatio1 = runningTasks1.toDouble / s1.weight.toDouble</span><br><span class="line">    <span class="keyword">val</span> taskToWeightRatio2 = runningTasks2.toDouble / s2.weight.toDouble</span><br><span class="line"></span><br><span class="line">    <span class="keyword">var</span> compare = <span class="number">0</span></span><br><span class="line">    <span class="keyword">if</span> (s1Needy &amp;&amp; !s2Needy) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (!s1Needy &amp;&amp; s2Needy) &#123;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">false</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (s1Needy &amp;&amp; s2Needy) &#123;</span><br><span class="line">      compare = minShareRatio1.compareTo(minShareRatio2)</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      compare = taskToWeightRatio1.compareTo(taskToWeightRatio2)</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (compare &lt; <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="literal">true</span></span><br><span class="line">    &#125; <span class="keyword">else</span> <span class="keyword">if</span> (compare &gt; <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="literal">false</span></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      s1.name &lt; s2.name</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+<h1 id="Submit-到-pool"><a href="#Submit-到-pool" class="headerlink" title="Submit 到 pool"></a>Submit 到 pool</h1><p>每一个 TaskSet 会创建一个TaskSetManager, 然后放到<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">org.apache.spark.scheduler.<span class="type">TaskSchedulerImpl</span>#submitTasks(taskSet: <span class="type">TaskSet</span>) &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">val</span> manager = createTaskSetManager(taskSet, maxTaskFailures)</span><br><span class="line">  schedulableBuilder.addTaskSetManager(manager, manager.taskSet.properties)</span><br><span class="line">  ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+
+            </div>
+          
+
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2012 -
+    
+    2019
+    <span class="footer-author">Aron Tao.</span>
+    <span class="power-by">
+        Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>
