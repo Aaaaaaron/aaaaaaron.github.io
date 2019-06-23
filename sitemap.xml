@@ -2,6 +2,34 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/10/24/Spark-executor-log/</loc>
+    
+    <lastmod>2019-06-23T12:26:39.510Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2018/09/14/Maven-%E6%89%93%E5%8C%85%E8%B6%9F%E5%9D%91%E4%B8%8E%E8%A7%A3%E6%B3%95/</loc>
+    
+    <lastmod>2019-06-23T12:20:11.210Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2019/01/05/Linux-%E5%88%9D%E5%85%BB%E6%88%90/</loc>
+    
+    <lastmod>2019-06-23T11:51:06.338Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/</loc>
+    
+    <lastmod>2019-06-23T11:49:20.765Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2019/06/09/Spark-bucketing-%E6%9C%BA%E5%88%B6/</loc>
     
     <lastmod>2019-06-23T11:34:54.477Z</lastmod>
@@ -30,13 +58,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2019/01/05/Linux-shell-snipaste/</loc>
-    
-    <lastmod>2019-01-05T07:18:47.217Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/12/19/Spark-PRC/</loc>
     
     <lastmod>2018-12-19T07:05:59.830Z</lastmod>
@@ -47,13 +68,6 @@
     <loc>https://aaaaaaron.github.io/2018/11/01/Spark-Parquet-Deep-Dive/</loc>
     
     <lastmod>2018-11-20T09:40:36.209Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/11/08/Maven-%E4%BE%9D%E8%B5%96-install/</loc>
-    
-    <lastmod>2018-11-18T07:51:01.611Z</lastmod>
     
   </url>
   
@@ -79,23 +93,9 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/09/14/Maven-shade/</loc>
-    
-    <lastmod>2018-11-18T04:25:37.968Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/</loc>
     
     <lastmod>2018-11-18T04:08:01.328Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/</loc>
-    
-    <lastmod>2018-11-02T11:13:34.042Z</lastmod>
     
   </url>
   
@@ -114,37 +114,9 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/09/12/Storage-different-strategies-about-high-cardinal-string/</loc>
-    
-    <lastmod>2018-10-31T03:09:33.488Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Spark-SQL-Relation-Deep-Dive/</loc>
-    
-    <lastmod>2018-10-30T01:54:14.533Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/07/19/Spark-Tungsten-Deep-Dive/</loc>
     
     <lastmod>2018-10-30T01:54:08.014Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Spark-SQL-WholeStageCodeGen-Deep-Dive/</loc>
-    
-    <lastmod>2018-10-30T01:54:02.391Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Spark-SQL-logic-plan-Deep-Dive/</loc>
-    
-    <lastmod>2018-10-30T01:53:43.708Z</lastmod>
     
   </url>
   
@@ -156,20 +128,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Golang/</loc>
-    
-    <lastmod>2018-10-30T01:51:43.799Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Java-%E7%B1%BB%E5%8A%A0%E8%BD%BD%E6%9C%BA%E5%88%B6/</loc>
-    
-    <lastmod>2018-10-30T01:51:19.096Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/about/index.html</loc>
     
     <lastmod>2018-10-29T05:09:32.268Z</lastmod>
@@ -177,23 +135,9 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/10/13/Learning-Scala/</loc>
-    
-    <lastmod>2018-10-27T14:12:55.599Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/26/%E6%8F%90%E4%BA%A4-Spark-%E5%BA%94%E7%94%A8/</loc>
+    <loc>https://aaaaaaron.github.io/2018/10/26/Spark-submit/</loc>
     
     <lastmod>2018-10-26T08:45:04.633Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/24/%E5%AF%BB%E6%89%BE-spark-executor-%E6%97%A5%E5%BF%97/</loc>
-    
-    <lastmod>2018-10-25T15:01:06.437Z</lastmod>
     
   </url>
   
@@ -201,13 +145,6 @@
     <loc>https://aaaaaaron.github.io/2018/10/16/Spark-map-vs-mapPartitions/</loc>
     
     <lastmod>2018-10-25T15:00:00.536Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Spark-ColumnarBatch-ColumnVector-glance/</loc>
-    
-    <lastmod>2018-10-25T14:59:29.973Z</lastmod>
     
   </url>
   
@@ -226,30 +163,9 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/07/24/Kylin-%E6%89%A7%E8%A1%8C%E6%9F%A5%E8%AF%A2%E6%B5%81%E7%A8%8B%E5%88%86%E6%9E%90/</loc>
-    
-    <lastmod>2018-10-25T14:58:39.829Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/01/Druid-%E5%85%A5%E9%97%A8-benchmark/</loc>
-    
-    <lastmod>2018-10-25T14:58:22.679Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/24/Shuffle/</loc>
+    <loc>https://aaaaaaron.github.io/2018/10/24/Spark-Shuffle/</loc>
     
     <lastmod>2018-10-24T14:52:49.951Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Linux-%E5%88%9D%E5%85%BB%E6%88%90/</loc>
-    
-    <lastmod>2018-10-24T14:49:36.903Z</lastmod>
     
   </url>
   
