@@ -41,7 +41,7 @@
 <meta property="og:description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/WeChatWorkScreenshot_9994c078-2f8a-40e8-9659-165afcde065d(1">
-<meta property="og:updated_time" content="2019-06-24T07:22:21.027Z">
+<meta property="og:updated_time" content="2019-07-02T07:45:36.222Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Linux 初养成">
 <meta name="twitter:description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
@@ -191,7 +191,14 @@
 </ol>
 <p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/WeChatWorkScreenshot_9994c078-2f8a-40e8-9659-165afcde065d(1" alt="">.png)</p>
 <ol start="24">
-<li></li>
+<li><p>找某个目录下是否有包含某各类的 jar 包: <code>grep -r &quot;SparkSession&quot; jars</code></p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">$</span><span class="bash"> grep -r <span class="string">"SparkSession"</span> jars</span></span><br><span class="line">Binary file jars/spark-hive_2.11-2.2.1.jar matches</span><br><span class="line">Binary file jars/spark-sql_2.11-2.2.1.jar matches</span><br><span class="line">Binary file jars/hive-exec-1.2.1.spark2.jar matches</span><br><span class="line">Binary file jars/spark-repl_2.11-2.2.1.jar matches</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>hadoop classpath</code>, <code>/var/log</code>, <code>/usr/hdp/2.4.0.0-169/</code></p>
+</li>
+<li><p>hive 默认 db 放的 HDFS 路径 <code>/user/hive/warehouse</code>, HIVE 查看表元数据: <code>desc formatted TEST_TIME</code></p>
+</li>
+<li><code>./spark-shell --master yarn --executor-cores 5 --executor-memory 5g --num-executors 3</code></li>
 </ol>
 <h2 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h2><ol>
 <li>jstat -gc [pid] : 查看gc情况</li>

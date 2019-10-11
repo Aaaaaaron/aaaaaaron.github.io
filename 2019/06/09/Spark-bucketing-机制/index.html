@@ -17,6 +17,8 @@
 
 
 
+  <meta name="keywords" content="BigData,Spark,">
+
 
 
 
@@ -34,13 +36,14 @@
 
 
 <meta name="description" content="0. 基础Spark 的 bucket 机制其实和 repartition 非常相似, 但是 Spark 的 repartition 在读取的时候不会做任何的 pruning, 而 bucket by 会 pruning 掉不必要的文件. bucket by 与 repartition 都是对于数据里每条记录通过一个 hash 函数得到一个值, 任何相同值的记录放到同一个文件中去. 对于点查, 例">
+<meta name="keywords" content="BigData,Spark">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spark bucketing 机制">
 <meta property="og:url" content="https://aaaaaaron.github.io/2019/06/09/Spark-bucketing-机制/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
 <meta property="og:description" content="0. 基础Spark 的 bucket 机制其实和 repartition 非常相似, 但是 Spark 的 repartition 在读取的时候不会做任何的 pruning, 而 bucket by 会 pruning 掉不必要的文件. bucket by 与 repartition 都是对于数据里每条记录通过一个 hash 函数得到一个值, 任何相同值的记录放到同一个文件中去. 对于点查, 例">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-06-23T11:34:54.477Z">
+<meta property="og:updated_time" content="2019-06-24T13:53:22.994Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spark bucketing 机制">
 <meta name="twitter:description" content="0. 基础Spark 的 bucket 机制其实和 repartition 非常相似, 但是 Spark 的 repartition 在读取的时候不会做任何的 pruning, 而 bucket by 会 pruning 掉不必要的文件. bucket by 与 repartition 都是对于数据里每条记录通过一个 hash 函数得到一个值, 任何相同值的记录放到同一个文件中去. 对于点查, 例">
@@ -148,6 +151,42 @@
             </div>
           
 
+    
+      <footer class="post-footer">
+        <div class="post-tags">
+          
+            <a href="/tags/BigData/">BigData</a>
+          
+            <a href="/tags/Spark/">Spark</a>
+          
+        </div>
+
+        
+        
+  <nav class="post-nav">
+    
+      <a class="prev" href="/2019/06/29/Spark-SQL-Join-Deep-Dive/">
+        <i class="iconfont icon-left"></i>
+        <span class="prev-text nav-default">Spark SQL Join Deep Dive</span>
+        <span class="prev-text nav-mobile">Prev</span>
+      </a>
+    
+    
+      <a class="next" href="/2019/05/09/Parquet-乱弹/">
+        <span class="next-text nav-default">Parquet 乱弹</span>
+        <span class="prev-text nav-mobile">Next</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
     
   </article>
 

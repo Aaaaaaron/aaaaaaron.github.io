@@ -12,7 +12,7 @@
 
 
 
-  <meta name="description" content="Parquet in Spark">
+  <meta name="description" content="Spark Parquet Deep Dive">
 
 
 
@@ -32,14 +32,14 @@
 
 
 
-<link rel="canonical" href="https://aaaaaaron.github.io/2018/08/21/Parquet-in-Spark/">
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/">
 
 
 <meta name="description" content="ParquetFileFormat#buildReaderWithPartitionValues 注意看 enableVectorizedReader. enable 了之后用的是VectorizedParquetRecordReader, 否则用的是ParquetRecordReader[UnsafeRow](new ParquetReadSupport(convertTz)). 1234567">
 <meta name="keywords" content="BigData,Spark">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Parquet in Spark">
-<meta property="og:url" content="https://aaaaaaron.github.io/2018/08/21/Parquet-in-Spark/index.html">
+<meta property="og:title" content="Spark Parquet Deep Dive">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
 <meta property="og:description" content="ParquetFileFormat#buildReaderWithPartitionValues 注意看 enableVectorizedReader. enable 了之后用的是VectorizedParquetRecordReader, 否则用的是ParquetRecordReader[UnsafeRow](new ParquetReadSupport(convertTz)). 1234567">
 <meta property="og:locale" content="zh-Hans">
@@ -47,9 +47,9 @@
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-21/4432890.jpg">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-21/77850304.jpg">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-21/54044866.jpg">
-<meta property="og:updated_time" content="2018-11-18T04:25:38.600Z">
+<meta property="og:updated_time" content="2019-06-24T15:09:24.497Z">
 <meta name="twitter:card" content="summary">
-<meta name="twitter:title" content="Parquet in Spark">
+<meta name="twitter:title" content="Spark Parquet Deep Dive">
 <meta name="twitter:description" content="ParquetFileFormat#buildReaderWithPartitionValues 注意看 enableVectorizedReader. enable 了之后用的是VectorizedParquetRecordReader, 否则用的是ParquetRecordReader[UnsafeRow](new ParquetReadSupport(convertTz)). 1234567">
 <meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/18-8-21/71064933.jpg">
 
@@ -81,7 +81,7 @@
   
 
 
-    <title> Parquet in Spark - Jiatao Tao's blog </title>
+    <title> Spark Parquet Deep Dive - Jiatao Tao's blog </title>
   </head>
 
   <body>
@@ -127,7 +127,7 @@
     <header class="post-header">
       <h1 class="post-title">
         
-          Parquet in Spark
+          Spark Parquet Deep Dive
         
       </h1>
 
