@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2019/10/16/Spark-MapOutputTracker-Deep-Dive/</loc>
+    
+    <lastmod>2019-10-16T15:07:12.108Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
     
     <lastmod>2019-10-16T03:26:23.678Z</lastmod>
