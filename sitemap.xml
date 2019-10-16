@@ -2,6 +2,20 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
+    
+    <lastmod>2019-10-16T03:26:23.678Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2019/10/13/Spark-%E8%B0%83%E5%BA%A6%E7%B3%BB%E7%BB%9F/</loc>
+    
+    <lastmod>2019-10-13T07:58:25.838Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/</loc>
     
     <lastmod>2019-10-11T15:11:17.397Z</lastmod>
@@ -131,27 +145,6 @@
     <loc>https://aaaaaaron.github.io/2018/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/</loc>
     
     <lastmod>2018-10-31T03:19:10.395Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
-    
-    <lastmod>2018-10-31T03:18:56.050Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Spark-Tungsten-Deep-Dive/</loc>
-    
-    <lastmod>2018-10-30T01:54:08.014Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Linux-IO-%E6%A8%A1%E5%9E%8B/</loc>
-    
-    <lastmod>2018-10-30T01:52:17.891Z</lastmod>
     
   </url>
   
