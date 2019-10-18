@@ -33,18 +33,18 @@
 <link rel="canonical" href="https://aaaaaaron.github.io/2019/10/16/Spark-MapOutputTracker-Deep-Dive/">
 
 
-<meta name="description" content="基础Shuffle writer会将中间数据保存到 Block 里面, 然后将数据的位置发送给 MapOutputTracker; Shuffle reader 通过向 MapOutputTracker 获取中间数据的位置之后, 才能读取到数据. MapOutputTrackerMaster 启动在 driver 端, MapOutputTrackerWorker 启动在 executor 端.">
+<meta name="description" content="基础Shuffle writer 会将中间数据保存到 Block 里面, 然后将数据的位置发送给 MapOutputTracker; Shuffle reader 通过向 MapOutputTracker 获取中间数据的位置之后, 才能读取到数据. MapOutputTrackerMaster 启动在 driver 端, MapOutputTrackerWorker 启动在 executor 端.">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Spark MapOutputTracker Deep Dive">
 <meta property="og:url" content="https://aaaaaaron.github.io/2019/10/16/Spark-MapOutputTracker-Deep-Dive/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="基础Shuffle writer会将中间数据保存到 Block 里面, 然后将数据的位置发送给 MapOutputTracker; Shuffle reader 通过向 MapOutputTracker 获取中间数据的位置之后, 才能读取到数据. MapOutputTrackerMaster 启动在 driver 端, MapOutputTrackerWorker 启动在 executor 端.">
+<meta property="og:description" content="基础Shuffle writer 会将中间数据保存到 Block 里面, 然后将数据的位置发送给 MapOutputTracker; Shuffle reader 通过向 MapOutputTracker 获取中间数据的位置之后, 才能读取到数据. MapOutputTrackerMaster 启动在 driver 端, MapOutputTrackerWorker 启动在 executor 端.">
 <meta property="og:locale" content="zh-Hans">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191016230210.png">
-<meta property="og:updated_time" content="2019-10-16T15:20:58.117Z">
+<meta property="og:updated_time" content="2019-10-17T13:16:51.405Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spark MapOutputTracker Deep Dive">
-<meta name="twitter:description" content="基础Shuffle writer会将中间数据保存到 Block 里面, 然后将数据的位置发送给 MapOutputTracker; Shuffle reader 通过向 MapOutputTracker 获取中间数据的位置之后, 才能读取到数据. MapOutputTrackerMaster 启动在 driver 端, MapOutputTrackerWorker 启动在 executor 端.">
+<meta name="twitter:description" content="基础Shuffle writer 会将中间数据保存到 Block 里面, 然后将数据的位置发送给 MapOutputTracker; Shuffle reader 通过向 MapOutputTracker 获取中间数据的位置之后, 才能读取到数据. MapOutputTrackerMaster 启动在 driver 端, MapOutputTrackerWorker 启动在 executor 端.">
 <meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191016230210.png">
 
 
@@ -134,19 +134,21 @@
 
     
             <div class="post-content">
-            <h2 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h2><p>Shuffle writer会将中间数据保存到 Block 里面, 然后将数据的位置发送给 <code>MapOutputTracker</code>; Shuffle reader 通过向 <code>MapOutputTracker</code> 获取中间数据的位置之后, 才能读取到数据.</p>
+            <h2 id="基础"><a href="#基础" class="headerlink" title="基础"></a>基础</h2><p>Shuffle writer 会将中间数据保存到 Block 里面, 然后将数据的位置发送给 <code>MapOutputTracker</code>; Shuffle reader 通过向 <code>MapOutputTracker</code> 获取中间数据的位置之后, 才能读取到数据.</p>
 <p><code>MapOutputTrackerMaster</code> 启动在 driver 端, <code>MapOutputTrackerWorker</code> 启动在 executor 端.</p>
 <p>ShuffleStatus 就是 <code>Map[Int, Array[MapStatus]]</code>, key 是 Shuffle 的 ID, value 数组的大小是该 ShuffleMapTask 的个数, MapStatus 会记录 stage reduce 端 task 个数的 status, 具体实现有两种: <code>CompressedMapStatus</code>/<code>HighlyCompressedMapStatus</code>, 具体实现之后分析, 当 reduce 端 task 超过 2000 (<code>SHUFFLE_MIN_NUM_PARTS_TO_HIGHLY_COMPRESS</code>) 的时候, 会使用 <code>HighlyCompressedMapStatus</code>, 看名字可以看出后一种压缩率更高. 因为其实这个 <code>Map[Int, Array[MapStatus]]</code> 会非常占据内存, 试想下, 假如我有10w 个 map 端的 task 和10w 个 reduce 端的 task, 那么这个 <code>Array[MapStatus]</code> 实际存了 100w task 的信息, 而且后面这些 status 还要序列化发给 executor, 又会占用更多的空间, 同时 Spark 这里代码写的也不是非常好, 导致内存占用会很高. 而 driver 端的内存大家一般不会设置的特别高, 这里就会导致 OOM, 而 driver 又是 Spark 的单点, 这是一个非常严重的稳定性问题. 之后我会给出具体的例子和修复.</p>
 <h2 id="流程"><a href="#流程" class="headerlink" title="流程:"></a>流程:</h2><h3 id="Write"><a href="#Write" class="headerlink" title="Write"></a>Write</h3><ol>
 <li><code>MapOutputTrackerMaster</code> 会 <code>registerShuffle</code> 和 <code>registerMapOutput</code>. registerShuffle 是 DAGScheduler 在创建一个 <code>ShuffleMapStage</code> 时会把这个 stage 对应的 shuffle 注册进来(<code>createShuffleMapStage</code>); <code>registerMapOutput</code> 是 在一个 <code>shuffleMapTask</code> 任务完成后(<code>DAGScheduler.handleTaskCompletion</code>)，会把 <code>shuffleMapTask</code> 输出的信息(<code>MapStatus</code>)放进来.</li>
 </ol>
 <h3 id="Read"><a href="#Read" class="headerlink" title="Read"></a>Read</h3><ol>
-<li>当 shuffle read 的时候, <code>BlockStoreShuffleReader中</code>，会调用 <code>MapOutputTrackerWorker.getMapSizesByExecutorId</code> (master 端的这个方法只在 local 用)</li>
+<li><p>当 shuffle read 的时候, <code>BlockStoreShuffleReader中</code>，会调用 <code>MapOutputTrackerWorker.getMapSizesByExecutorId</code> (master 端的这个方法只在 local 用)</p>
+</li>
 <li><p>调用 <code>MapOutputTrackerWorker#getStatuses(shuffleID)</code>, Worker 有个 mapStatuses 缓存 <code>Map[Int, Array[MapStatus]]</code>, 当 Miss 的时候, 会去 fetching, 就有两个很重要的方法:</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> fetchedBytes = askTracker[<span class="type">Array</span>[<span class="type">Byte</span>]](<span class="type">GetMapOutputStatuses</span>(shuffleId))</span><br><span class="line">fetchedStatuses = <span class="type">MapOutputTracker</span>.deserializeMapStatuses(fetchedBytes) <span class="comment">// 有两种模式 direct 的和 broadcast 的</span></span><br></pre></td></tr></table></figure>
 </li>
-<li><p>Worker askTracker 向 <code>MapOutputTrackerMasterEndpoint</code> 要 statues, 这个 endpoint 会向 MapOutputTrackerMaster post 一个 <code>GetMapOutputMessage(shufflID)</code> 事件(放入 <code>LinkedBlockingQueue[GetMapOutputMessage]</code>), 且 master 会启动一个 <code>MessageLoop</code>, 会 take 这个阻塞队列的事件, 从 master 自己内存中维护的 <code>shuffleStatuses</code> 找到对应 shuffleID 的 ShuffleStatus(<code>Map[Int, Array[MapStatus]]</code>), 在 Write 中提过, 当 <code>shuffleMapTask</code> 完成的时候, 会通知 <code>DAGScheduler.handleTaskCompletion</code>, 所以 driver 有所有的 <code>MapStatues</code>.</p>
-</li>
+</ol>
+<p>Worker askTracker 向 <code>MapOutputTrackerMasterEndpoint</code> 要 statues, 这个 endpoint 会向 MapOutputTrackerMaster post 一个 <code>GetMapOutputMessage(shufflID)</code> 事件(放入 <code>LinkedBlockingQueue[GetMapOutputMessage]</code>), 且 master 会启动一个 <code>MessageLoop</code>, 会 take 这个阻塞队列的事件, 从 master 自己内存中维护的 <code>shuffleStatuses</code> 找到对应 shuffleID 的 ShuffleStatus(<code>Map[Int, Array[MapStatus]]</code>), 在 Write 中提过, 当 <code>shuffleMapTask</code> 完成的时候, 会通知 <code>DAGScheduler.handleTaskCompletion</code>, 所以 driver 有所有的 <code>MapStatues</code>.</p>
+<ol start="3">
 <li>driver 拿到对应的 shuffleStatuses 之后, 需要把它 reply 回 请求的发起方, 也就是 executor, 这是最耗费内存的一步操作, 也是外面后期性能优化的点: <code>context.reply(shuffleStatus.serializedMapStatus(broadcastManager, isLocal, minSizeForBroadcast))</code>, 这个方法会调用 <code>MapOutputTracker.serializeMapStatuses</code>. 这个方法会使用 Java 的序列化机制(ObjectOutputStream)来序列化一个 <code>Array[MapStatus]</code> (对应一个 shuffle 的所有 MapStatus 输出), 并使用 gzip 压缩, 当序列化完之后, 会有有两种通知给 executor 的模式: 当序列化后的 byte 数组大小小于 minBroadcastSize(512K) 时, 会直接返回 Array[Byte], 后续使用 Spark 的 RPC 模式返回给 executor, 否则则用 Broadcast 机制返回给 executor.</li>
 </ol>
 <h2 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h2><ol>
