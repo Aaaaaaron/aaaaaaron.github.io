@@ -2,9 +2,9 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://aaaaaaron.github.io/2019/06/09/Spark-Bucketing-Deep-Dive/</loc>
+    <loc>https://aaaaaaron.github.io/2019/10/09/Spark-Bucketing-Deep-Dive/</loc>
     
-    <lastmod>2019-10-19T12:22:09.850Z</lastmod>
+    <lastmod>2019-10-20T01:22:06.250Z</lastmod>
     
   </url>
   
@@ -12,6 +12,13 @@
     <loc>https://aaaaaaron.github.io/2019/10/16/Spark-MapOutputTracker-Deep-Dive/</loc>
     
     <lastmod>2019-10-18T14:23:36.628Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2019/06/29/Spark-SQL-Join-Deep-Dive/</loc>
+    
+    <lastmod>2019-10-17T13:21:12.576Z</lastmod>
     
   </url>
   
@@ -33,13 +40,6 @@
     <loc>https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/</loc>
     
     <lastmod>2019-10-11T15:11:17.397Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2019/06/29/Spark-SQL-Join-Deep-Dive/</loc>
-    
-    <lastmod>2019-08-06T03:00:30.162Z</lastmod>
     
   </url>
   
