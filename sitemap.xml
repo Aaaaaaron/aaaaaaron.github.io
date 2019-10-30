@@ -2,16 +2,16 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://aaaaaaron.github.io/2019/10/09/Spark-Bucketing-Deep-Dive/</loc>
+    <loc>https://aaaaaaron.github.io/2019/10/16/Spark-MapOutputTracker-Deep-Dive/</loc>
     
-    <lastmod>2019-10-20T01:22:06.250Z</lastmod>
+    <lastmod>2019-10-30T14:35:10.965Z</lastmod>
     
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2019/10/16/Spark-MapOutputTracker-Deep-Dive/</loc>
+    <loc>https://aaaaaaron.github.io/2019/10/09/Spark-Bucketing-Deep-Dive/</loc>
     
-    <lastmod>2019-10-18T14:23:36.628Z</lastmod>
+    <lastmod>2019-10-20T01:22:06.250Z</lastmod>
     
   </url>
   
