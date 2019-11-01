@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/12/30/Maven-%E6%89%93%E5%8C%85%E8%B6%9F%E5%9D%91%E4%B8%8E%E8%A7%A3%E6%B3%95/</loc>
+    
+    <lastmod>2019-11-01T14:11:30.776Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/</loc>
     
     <lastmod>2019-11-01T14:03:36.863Z</lastmod>
@@ -51,13 +58,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/</loc>
-    
-    <lastmod>2019-06-24T15:09:24.497Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/about/index.html</loc>
     
     <lastmod>2019-06-23T15:15:06.681Z</lastmod>
@@ -75,13 +75,6 @@
     <loc>https://aaaaaaron.github.io/2018/10/24/Spark-executor-log/</loc>
     
     <lastmod>2019-06-23T12:26:39.510Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/09/14/Maven-%E6%89%93%E5%8C%85%E8%B6%9F%E5%9D%91%E4%B8%8E%E8%A7%A3%E6%B3%95/</loc>
-    
-    <lastmod>2019-06-23T12:20:11.210Z</lastmod>
     
   </url>
   
@@ -110,13 +103,6 @@
     <loc>https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/</loc>
     
     <lastmod>2018-11-18T04:25:40.002Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/08/12/Spark-Strategy-DataSource/</loc>
-    
-    <lastmod>2018-11-18T04:25:39.281Z</lastmod>
     
   </url>
   
