@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/12/30/Spark-Parquet-file-split/</loc>
+    
+    <lastmod>2019-11-01T14:13:50.072Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/12/30/Maven-%E6%89%93%E5%8C%85%E8%B6%9F%E5%9D%91%E4%B8%8E%E8%A7%A3%E6%B3%95/</loc>
     
     <lastmod>2019-11-01T14:11:30.776Z</lastmod>
@@ -33,13 +40,6 @@
     <loc>https://aaaaaaron.github.io/2019/06/29/Spark-SQL-Join-Deep-Dive/</loc>
     
     <lastmod>2019-10-17T13:21:12.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/22/Spark-Parquet-file-split/</loc>
-    
-    <lastmod>2019-10-16T03:26:23.678Z</lastmod>
     
   </url>
   
