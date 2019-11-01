@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/</loc>
+    
+    <lastmod>2019-11-01T14:03:36.863Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2019/10/16/Spark-MapOutputTracker-Deep-Dive/</loc>
     
     <lastmod>2019-10-30T14:35:10.965Z</lastmod>
@@ -30,13 +37,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2019/10/13/Spark-%E8%B0%83%E5%BA%A6%E7%B3%BB%E7%BB%9F/</loc>
-    
-    <lastmod>2019-10-13T07:58:25.838Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/</loc>
     
     <lastmod>2019-10-11T15:11:17.397Z</lastmod>
@@ -47,13 +47,6 @@
     <loc>https://aaaaaaron.github.io/2019/01/05/Linux-%E5%88%9D%E5%85%BB%E6%88%90/</loc>
     
     <lastmod>2019-07-02T07:45:36.222Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/</loc>
-    
-    <lastmod>2019-06-28T01:44:32.145Z</lastmod>
     
   </url>
   
@@ -86,13 +79,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/</loc>
-    
-    <lastmod>2019-06-23T12:20:49.053Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/09/14/Maven-%E6%89%93%E5%8C%85%E8%B6%9F%E5%9D%91%E4%B8%8E%E8%A7%A3%E6%B3%95/</loc>
     
     <lastmod>2019-06-23T12:20:11.210Z</lastmod>
@@ -103,13 +89,6 @@
     <loc>https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/</loc>
     
     <lastmod>2019-06-23T11:49:20.765Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2019/01/26/Spark-Scheduler-Deep-Dive/</loc>
-    
-    <lastmod>2019-02-01T06:22:02.887Z</lastmod>
     
   </url>
   
