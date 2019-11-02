@@ -40,7 +40,7 @@
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
 <meta property="og:description" content="OLAP 系统No-SQL, New-SQL, 到了最后还是 SQL 好!  性能和稳定性的考量, 性能优先(MPP)? or 稳定性优先(DAG/MR)? 让数据更适合被计算 将计算放在数据附近: Move compute logic, not data. 矛盾: 云, 存储和计算分离. 做大宽表, 减少 join 开销. 提前对数据进行分区/分桶/排序, 减少后续计算时候的 shuffle 以">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:updated_time" content="2019-11-02T08:15:48.971Z">
+<meta property="og:updated_time" content="2019-11-02T08:39:38.960Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="大数据处理迷思">
 <meta name="twitter:description" content="OLAP 系统No-SQL, New-SQL, 到了最后还是 SQL 好!  性能和稳定性的考量, 性能优先(MPP)? or 稳定性优先(DAG/MR)? 让数据更适合被计算 将计算放在数据附近: Move compute logic, not data. 矛盾: 云, 存储和计算分离. 做大宽表, 减少 join 开销. 提前对数据进行分区/分桶/排序, 减少后续计算时候的 shuffle 以">
@@ -138,6 +138,20 @@
 <li>Schema change</li>
 <li>数据点更新</li>
 <li>如何调配资源</li>
+</ol>
+<h4 id="什么是一个好的-OLAP-系统"><a href="#什么是一个好的-OLAP-系统" class="headerlink" title="什么是一个好的 OLAP 系统"></a>什么是一个好的 OLAP 系统</h4><ol start="0">
+<li>最最重要的: 稳定性</li>
+<li>最重要的: 标准 SQL 支持</li>
+<li>低延迟, 高 QPS</li>
+<li>部署运维简单</li>
+<li>支持 schema change</li>
+<li>既能查聚合数据, 又可以查明细数据(此条对于预计算系统)</li>
+</ol>
+<h4 id="数据分析师之痛"><a href="#数据分析师之痛" class="headerlink" title="数据分析师之痛"></a>数据分析师之痛</h4><ol>
+<li>精确去重</li>
+<li>TopN</li>
+<li>N 多 join</li>
+<li>N 多子查询</li>
 </ol>
 
             </div>
