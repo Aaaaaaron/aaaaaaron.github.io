@@ -2,6 +2,13 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/11/02/Hadoop-MR-%E5%92%8C-Spark-%E5%AF%B9%E6%AF%94/</loc>
+    
+    <lastmod>2019-11-02T07:22:12.278Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/12/30/Spark-Parquet-file-split/</loc>
     
     <lastmod>2019-11-01T14:13:50.072Z</lastmod>

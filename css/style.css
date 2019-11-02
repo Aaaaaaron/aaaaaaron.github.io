@@ -583,12 +583,12 @@ h6 {
     .post .post-content .headerlink::before {
       margin-right: 5px;
       font-size: 1.1em;
-      color: #4D89FB; }
+      color: #FF69B4; }
     .post .post-content a {
-      color: #4D89FB;
+      color: #FF69B4;
       word-break: break-all; }
       .post .post-content a:hover {
-        border-bottom: 1px solid #4D89FB; }
+        border-bottom: 1px solid #FF69B4; }
       .post .post-content a.fancybox {
         border: 0; }
     .post .post-content blockquote {
@@ -609,13 +609,13 @@ h6 {
       border-spacing: 0; }
       .post .post-content > table th, .post .post-content > table td {
         padding: 5px 15px;
-        border: 1px double #f0f0f0;
+        border: 1px double #f2ecec;
         text-align: left; }
     .post .post-content code, .post .post-content pre {
       padding: 7px;
       font-size: 13px;
       font-family: "Open Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei", "Microsoft Jhenghei", sans-serif;
-      background: #F8F8F8; }
+      background: #f8f5f5; }
     .post .post-content code {
       padding: 3px 5px;
       color: #000; }
@@ -634,7 +634,7 @@ h6 {
           font-size: 13px;
           font-weight: bold;
           color: #cacaca;
-          background: #f0f0f0;
+          background: #f2ecec;
           content: 'Code'; }
       .post .post-content .highlight.html > ::after {
         content: "HTML"; }
@@ -722,11 +722,11 @@ h6 {
       .post .post-content .highlight .code .deletion {
         color: #dc322f; }
     .post .post-content .read-more .read-more-link {
-      color: #4D89FB;
+      color: #FF69B4;
       font-size: 1.1em;
       font-family: "Open Sans", "PingFang SC", "Hiragino Sans GB", "Microsoft Yahei", "Microsoft Jhenghei", sans-serif; }
       .post .post-content .read-more .read-more-link:hover {
-        border-bottom: 1px solid #4D89FB; }
+        border-bottom: 1px solid #FF69B4; }
   .post .post-footer {
     margin-top: 20px;
     border-top: 1px solid #eee;
@@ -735,7 +735,7 @@ h6 {
       padding: 15px 0; }
       .post .post-footer .post-tags a {
         margin-right: 5px;
-        color: #4D89FB;
+        color: #FF69B4;
         word-break: break-all; }
         .post .post-footer .post-tags a::before {
           content: '#'; }
@@ -758,12 +758,12 @@ h6 {
       .post .post-footer .post-nav .prev {
         float: left; }
         .post .post-footer .post-nav .prev:hover {
-          color: #4D89FB;
+          color: #FF69B4;
           transform: translateX(-4px); }
       .post .post-footer .post-nav .next {
         float: right; }
         .post .post-footer .post-nav .next:hover {
-          color: #4D89FB;
+          color: #FF69B4;
           transform: translateX(4px); }
       .post .post-footer .post-nav .nav-mobile {
         display: none; }
@@ -791,12 +791,12 @@ h6 {
   .pagination .prev {
     float: left; }
     .pagination .prev:hover {
-      color: #4D89FB;
+      color: #FF69B4;
       transform: translateX(-4px); }
   .pagination .next {
     float: right; }
     .pagination .next:hover {
-      color: #4D89FB;
+      color: #FF69B4;
       transform: translateX(4px); }
 
 #secondary {
@@ -913,9 +913,9 @@ h6 {
       transition: 0.2s ease-out;
       transform: translateX(4px); }
       .archive .archive-post:hover .archive-post-time {
-        color: #4D89FB; }
+        color: #FF69B4; }
       .archive .archive-post:hover .archive-post-title .archive-post-link {
-        color: #4D89FB; }
+        color: #FF69B4; }
 
 .tag-cloud {
   margin: 2em 0 3em;
@@ -924,8 +924,8 @@ h6 {
   .tag-cloud .tag-cloud-title {
     display: inline-block;
     font-size: 18px;
-    color: #4D89FB;
-    border-bottom: 2px solid #4D89FB; }
+    color: #FF69B4;
+    border-bottom: 2px solid #FF69B4; }
   .tag-cloud .tag-cloud-tags {
     margin: 10px 0; }
     .tag-cloud .tag-cloud-tags a {
@@ -937,7 +937,7 @@ h6 {
       transition-property: transform;
       transition-timing-function: ease-out; }
       .tag-cloud .tag-cloud-tags a:active, .tag-cloud .tag-cloud-tags a:focus, .tag-cloud .tag-cloud-tags a:hover {
-        color: #4D89FB;
+        color: #FF69B4;
         transform: scale(1.1); }
 
 .categories {
@@ -947,8 +947,8 @@ h6 {
   .categories .categories-title {
     display: inline-block;
     font-size: 18px;
-    color: #4D89FB;
-    border-bottom: 2px solid #4D89FB; }
+    color: #FF69B4;
+    border-bottom: 2px solid #FF69B4; }
   .categories .categories-tags {
     margin: 10px 0; }
     .categories .categories-tags .category-link {
@@ -964,10 +964,10 @@ h6 {
         position: relative;
         top: -8px;
         right: -2px;
-        color: #4D89FB;
+        color: #FF69B4;
         font-size: 12px; }
       .categories .categories-tags .category-link:active, .categories .categories-tags .category-link:focus, .categories .categories-tags .category-link:hover {
-        color: #4D89FB;
+        color: #FF69B4;
         transform: scale(1.1); }
 
 @font-face {
