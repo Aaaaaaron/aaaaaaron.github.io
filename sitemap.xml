@@ -2,9 +2,23 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2019/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/</loc>
+    
+    <lastmod>2019-11-02T15:38:53.651Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2019/10/30/Spark-Parquet-file-split/</loc>
+    
+    <lastmod>2019-11-02T15:38:39.277Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2019/11/02/%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E8%BF%B7%E6%80%9D/</loc>
     
-    <lastmod>2019-11-02T08:39:38.960Z</lastmod>
+    <lastmod>2019-11-02T09:15:33.806Z</lastmod>
     
   </url>
   
@@ -12,13 +26,6 @@
     <loc>https://aaaaaaron.github.io/2018/11/02/Hadoop-MR-%E5%92%8C-Spark-%E5%AF%B9%E6%AF%94/</loc>
     
     <lastmod>2019-11-02T07:22:12.278Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/12/30/Spark-Parquet-file-split/</loc>
-    
-    <lastmod>2019-11-01T14:13:50.072Z</lastmod>
     
   </url>
   
@@ -100,13 +107,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2019/01/13/Spark-SchedulerPool-Deep-Div/</loc>
-    
-    <lastmod>2019-01-13T07:44:04.891Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/12/19/Spark-PRC/</loc>
     
     <lastmod>2018-12-19T07:05:59.830Z</lastmod>
@@ -124,13 +124,6 @@
     <loc>https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/</loc>
     
     <lastmod>2018-11-18T04:08:01.328Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/</loc>
-    
-    <lastmod>2018-10-31T03:19:10.395Z</lastmod>
     
   </url>
   
