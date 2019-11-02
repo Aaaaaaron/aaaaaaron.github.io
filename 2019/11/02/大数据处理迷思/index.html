@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="">
+  <head><meta name="generator" content="Hexo 3.8.0">
+    
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+  <meta name="description" content="大数据处理迷思">
+
+
+
+
+
+
+
+
+  <link rel="alternate" href="/default" title="Jiatao Tao's blog">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1">
+
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2019/11/02/大数据处理迷思/">
+
+
+<meta name="description" content="OLAP 系统No-SQL, New-SQL, 到了最后还是 SQL 好!  性能和稳定性的考量, 性能优先(MPP)? or 稳定性优先(DAG/MR)? 让数据更适合被计算 将计算放在数据附近: Move compute logic, not data. 矛盾: 云, 存储和计算分离. 做大宽表, 减少 join 开销. 提前对数据进行分区/分桶/排序, 减少后续计算时候的 shuffle 以">
+<meta property="og:type" content="article">
+<meta property="og:title" content="大数据处理迷思">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/11/02/大数据处理迷思/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="OLAP 系统No-SQL, New-SQL, 到了最后还是 SQL 好!  性能和稳定性的考量, 性能优先(MPP)? or 稳定性优先(DAG/MR)? 让数据更适合被计算 将计算放在数据附近: Move compute logic, not data. 矛盾: 云, 存储和计算分离. 做大宽表, 减少 join 开销. 提前对数据进行分区/分桶/排序, 减少后续计算时候的 shuffle 以">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:updated_time" content="2019-11-02T08:15:48.971Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="大数据处理迷思">
+<meta name="twitter:description" content="OLAP 系统No-SQL, New-SQL, 到了最后还是 SQL 好!  性能和稳定性的考量, 性能优先(MPP)? or 稳定性优先(DAG/MR)? 让数据更适合被计算 将计算放在数据附近: Move compute logic, not data. 矛盾: 云, 存储和计算分离. 做大宽表, 减少 join 开销. 提前对数据进行分区/分桶/排序, 减少后续计算时候的 shuffle 以">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+    <title> 大数据处理迷思 - Jiatao Tao's blog </title>
+  </head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">Jiatao Tao's blog</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          大数据处理迷思
+        
+      </h1>
+
+      <time class="post-time">
+          Nov 2 2019
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <h3 id="OLAP-系统"><a href="#OLAP-系统" class="headerlink" title="OLAP 系统"></a>OLAP 系统</h3><p>No-SQL, New-SQL, 到了最后还是 SQL 好!</p>
+<ol>
+<li>性能和稳定性的考量, 性能优先(MPP)? or 稳定性优先(DAG/MR)?</li>
+<li>让数据更适合被计算<ol>
+<li>将计算放在数据附近: Move compute logic, not data. 矛盾: 云, 存储和计算分离.</li>
+<li>做大宽表, 减少 join 开销.</li>
+<li>提前对数据进行分区/分桶/排序, 减少后续计算时候的 shuffle 以及 sort.</li>
+<li>对数据进行预计算, 减少后续计算的聚合开销. 并且预计算等于说自己 own 了数据(多了一步构建 cube 的操作), 且由于是预计算的, 还可以进一步把查询结果 cache 到 Redis 这样的系统中, 下次一模一样的查询来直接用 cache 的 result 就行了, 这个 QPS 超级高.</li>
+</ol>
+</li>
+<li>QPS 考量</li>
+<li>很重要一点, 客户/业务方要怎么使用我们的系统? 换句话说, 我们能让客户按我们推荐的方式使用我们系统吗? 举例来说, 时间分区列我们推荐使用 date, 但是用户使用到了 timestamp, 造成了很多小文件, 怎么避免这种错误使用?</li>
+<li>Schema change</li>
+<li>数据点更新</li>
+<li>如何调配资源</li>
+</ol>
+
+            </div>
+          
+
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2012 -
+    
+    2019
+    <span class="footer-author">陶加涛.</span>
+    <span class="power-by">
+        Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>
