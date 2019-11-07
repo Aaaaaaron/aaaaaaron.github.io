@@ -43,18 +43,18 @@
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
 <meta property="og:description" content="0. 开篇Spark 的 bucket 原理上其实和 repartition 非常相似(其实对数据的操作都是一样的), 但是 Spark 的 repartition 是用来调整 Dataframe 的分区数, 而 bucketing 机制相比, 更多了以下的功能:  当有点查的时候, 可以 pruning 掉不必要的文件. 当 join 的双边都有 bucketBy 且满足一定条件之后, 可以进行">
 <meta property="og:locale" content="zh-Hans">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084225.png">
-<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084345.png">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/企业微信截图_78b48f23-6c82-4db0-9237-ecfcadbe8248.png">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191019131517.png">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191019201545.png">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/企业微信截图_2d709ebe-ee49-495a-8971-c8cf988cabf2.png">
 <meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191019202151.png">
-<meta property="og:updated_time" content="2019-10-20T01:22:06.250Z">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084225.png">
+<meta property="og:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084345.png">
+<meta property="og:updated_time" content="2019-11-05T03:18:07.549Z">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:title" content="Spark bucketing 机制">
 <meta name="twitter:description" content="0. 开篇Spark 的 bucket 原理上其实和 repartition 非常相似(其实对数据的操作都是一样的), 但是 Spark 的 repartition 是用来调整 Dataframe 的分区数, 而 bucketing 机制相比, 更多了以下的功能:  当有点查的时候, 可以 pruning 掉不必要的文件. 当 join 的双边都有 bucketBy 且满足一定条件之后, 可以进行">
-<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084225.png">
+<meta name="twitter:image" content="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/企业微信截图_78b48f23-6c82-4db0-9237-ecfcadbe8248.png">
 
 
 <link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1">
@@ -143,12 +143,11 @@
 <h1 id="1-基础"><a href="#1-基础" class="headerlink" title="1. 基础"></a>1. 基础</h1><p>bucketing 与 repartition 都是对数据里每条记录通过一个 Hash 函数计算 key(<code>Murmur3Hash</code>)得到一个值, 相同值的记录放到同一个分片中去. </p>
 <p>bucketBy 的写入比较特殊, 不能直接 write.parquet, 因为需要记录一些信息到元数据信息, 在我们自己测试的时候, 可以这样写: <code>df.write.format(&quot;parquet&quot;).option(&quot;path&quot;, &quot;/tmp/bueket&quot;).bucketBy(3, &quot;id&quot;).saveAsTable(&quot;tbl&quot;)</code>, 我们 buketBy 的列是 id, 分了三个桶, 最后产生出来的文件会小于等于3个(如果 id 只有一个值, 只会有一个文件). 如下, 文件名中<code>_</code>后的, 就是每个文件的 buckId(也是里面记录的 hash 值).</p>
 <figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">part-00000-39d128dc-69a1-4b91-8931-68e81c77c4ae_00000.c000.snappy.parquet</span><br><span class="line">part-00000-39d128dc-69a1-4b91-8931-68e81c77c4ae_00001.c000.snappy.parquet</span><br><span class="line">part-00000-39d128dc-69a1-4b91-8931-68e81c77c4ae_00002.c000.snappy.parquet</span><br></pre></td></tr></table></figure>
-<p>写入的流程比较杂, 后续会专门讲下, 这里只贴两张调用 debug 的图, 感兴趣的读者可以自己去追下, 虽然流程很长, 但是代码还是很简单的.</p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084225.png" alt=""></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084345.png" alt=""></p>
+<p>写入的流程比较杂, 后续会专门讲下, 文末贴了两张调用 debug 的图, 感兴趣的读者可以自己去追下, 虽然流程很长, 但是代码还是很简单的.</p>
 <p>这里提下 buckId 是怎么加到文件上的: 在 <code>DynamicPartitionDataWriter#newOutputWriter</code> 中:</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 所以可以看到最多五位数的 bucketId</span></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">bucketIdToString</span></span>(id: <span class="type">Int</span>): <span class="type">String</span> = <span class="string">f"_<span class="subst">$id</span>%05d"</span></span><br><span class="line"><span class="keyword">val</span> bucketIdStr = bucketId.map(<span class="type">BucketingUtils</span>.bucketIdToString).getOrElse(<span class="string">""</span>)</span><br></pre></td></tr></table></figure>
-<p>提一句, 其实如果你是 repartition 了之后存下来的, <code>part-</code> 后的数字也就是 hash 之后的值, 这个 task attempt ID 就是.<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">getFilename</span></span>(taskContext: <span class="type">TaskAttemptContext</span>, ext: <span class="type">String</span>): <span class="type">String</span> = &#123;</span><br><span class="line">  <span class="keyword">val</span> split = taskContext.getTaskAttemptID.getTaskID.getId</span><br><span class="line">  <span class="string">f"part-<span class="subst">$split</span>%05d-<span class="subst">$jobId</span><span class="subst">$ext</span>"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
+<p>提一句, 其实如果你是 repartition 了之后存下来的, <code>part-</code> 后的数字也就是 hash 之后的值, 这个 task attempt ID 是之前 execute task 时传入的 sparkPartitionId, 代码在 <code>FileFormatWriter#executeTask</code></p>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="function"><span class="keyword">def</span> <span class="title">getFilename</span></span>(taskContext: <span class="type">TaskAttemptContext</span>, ext: <span class="type">String</span>): <span class="type">String</span> = &#123;</span><br><span class="line">  <span class="keyword">val</span> split = taskContext.getTaskAttemptID.getTaskID.getId</span><br><span class="line">  <span class="string">f"part-<span class="subst">$split</span>%05d-<span class="subst">$jobId</span><span class="subst">$ext</span>"</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 <h1 id="2-优化-Bucket-Pruning"><a href="#2-优化-Bucket-Pruning" class="headerlink" title="2. 优化: Bucket Pruning"></a>2. 优化: Bucket Pruning</h1><p>对于点查, 还是上面 bucketBy id 的例子, 例如 id=5, 可以把id=5当做原始表中一条记录, 同样的我们可以计算出它的 hash 值, 得到它的 bucket ID, 那么我们只要扫这个 bucket ID 文件就可以了, 因为其他 bucket ID 的文件里肯定没有5这个元素.</p>
 <h2 id="2-1-Strategy-部分"><a href="#2-1-Strategy-部分" class="headerlink" title="2.1 Strategy 部分"></a>2.1 Strategy 部分</h2><p>先简单带过下 Spark read parquet 的流程, 想了解更多的可以参考这篇<a href="https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/">Spark Read Deep Dive
 </a>. </p>
@@ -211,6 +210,9 @@
 <h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><ol>
 <li>DF 的每个 partition 都会有 bucket num 个文件, 比如 <code>df.repartition(5).write.format(&quot;parquet&quot;).option(&quot;path&quot;, &quot;/tmp/bueket&quot;).bucketBy(3, &quot;id&quot;)</code> 会产生15个文件, 由于这个限制, 我们使用 repartition 重新实现了类似 bucket 的功能.</li>
 </ol>
+<h1 id="写入-debug-截图"><a href="#写入-debug-截图" class="headerlink" title="写入 debug 截图"></a>写入 debug 截图</h1><p>TBD, 后面写个文章介绍</p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084225.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084345.png" alt=""></p>
 
             </div>
           
