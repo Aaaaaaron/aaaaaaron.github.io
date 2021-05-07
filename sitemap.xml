@@ -2,227 +2,364 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2021/05/07/test/</loc>
+    
+    <lastmod>2021-05-07</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2018/10/24/Spark-Shuffle/</loc>
     
-    <lastmod>2021-05-07T14:52:12.410Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/12/19/Spark-PRC/</loc>
     
-    <lastmod>2021-05-07T14:44:12.664Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2019/03/29/Spark-SQL-Join-Deep-Dive/</loc>
     
-    <lastmod>2021-05-07T14:42:05.155Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/11/02/%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E8%BF%B7%E6%80%9D/</loc>
     
-    <lastmod>2021-05-07T14:40:46.077Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2019/11/03/%E6%95%B4%E7%90%86-%E7%A3%81%E7%9B%98-I-O/</loc>
     
-    <lastmod>2021-05-07T14:39:02.742Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/</loc>
     
-    <lastmod>2021-05-07T14:38:50.223Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/</loc>
     
-    <lastmod>2021-05-07T14:34:56.390Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2019/10/16/Spark-MapOutputTracker-Deep-Dive/</loc>
     
-    <lastmod>2021-05-07T13:35:38.236Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2020/02/07/Kylin%20%E6%9F%A5%E8%AF%A2%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%B5%81%E7%A8%8B/</loc>
     
-    <lastmod>2021-05-07T13:31:33.379Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2020/02/09/Calcite%20Volcano%20Planner/</loc>
     
-    <lastmod>2021-05-07T13:31:27.524Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2021/04/25/Calcite%20Not%20in%20%E8%BD%AC%20cross%20join%20%E4%BC%98%E5%8C%96/</loc>
     
-    <lastmod>2021-05-07T13:31:20.585Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20%E4%BC%98%E5%8C%96/</loc>
     
-    <lastmod>2021-05-07T13:29:20.306Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2020/02/08/Calcite%20-%20Parser%20%E9%83%A8%E5%88%86/</loc>
     
-    <lastmod>2021-05-07T13:23:33.930Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2020/02/07/Paper/</loc>
     
-    <lastmod>2021-05-07T13:03:11.277Z</lastmod>
+    <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/</loc>
     
-    <lastmod>2019-11-25T14:23:58.834Z</lastmod>
+    <lastmod>2019-11-25</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2019/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/</loc>
     
-    <lastmod>2019-11-02T15:38:53.651Z</lastmod>
+    <lastmod>2019-11-02</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2019/10/30/Spark-Parquet-file-split/</loc>
     
-    <lastmod>2019-11-02T15:38:39.277Z</lastmod>
+    <lastmod>2019-11-02</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/11/02/Hadoop-MR-%E5%92%8C-Spark-%E5%AF%B9%E6%AF%94/</loc>
     
-    <lastmod>2019-11-02T07:22:12.278Z</lastmod>
+    <lastmod>2019-11-02</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/12/30/Maven-%E6%89%93%E5%8C%85%E8%B6%9F%E5%9D%91%E4%B8%8E%E8%A7%A3%E6%B3%95/</loc>
     
-    <lastmod>2019-11-01T14:11:30.776Z</lastmod>
+    <lastmod>2019-11-01</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2019/01/05/Linux-%E5%88%9D%E5%85%BB%E6%88%90/</loc>
     
-    <lastmod>2019-07-02T07:45:36.222Z</lastmod>
+    <lastmod>2019-07-02</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/about/index.html</loc>
     
-    <lastmod>2019-06-23T15:15:06.681Z</lastmod>
+    <lastmod>2019-06-23</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/tags/index.html</loc>
     
-    <lastmod>2019-06-23T15:13:14.767Z</lastmod>
+    <lastmod>2019-06-23</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/10/24/Spark-executor-log/</loc>
     
-    <lastmod>2019-06-23T12:26:39.510Z</lastmod>
+    <lastmod>2019-06-23</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/</loc>
     
-    <lastmod>2019-06-23T11:49:20.765Z</lastmod>
+    <lastmod>2019-06-23</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/</loc>
     
-    <lastmod>2018-11-18T04:25:40.002Z</lastmod>
+    <lastmod>2018-11-18</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/</loc>
     
-    <lastmod>2018-11-18T04:08:01.328Z</lastmod>
+    <lastmod>2018-11-18</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/10/16/Spark-map-vs-mapPartitions/</loc>
     
-    <lastmod>2018-10-25T15:00:00.000Z</lastmod>
+    <lastmod>2018-10-25</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/07/19/Spark-Catalyst-Deep-Dive/</loc>
     
-    <lastmod>2018-10-25T14:59:23.931Z</lastmod>
+    <lastmod>2018-10-25</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/08/22/Parquet-encoding-definitions-official/</loc>
     
-    <lastmod>2018-10-25T14:59:07.970Z</lastmod>
+    <lastmod>2018-10-25</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/07/19/Elixir/</loc>
     
-    <lastmod>2018-10-24T14:49:18.405Z</lastmod>
+    <lastmod>2018-10-24</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/2018/07/19/Java-Streaming-Deep-Dive/</loc>
     
-    <lastmod>2018-07-19T12:45:37.505Z</lastmod>
+    <lastmod>2018-07-19</lastmod>
     
   </url>
   
   <url>
     <loc>https://aaaaaaron.github.io/categories/index.html</loc>
     
-    <lastmod>2018-07-19T08:45:18.845Z</lastmod>
+    <lastmod>2018-07-19</lastmod>
     
   </url>
+  
+
+  <url>
+    <loc>https://aaaaaaron.github.io/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>1.0</priority>
+  </url>
+
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/BigData/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Calcite/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/OLAP/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Optimizer/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Druid/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Java/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Kylin/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Parquet/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Paper/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Maven/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/SQL/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/CTE/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Spark/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/%E9%AB%98%E6%80%A7%E8%83%BD/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/System/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/MR/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Elixir/</loc>
+    <lastmod>2021-05-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+
   
 </urlset>
