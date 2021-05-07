@@ -1,0 +1,86 @@
+if page.title
+  - var current_title = page.title
+else
+  - var current_title = config.title
+
+if (config.root != '/')
+  - var root = config.root
+else
+  - var root = '/'
+
+if config.feed
+  case config.feed.type
+    when "rss2"
+      - var feed_type='application/rss+xml'
+    when "atom"
+    default
+      - var feed_type='application/atom+xml'
+
+if config.noise
+    - for (var key in config.noise) { theme[key] = config.noise[key]; }
+
+include _partial/helpers.pug
+
+doctype html
+html
+  head
+    meta(http-equiv="content-type", content="text/html; charset=utf-8")
+    meta(content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0", name="viewport")
+    meta(content="yes", name="apple-mobile-web-app-capable")
+    meta(content="black-translucent", name="apple-mobile-web-app-status-bar-style")
+    meta(content="telephone=no", name="format-detection")
+
+    if page.description
+      meta(name="description", content=page.description)
+    else if page.excerpt
+      meta(name="description", content=page.excerpt)
+    else if page.content
+      - var br = page.content.indexOf('</p>')
+      if br < 0
+        meta(name="description", content=page.content)
+      else
+        meta(name="description", content=page.content.substring(3, br))
+
+    link(rel='stylesheet', type='text/css', href=root + 'css/normalize.css')
+    link(rel='stylesheet', type='text/css', href=root + 'css/highlight.css')
+    link(rel='stylesheet', type='text/css', href=root + 'css/noise.css')
+
+    block title
+
+    link(rel='Shortcut Icon', type='image/x-icon',href=url_for('favicon.ico'))
+    if config.feed
+      link(rel='alternate', type=feed_type, href=url_for(config.feed.path))
+
+    if theme.google_adsense_page_level_ads
+      script(async, src="//pagead2.googlesyndication.com/pagead/js/adsbygoogle.js")
+      script.
+         (adsbygoogle = window.adsbygoogle || []).push({
+          google_ad_client: "#{theme.google_adsense_page_level_ads}",
+          enable_page_level_ads: true
+          });
+
+  body
+
+    block main
+
+    link(rel='stylesheet', type='text/css', href=root + 'css/font.css')
+    link(rel='stylesheet', type='text/css', href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css")
+
+    if theme.fancybox
+      link(rel='stylesheet', type='text/css', href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css")
+      script(src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js")
+      script(src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js")
+
+      script.
+        $(document).ready(function() {
+          $(".fancybox").fancybox();
+        });
+
+    if theme.google_analytics
+      script.
+        (function(b,o,i,l,e,r){b.GoogleAnalyticsObject=l;b[l]||(b[l]=
+        function(){(b[l].q=b[l].q||[]).push(arguments)});b[l].l=+new Date;
+        e=o.createElement(i);r=o.getElementsByTagName(i)[0];
+        e.src='//www.google-analytics.com/analytics.js';
+        r.parentNode.insertBefore(e,r)}(window,document,'script','ga'));
+        ga('create','#{theme.google_analytics}');ga('send','pageview');

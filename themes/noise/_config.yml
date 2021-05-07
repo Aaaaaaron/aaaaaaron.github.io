@@ -1,0 +1,35 @@
+# Header
+menu:
+  ## If your site is put in a subdirectory, set Home as '/child/'
+  Home: /
+  Archives: archives
+  About: about
+
+social:
+  email: tao@apache.org
+  twitter:
+  weibo:
+  github: github.com/aaaaaaron/
+  googleplus:
+  rss: /atom.xml
+
+# Content
+fancybox: true # set to true if you want to use it
+infinite_scroll: false # set to true if you want to use it
+toc_words: "Table of Contents" # the line shown in toc
+show_toc_by_default: true # to show toc if `toc:` is not specified in post
+compact_index: true # to use compact version of index page
+per_page: 0
+order_by: -date
+
+
+duoshuo: #duoshuo_shortname
+disqus: #disqus _shortname
+google_analytics: #Google Analytics Tracking Code
+google_adsense_page_level_ads: #Google Adsense Page Level Ads Code
+
+less:
+  paths:
+    - source/css
+  compress:
+    true
