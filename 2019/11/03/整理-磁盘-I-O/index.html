@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="">
-  <head><meta name="generator" content="Hexo 3.8.0">
+<html lang>
+  <head><meta name="generator" content="Hexo 3.9.0">
     
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -145,7 +145,7 @@
 <p>虽然15000rpm的磁盘计算出的理论最大IOPS仅为166, 但在实际运行环境中, 实际磁盘的IOPS往往能够突破200甚至更高. 这其实就是在系统调用过程中, 操作系统进行了一系列的优化(page cache, 预读). </p>
 <h4 id="吞吐量"><a href="#吞吐量" class="headerlink" title="吞吐量"></a>吞吐量</h4><p>吞吐量（Throughput）, 指单位时间内可以成功传输的数据数量. 顺序读写频繁的应用, 如视频点播, 关注连续读写性能、数据吞吐量是关键衡量指标. 它主要取决于磁盘阵列的架构, 通道的大小以及磁盘的个数. 不同的磁盘阵列存在不同的架构, 但他们都有自己的内部带宽, 一般情况下, 内部带宽都设计足够充足, 不会存在瓶颈. 磁盘阵列与服务器之间的数据通道对吞吐量影响很大, 比如一个2Gbps的光纤通道, 其所能支撑的最大流量仅为250MB/s. 最后, 当前面的瓶颈都不再存在时, 硬盘越多的情况下吞吐量越大. </p>
 <h1 id="read-write"><a href="#read-write" class="headerlink" title="read / write"></a>read / write</h1><p>在现代操作系统中, 一个 “真正的” 文件, 当调用 <code>read</code> / <code>write</code> 的时候, 数据当然不会简单地就直达硬盘. 对于 Linux 而言, 这个过程的<strong>一部分</strong>是这样的：</p>
-<p><img src="https://image-static.segmentfault.com/588/476/588476624-59fadc92da61c_articlex" alt=""></p>
+<p><img src="https://image-static.segmentfault.com/588/476/588476624-59fadc92da61c_articlex" alt></p>
 <p>在操作系统内核空间内, read / write 到硬件设备之间, 按顺序有这么几层：</p>
 <ul>
 <li><strong>VFS</strong>：虚拟文件系统, 可以大致理解为 <code>read</code> / <code>write</code> / <code>ioctl</code> 之类的系统调用就在这一层. 当调用 <code>open</code> 之后, 内核会为每一个 file descriptor 创建一个 <code>file_operations</code> 结构体实例. 这个结构体里包含了 open、write、seek 等的实例（回调函数）. 这一层其实是 Linux 文件和设备体系的精华之一, 很多东西都隐藏或暴露在这一层. 不过本文不研究这一块</li>
@@ -154,7 +154,7 @@
 <li><strong>设备驱动</strong>：这是具体硬件设备的设备驱动了, 比如 SSD 的读写驱动、磁盘的读写驱动、字符设备的读写驱动等等. </li>
 <li><strong>硬件设备</strong>：这没什么好讲的了, 就是实际的硬件设备接口. 参见<a href="https://segmentfault.com/a/1190000011743916" target="_blank" rel="noopener">上一篇文章</a></li>
 </ul>
-<h4 id="从系统调用角度"><a href="#从系统调用角度" class="headerlink" title="从系统调用角度"></a>从系统调用角度</h4><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103212251.png" alt=""></p>
+<h4 id="从系统调用角度"><a href="#从系统调用角度" class="headerlink" title="从系统调用角度"></a>从系统调用角度</h4><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103212251.png" alt></p>
 <ol>
 <li>进程向内核发起一个系统调用, </li>
 <li>内核接收到系统调用, 知道是对文件的请求, 于是告诉磁盘, 把文件读取出来</li>
@@ -172,7 +172,7 @@
 <li>Java 中的 mmap 回收比较蛋疼</li>
 <li>MMAP 使用的是虚拟内存, 和 PageCache 一样是由操作系统来控制刷盘的, 可以通过 force 强刷</li>
 </ol>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103215919.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103215919.png" alt></p>
 <h6 id="性能测试-Java"><a href="#性能测试-Java" class="headerlink" title="性能测试(Java)"></a>性能测试(Java)</h6><ul>
 <li>文件大小 1.5G</li>
 <li>读取方式:顺序读取</li>
@@ -197,13 +197,13 @@
 <li>OS 将Socket缓存复制到网卡发出 (kernel buffer -&gt; 网卡(DMA))</li>
 </ol>
 <p>1,2 步是 read, 3,4 步是 send, 整个过程总共发生了四次拷贝和四次的用户态和内核态的切换. </p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103221636.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103221636.png" alt></p>
 <h6 id="Zero-copy-sendfile"><a href="#Zero-copy-sendfile" class="headerlink" title="Zero copy (sendfile)"></a>Zero copy (sendfile)</h6><ol>
 <li>OS 将数据从磁盘复制到操作系统内核的页缓存中 (磁盘(DMA) -&gt; kernel buffer, U -&gt; K)</li>
 <li>内核的页缓存复制到内核态的 Socket 缓存中 (kernel buffer -&gt; Socket kernel buffer)</li>
 <li>OS 将Socket缓存复制到网卡发出 (kernel buffer -&gt; 网卡(DMA))</li>
 </ol>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103221734.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103221734.png" alt></p>
 <p>如果网卡支持 gather operations 内核就可以进一步减少数据拷贝:</p>
 <ol>
 <li>OS 将数据从磁盘复制到操作系统内核的页缓存中 (磁盘(DMA) -&gt; kernel buffer, U -&gt; K)</li>
@@ -214,7 +214,7 @@
 <h1 id="工作机制"><a href="#工作机制" class="headerlink" title="工作机制"></a>工作机制</h1><h3 id="通用块层"><a href="#通用块层" class="headerlink" title="通用块层"></a>通用块层</h3><p>硬盘中每个扇区的大小固定为512字节, 扇区是最小的可寻址单元.</p>
 <p>对于VFS和具体的文件系统来说, 数据是以块(Block)为单位进行管理的, 当内核访问文件的数据时, 它首先从磁盘上读取一个块, 由于扇区是磁盘的最小可寻址单元, 所以块不能比扇区还小, 只能整数倍于扇区大小, 即一个块对应磁盘上的一个或多个扇区. 而且由于Page Cache层的最小单元是页（Page）, 所以块大小不能超过一页的长度. 每块一般设定为4Kb, 当OS需要获取磁盘某个数据时, 将产生一个I/O中断, 本次I/O中断将带上具体的块号去驱动磁盘进行块数据查找和读取操作, 这些操作都是以某块作为起点, 每次读取数据的最小单位也是4Kb.</p>
 <p>通用块层是粘合所有上层和底层的部分, 一个页的磁盘数据布局如下图所示：</p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103210628.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191103210628.png" alt></p>
 <p><a href="https://www.ibm.com/developerworks/cn/linux/l-cache/index.html" target="_blank" rel="noopener">IBM 的资料</a> 摘抄：</p>
 <p>当应用程序需要读取文件中的数据时, 操作系统先分配一些内存, 将数据从存储设备读入到这些内存中, 然后再将数据分发给应用程序；当需要往文件中写数据时, 操作系统先分配内存接收用户数据, 然后再将数据从内存写到磁盘上. </p>
 <p>对于每个文件的<strong>第一个</strong>读请求, 系统读入所请求的页面并读入紧随其后的少数几个页面(不少于一个页面, 通常是三个页面), 这时的预读称为<strong>同步预读</strong>. </p>
@@ -271,7 +271,7 @@
     
         2012 -
     
-    2019
+    2021
     <span class="footer-author">陶加涛.</span>
     <span class="power-by">
         Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>

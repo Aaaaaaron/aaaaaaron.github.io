@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="">
-  <head><meta name="generator" content="Hexo 3.8.0">
+<html lang>
+  <head><meta name="generator" content="Hexo 3.9.0">
     
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -133,13 +133,13 @@
             <h1 id="小谈阻塞非阻塞"><a href="#小谈阻塞非阻塞" class="headerlink" title="小谈阻塞非阻塞"></a>小谈阻塞非阻塞</h1><p>阻塞非阻塞概念都是对于线程, 进程这种粒度来说的, 因为只有他们才是内核有感知的, 协程是你内核无感知, 是你用户自己实现的.</p>
 <p>例如在 Golang 中, <code>resp, err := client.Do(req)</code> 看着是阻塞的写法(有网络 IO), 但是 Go 的 Http 包是异步的, 这边在协程粒度是阻塞住了, 但是线程该干嘛就干嘛去了, 对于系统来说, 就是非阻塞. 应用程序觉得我遇到阻塞, 比如 I/O什么的, 我就 yield 出去, 把控制权交出去.</p>
 <p><strong>分清楚内核层和应用层是关键</strong></p>
-<p><strong>阻塞还是非阻塞</strong> 应用程序的调用是否立即返回. 被挂起无法执行其他操作的则是阻塞型的, 可以被立即「抽离」去完成其他「任务」的则是非阻塞型的.<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191009205805.png" alt=""></p>
+<p><strong>阻塞还是非阻塞</strong> 应用程序的调用是否立即返回. 被挂起无法执行其他操作的则是阻塞型的, 可以被立即「抽离」去完成其他「任务」的则是非阻塞型的.<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191009205805.png" alt></p>
 <p>但是挂起就不能干事情了吗, 答案是否定的, 一个线程读文件,被阻塞了,资源会出让(陈力就列, 不能者止). coroutine也是, 但是比如 goroutine, go的调度器会把处于阻塞的的go程上的资源分配给其他go程. 但是这里的重点就是线程切换的代价比协程切换的代价高很多(线程切换涉及到内核态和用户态的切换)</p>
 <p><strong>协程线程</strong> 调度一个主动(协作式调度, 应用程序自己调度) 一个被动(抢占式调度, 操作系统调度)</p>
 <p><strong>异步和同步</strong> 数据 copy 时进程是否阻塞.  同步:应用层自己去想内核询问(轮询?); 异步:内核主动通知应用层数据. IO 操作分为两个过程：内核等待事件, 把数据拷贝到用户缓冲区. 这两个过程只要等待任何一个都是同步 IO</p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191009205836.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191009205836.png" alt></p>
 <p>在异步非阻塞模型中, 没有无谓的挂起、休眠与等待, 也没有盲目无知的问询与检查, 应用层做到不等候片刻的最大化利用自身的资源, 系统内核也十分「善解人意」的在完成任务后主动通知应用层来接收任务成果. </p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191011223017.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191011223017.png" alt></p>
 <h3 id="进程、线程、协程"><a href="#进程、线程、协程" class="headerlink" title="进程、线程、协程"></a>进程、线程、协程</h3><h3 id="1-进程"><a href="#1-进程" class="headerlink" title="1. 进程"></a>1. 进程</h3><p>操作系统中最核心的概念是进程, 分布式系统中最重要的问题是进程间通信. </p>
 <p>进程是具有一定独立功能的程序关于某个数据集合上的一次运行活动,进程是系统进行资源分配和调度的一个独立单位. 每个进程都有自己的独立内存空间, 不同进程通过进程间通信来通信. 由于进程比较重量, 占据独立的内存, 所以上下文进程间的切换开销（栈、寄存器、虚拟内存、文件句柄等）比较大, 但相对比较稳定安全. </p>
 <p>进程是“程序执行的一个实例” , 担当分配系统资源的实体. 进程创建必须分配一个完整的独立地址空间. </p>
@@ -274,7 +274,7 @@
     
     
       <a class="next" href="/2019/10/09/Spark-Bucketing-Deep-Dive/">
-        <span class="next-text nav-default">Spark bucketing 机制</span>
+        <span class="next-text nav-default">Spark bucketing Deep Dive</span>
         <span class="prev-text nav-mobile">Next</span>
         <i class="iconfont icon-right"></i>
       </a>
@@ -301,7 +301,7 @@
     
         2012 -
     
-    2019
+    2021
     <span class="footer-author">陶加涛.</span>
     <span class="power-by">
         Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>

@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="">
-  <head><meta name="generator" content="Hexo 3.8.0">
+<html lang>
+  <head><meta name="generator" content="Hexo 3.9.0">
     
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -131,7 +131,7 @@
             <div class="post-content">
             <h1 id="Spark-Catalyst-的实现分析"><a href="#Spark-Catalyst-的实现分析" class="headerlink" title="Spark Catalyst 的实现分析"></a>Spark Catalyst 的实现分析</h1><p><strong>转载自:</strong><a href="https://github.com/ColZer/DigAndBuried/blob/master/spark/spark-catalyst.md#spark-catalyst%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90" target="_blank" rel="noopener">Spark Catalyst 的实现分析</a></p>
 <p>Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他 SQL 引擎的工作原理也基本一致，比如 Hive 之类的。</p>
-<p><img src="https://databricks.com/wp-content/uploads/2016/06/Catalyst-Optimizer-diagram.png" alt=""></p>
+<p><img src="https://databricks.com/wp-content/uploads/2016/06/Catalyst-Optimizer-diagram.png" alt></p>
 <p>本文核心也是介绍 Catalyst 内部的实现，但是不是按照这张图的步骤来介绍 Catalyst 的实现原理，而是按照 SQL 给人最直接几个概念，比如 Row，Expression，Plan 来逐步介绍它们的内部实现。</p>
 <p>看过 Spark SQL 或者 Catalyst 人都知道，相比 Spark Core 的代码，这一块真的挺复杂了，各种算法逻辑，复杂的 Scala 语法元素，以及各种性能优化，代码自动生成，可能得需要几倍的时间，反复的琢磨，才能梳理清楚。</p>
 <h2 id="1-Row"><a href="#1-Row" class="headerlink" title="1. Row"></a>1. Row</h2><p>Spark SQL 中处理的数据与传统 RDD 最大区别在处理的每行数据的类型表示，传统 RDD 不对每行数据进行类型要求，可以任何复杂数据结构，比如 Map, 或者自己自定义的类之类的，而 Spark SQL 中为<code>Row</code>。</p>
@@ -508,7 +508,7 @@ funtion(row) {
     
         2012 -
     
-    2019
+    2021
     <span class="footer-author">陶加涛.</span>
     <span class="power-by">
         Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>

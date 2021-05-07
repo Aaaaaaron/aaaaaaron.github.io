@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang>
+  <head><meta name="generator" content="Hexo 3.9.0">
+    
+<meta charset="UTF-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge">
+<meta name="viewport" content="width=device-width,user-scalable=no,initial-scale=1,minimum-scale=1,maximum-scale=1">
+
+
+<meta http-equiv="Cache-Control" content="no-transform">
+<meta http-equiv="Cache-Control" content="no-siteapp">
+
+
+
+  <meta name="description" content="SQL CTE 优化">
+
+
+
+
+  <meta name="keywords" content="OLAP,Optimizer,SQL,CTE,">
+
+
+
+
+
+  <link rel="alternate" href="/default" title="Jiatao Tao's blog">
+
+
+
+
+  <link rel="shortcut icon" type="image/x-icon" href="/favicon.ico?v=1.1">
+
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2021/05/01/SQL CTE 优化/">
+
+
+<meta name="description" content="介绍CTE: Common Table Expressions, 也就是我们常见的 With clause. 1234WITH v AS (SELECT i-brand, i_current_price, MAX (i_units) m           FROM item WHERE i_color = &apos;red&apos;           GROUP BY ibrand, i_current_pr">
+<meta name="keywords" content="OLAP,Optimizer,SQL,CTE">
+<meta property="og:type" content="article">
+<meta property="og:title" content="SQL CTE 优化">
+<meta property="og:url" content="https://aaaaaaron.github.io/2021/05/01/SQL CTE 优化/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="介绍CTE: Common Table Expressions, 也就是我们常见的 With clause. 1234WITH v AS (SELECT i-brand, i_current_price, MAX (i_units) m           FROM item WHERE i_color = &apos;red&apos;           GROUP BY ibrand, i_current_pr">
+<meta property="og:locale" content="zh-Hans">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210426183446419-20210507210541900.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210426205405612-20210507210542053.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210427111008104-20210507210542029.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210427142643234-20210507210542091.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20200208221706543-20210507210542129.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20200208221734549-20210507210542169.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20200208221741219-20210507210542188.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210427144511944-20210507210542294.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210427145718543-20210507210542229.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210427153800222-20210507210542245.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210427161134653-20210507210542580.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210427200049532-20210507210542308.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210427202305622-20210507210542337.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210427202537374-20210507210542586.png">
+<meta property="og:updated_time" content="2021-05-07T13:29:20.306Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="SQL CTE 优化">
+<meta name="twitter:description" content="介绍CTE: Common Table Expressions, 也就是我们常见的 With clause. 1234WITH v AS (SELECT i-brand, i_current_price, MAX (i_units) m           FROM item WHERE i_color = &apos;red&apos;           GROUP BY ibrand, i_current_pr">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20优化/image-20210426183446419-20210507210541900.png">
+
+
+<link rel="stylesheet" type="text/css" href="/css/style.css?v=1.1">
+<link href="https://fonts.googleapis.com/css?family=Open+Sans" rel="stylesheet">
+
+
+
+
+
+<script type="text/javascript">
+  var themeConfig = {
+    fancybox: {
+      enable: false
+    },
+  };
+</script>
+
+
+
+
+  
+
+
+
+
+
+  
+
+
+    <title> SQL CTE 优化 - Jiatao Tao's blog </title>
+  </head>
+
+  <body>
+    <div id="page">
+      <header id="masthead"><div class="site-header-inner">
+    <h1 class="site-title">
+        <a href="/." class="logo">Jiatao Tao's blog</a>
+    </h1>
+
+    <nav id="nav-top">
+        
+            <ul id="menu-top" class="nav-top-items">
+                
+                    <li class="menu-item">
+                        <a href="/about">
+                            
+                            
+                                About
+                            
+                        </a>
+                    </li>
+                
+            </ul>
+        
+  </nav>
+</div>
+
+      </header>
+      <div id="content">
+        
+    <div id="primary">
+        
+  <article class="post">
+    <header class="post-header">
+      <h1 class="post-title">
+        
+          SQL CTE 优化
+        
+      </h1>
+
+      <time class="post-time">
+          May 1 2021
+      </time>
+    </header>
+
+
+
+    
+            <div class="post-content">
+            <h1 id="介绍"><a href="#介绍" class="headerlink" title="介绍"></a>介绍</h1><p><strong>CTE</strong>: Common Table Expressions, 也就是我们常见的 With clause.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">WITH</span> v <span class="keyword">AS</span> (<span class="keyword">SELECT</span> i-brand, i_current_price, <span class="keyword">MAX</span> (i_units) m</span><br><span class="line">           <span class="keyword">FROM</span> item <span class="keyword">WHERE</span> i_color = <span class="string">'red'</span></span><br><span class="line">           <span class="keyword">GROUP</span> <span class="keyword">BY</span> ibrand, i_current_price)</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> v <span class="keyword">WHERE</span> m &lt; <span class="number">100</span></span><br></pre></td></tr></table></figure>
+<p><strong>CTE 优点:</strong></p>
+<ol>
+<li>简化查询, 使其更可读</li>
+<li>性能提升(本文主要介绍非递归 CTE 带来的性能提升)</li>
+</ol>
+<h2 id="挑战"><a href="#挑战" class="headerlink" title="挑战"></a>挑战</h2><h3 id="解决死锁"><a href="#解决死锁" class="headerlink" title="解决死锁"></a>解决死锁</h3><ul>
+<li>复杂的查询可能会有嵌套的 CTE, 优化器需要保证没有同时多个 process 在等对方结束</li>
+</ul>
+<h3 id="如何枚举-选取可能的计划"><a href="#如何枚举-选取可能的计划" class="headerlink" title="如何枚举/选取可能的计划"></a>如何枚举/选取可能的计划</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SQL2</span></span><br><span class="line"><span class="comment">-- index on i_color</span></span><br><span class="line"><span class="keyword">WITH</span> v <span class="keyword">AS</span> (<span class="keyword">SELECT</span> i_brand, i_color <span class="keyword">FROM</span> item </span><br><span class="line">           <span class="keyword">WHERE</span> i_CURRENT_price &lt; <span class="number">1000</span>)</span><br><span class="line"><span class="keyword">SELECT</span> v1.*</span><br><span class="line"><span class="keyword">FROM</span> y vl, v v2, v v3</span><br><span class="line"><span class="keyword">WHERE</span> vl.i_brand = v2.i_brand</span><br><span class="line">  <span class="keyword">AND</span> v2.i_brand = v3.i_brand</span><br><span class="line">  <span class="keyword">AND</span> v3.i_color = <span class="string">'red'</span>;</span><br></pre></td></tr></table></figure>
+<p>对于 <strong>SQL2</strong>, 有几种 CTE 展开的形式</p>
+<p>a. 不展开: CTE 只执行一次, 但是没有用到 i_color 上的 index</p>
+<p>b. 全部展开: 可以使用 i_color 上的 index, 但是展开的部分重复计算了三次</p>
+<p>c. 部分展开</p>
+<p><img src="image-20210426183446419-20210507210541900.png" alt="image-20210426183446419"></p>
+<h3 id="如何根据上下文优化"><a href="#如何根据上下文优化" class="headerlink" title="如何根据上下文优化"></a>如何根据上下文优化</h3><ol>
+<li>如果查询对所有的 CTE 都有 filter, 可以直接把 filter 下推到 CTE 的定义上</li>
+<li>分布式计划中的物理属性的 enforce, 减少对同一份数据的re-partition/re-ordering</li>
+</ol>
+<h1 id="优化流程"><a href="#优化流程" class="headerlink" title="优化流程"></a>优化流程</h1><h2 id="名词定义"><a href="#名词定义" class="headerlink" title="名词定义"></a>名词定义</h2><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SQL3</span></span><br><span class="line"><span class="keyword">WITH</span> v <span class="keyword">AS</span> (<span class="keyword">SELECT</span> i_brand <span class="keyword">FROM</span> item <span class="keyword">WHERE</span> i_color = ’red’) </span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> v <span class="keyword">as</span> v1, v <span class="keyword">as</span> v2 <span class="keyword">WHERE</span> v1.i_brand = v2.i_brand;</span><br></pre></td></tr></table></figure>
+<p><img src="image-20210426205405612-20210507210542053.png" alt="image-20210426205405612"></p>
+<ol>
+<li><strong>CTEProducer</strong>: CTE 定义的树的根节点, 有唯一的 ID.</li>
+<li><strong>CTEConsumer</strong>: query 里用到 CTE 的地方, ID 与其对应的 CTEProducer 一致.</li>
+<li><strong>CTEAnchor</strong>: 定义了 CTE 的作用域, 一个 CTE 仅可以在被其相对应的 CTEAnchor 下被引用.</li>
+<li><strong>Sequence</strong>: 二元操作符, 按顺序执行其 children (从左到右), 然后返回其 right child.</li>
+</ol>
+<p>图三展示了 SQL3 的两种可能的 plan.</p>
+<ul>
+<li>a. 所有 CTEs 都被内联了, CTEAnchor 被去除, 所有的 CTEConsumer 都被替换成 CTE 展开的定义</li>
+<li>b. 无内联, CTEAnchor 被替换成 Sequence, CTEProducer 作为其 left child, CTEAnchor 的 child 作为其 right child<ul>
+<li><strong>Sequence</strong> 保证了特定的执行顺序, 可以保证 CTEProducer 在 CTEConsumer 之前执行. 这个机制可以保证生成的计划没有死锁</li>
+</ul>
+</li>
+</ul>
+<p><img src="image-20210427111008104-20210507210542029.png" alt="image-20210427111008104"></p>
+<h3 id="嵌套-CTE-例子"><a href="#嵌套-CTE-例子" class="headerlink" title="嵌套 CTE 例子"></a>嵌套 CTE 例子</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SQL4</span></span><br><span class="line"><span class="keyword">WITH</span> v <span class="keyword">AS</span> (<span class="keyword">SELECT</span> i_current_price <span class="keyword">FROM</span> item <span class="keyword">WHERE</span> i_color = ’red’),</span><br><span class="line">     w <span class="keyword">AS</span> (<span class="keyword">SELECT</span> v1.p <span class="keyword">FROM</span> v <span class="keyword">AS</span> v1, v <span class="keyword">AS</span> v2 <span class="keyword">WHERE</span> v1.p &lt; v2.p)</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> v <span class="keyword">AS</span> v3, w <span class="keyword">AS</span> w1, w <span class="keyword">AS</span> w2</span><br><span class="line"><span class="keyword">WHERE</span> v3.p &lt; w1.p + w2.p;</span><br></pre></td></tr></table></figure>
+<p><img src="image-20210427142643234-20210507210542091.png" alt="image-20210427142643234"></p>
+<p>注意, 图 b 有两个 CTEAnchor, 其顺序和在 with 定义里的一致</p>
+<h2 id="PLAN-ENUMERATION"><a href="#PLAN-ENUMERATION" class="headerlink" title="PLAN ENUMERATION"></a>PLAN ENUMERATION</h2><h3 id="Memo-介绍"><a href="#Memo-介绍" class="headerlink" title="Memo 介绍"></a>Memo 介绍</h3><ul>
+<li>MEMO 的定义：是一种数据结构，用于管理一个组，每个组代表一个查询计划的不同子目标。</li>
+<li>MEMO 结构的目标：是通过尽可能的公用相同的子树使得内存的使用最小。</li>
+<li>MEMO 的主要思想：通过使用共享的副本来避免子树的重复使用。</li>
+</ul>
+<p>Memo 中两个最基本的概念就是 Expression Group（简称 Group） 以及 Group Expression（对应关系代数算子）</p>
+<ul>
+<li>每个 Group 中保存的是逻辑等价的 Group Expression</li>
+<li>Group Expression 的子节点是由 Group 组成</li>
+</ul>
+<h4 id="Init-Memo"><a href="#Init-Memo" class="headerlink" title="Init Memo"></a>Init Memo</h4><p><img src="image-20200208221706543-20210507210542129.png" alt="image-20200208221706543"></p>
+<p>一旦最初的计划复制到了MEMO结构中以后，就可以对逻辑操作符做一些转换以生成物理操作符。<br>一个转换规则可以生成：</p>
+<ol>
+<li>同一组中的一个逻辑操作符: 如 join( A, B) -&gt; join( B, A)</li>
+<li>同一组中的一个物理操作符: 如 join -&gt; Hash Join</li>
+</ol>
+<h4 id="Apply-transformation-implement-rule"><a href="#Apply-transformation-implement-rule" class="headerlink" title="Apply transformation/implement rule"></a>Apply transformation/implement rule</h4><p><img src="image-20200208221734549-20210507210542169.png" alt="image-20200208221734549"></p>
+<p>一组逻辑操作符组成一个子计划。根仍保留在原来的组中，而其他操作符分配到其他的组中，必要的时候可以建立新组，如 join( A, join(B,C)) -&gt; join( join(A,B), C), 这两个最外面的 Join 是等价的, 所以是同一个根节点, 但是前后两次里面的 join 不一样, 所以在不同的组</p>
+<h4 id="Find-best-plan"><a href="#Find-best-plan" class="headerlink" title="Find best plan"></a>Find best plan</h4><p><img src="image-20200208221741219-20210507210542188.png" alt="image-20200208221741219"></p>
+<h3 id="CTE-Transformation"><a href="#CTE-Transformation" class="headerlink" title="CTE Transformation"></a>CTE Transformation</h3><p>使用 Memo 代表不同的候选者使得这个过程是 CBO 的, 我们可以在一条查询中内联某些 CTE, 其他的不内联.</p>
+<p><img src="image-20210427144511944-20210507210542294.png" alt="image-20210427144511944"></p>
+<ol>
+<li>首先生成一个初始的 memo (F.6)</li>
+<li>第一条 rule 应用在 CTEAnchor 上, 生成一个 Sequence 节点(group 0), 同时把 CTEProducer 作为其 left child 展开, 生成了 group 4/5/6, 其 right child 是CTEAnchor 的 child</li>
+<li>第二条 rule 还是应用在 CTEAnchor, 生成一个 NoOp 算子, child 是 CTEAnchor 的 child</li>
+<li>第三条 rule 应用在 CTEConsumer 上, 生成一个展开后的 CTE 定义, 添加到 CTEConsumer 的同一个 group 中</li>
+</ol>
+<p>F.8 展示了一些可能的 plan, 这些 plan 都有一些问题:</p>
+<ul>
+<li>8(a)/8(b) 是非法的, 他们只有 CTEConsumer, 却没有 CTEProducer, 所以 CTEConsumer 永远也读不到他们想要的数据. 我们会避免产生这样的计划</li>
+<li>8(c)/8(d) 的计划明显不是最优的, c 展开了所有的 CTE, 但是保留了 CTEProducer, 同理 d 也是.</li>
+</ul>
+<p><img src="image-20210427145718543-20210507210542229.png" alt="image-20210427145718543"></p>
+<h3 id="Predicate-Pushdown"><a href="#Predicate-Pushdown" class="headerlink" title="Predicate Pushdown"></a>Predicate Pushdown</h3><p>在 Orca, 我们引入了一种方法, 可以不展开 CTE 也可以做谓词下推.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SQL5</span></span><br><span class="line"><span class="keyword">WITH</span> v <span class="keyword">AS</span> (<span class="keyword">SELECT</span> i_brand, i_color <span class="keyword">FROM</span> item <span class="keyword">WHERE</span> i_CURRENT price &lt; <span class="number">50</span>)</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> v v1, v v2</span><br><span class="line"><span class="keyword">WHERE</span> v1.i_brand = v2.i_brand</span><br><span class="line">  <span class="keyword">AND</span> v1.i_color = ’red’</span><br><span class="line">  <span class="keyword">AND</span> v2.i_color = ’blue’;</span><br></pre></td></tr></table></figure>
+<p><img src="image-20210427153800222-20210507210542245.png" alt="image-20210427153800222"></p>
+<h3 id="Always-Inlining-Single-use-CTEs"><a href="#Always-Inlining-Single-use-CTEs" class="headerlink" title="Always Inlining Single-use CTEs"></a>Always Inlining Single-use CTEs</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SQL6</span></span><br><span class="line"><span class="keyword">WITH</span> v <span class="keyword">AS</span> (<span class="keyword">SELECT</span> i_color <span class="keyword">FROM</span> item <span class="keyword">WHERE</span> i_current_price &lt; <span class="number">50</span>)</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> v <span class="keyword">WHERE</span> v.i_color = ’red’;</span><br></pre></td></tr></table></figure>
+<p>由于这类 CTE 只被使用了一次, 所以可以无脑 inline</p>
+<h3 id="Elimination-of-unused-CTEs"><a href="#Elimination-of-unused-CTEs" class="headerlink" title="Elimination of unused CTEs"></a>Elimination of unused CTEs</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">WITH</span> v <span class="keyword">AS</span> (<span class="keyword">SELECT</span> i_color <span class="keyword">FROM</span> item <span class="keyword">WHERE</span> i_current_price &lt; <span class="number">50</span>)</span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span> item <span class="keyword">WHERE</span> item.i_color = <span class="string">'red'</span>;</span><br></pre></td></tr></table></figure>
+<p>当 CTE 没有被使用到的时候, 直接消除掉. 当 CTE 有嵌套定义时, 可以先消除最外层定义的 CTE, 外层的 CTE 消除之后, 内层的 CTE 也无引用, 也可以消除.</p>
+<h2 id="CONTEXTUALIZED-OPTIMIZATION"><a href="#CONTEXTUALIZED-OPTIMIZATION" class="headerlink" title="CONTEXTUALIZED OPTIMIZATION"></a>CONTEXTUALIZED OPTIMIZATION</h2><h3 id="Enforcing-Physical-Properties"><a href="#Enforcing-Physical-Properties" class="headerlink" title="Enforcing Physical Properties"></a>Enforcing Physical Properties</h3><p><img src="image-20210427161134653-20210507210542580.png" alt="image-20210427161134653"></p>
+<h3 id="Producer-Context"><a href="#Producer-Context" class="headerlink" title="Producer Context"></a>Producer Context</h3><p>CTEProducer 侧的计划生成比较独立, 可以不考虑 Consumer 侧. 如图 11(a), CTEProducer 侧并不需要任何分布, 所以没有添加任何 distribution. 但是 Consumer 测有个 hash join, 所以需要其底下的算子提供 HashDistribution, 但这不是最优的计划.</p>
+<h3 id="Consumer-Context"><a href="#Consumer-Context" class="headerlink" title="Consumer Context"></a>Consumer Context</h3><p>先从 Consumer 侧来考虑数据分布, 可以产生的更优的计划. 如图 11(b). 这种方式把 distribution 下推到了 CTE 中, 这样在 consumer 测就不用做 distribution.</p>
+<h2 id="CTE-BASED-OPTIMIZATIONS"><a href="#CTE-BASED-OPTIMIZATIONS" class="headerlink" title="CTE-BASED OPTIMIZATIONS"></a>CTE-BASED OPTIMIZATIONS</h2><h3 id="CTE-Generating-Transformations"><a href="#CTE-Generating-Transformations" class="headerlink" title="CTE-Generating Transformations"></a>CTE-Generating Transformations</h3><p>在以下场景 window function, full outer joins, distinct aggregates , Orca 会自动生成 CTE.</p>
+<p>例如下面的 SQL9, distinct 了两个不同的列, 可以把 P-F-T 的部分提成一个 CTE, 减少读取的 input.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SQL9</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="keyword">COUNT</span>(<span class="keyword">DISTINCT</span> cs_item_sk), <span class="keyword">AVG</span>(<span class="keyword">DISTINCT</span> cs_qty)</span><br><span class="line"><span class="keyword">FROM</span> <span class="keyword">CATALOG</span> sales <span class="keyword">WHERE</span> cs_net profit &gt; <span class="number">1000</span></span><br></pre></td></tr></table></figure>
+<p><img src="image-20210427200049532-20210507210542308.png" alt="image-20210427200049532"></p>
+<h3 id="Common-Subexpression-Elimination"><a href="#Common-Subexpression-Elimination" class="headerlink" title="Common Subexpression Elimination"></a>Common Subexpression Elimination</h3><p>Orca可以提取公共子表达式为 CTE.</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">-- SQL10</span></span><br><span class="line"><span class="keyword">SELECT</span> * <span class="keyword">FROM</span></span><br><span class="line">  (<span class="keyword">SELECT</span> i_brand, <span class="keyword">count</span>(*) <span class="keyword">AS</span> b <span class="keyword">FROM</span> item <span class="keyword">GROUP</span> <span class="keyword">BY</span> i_brand <span class="keyword">HAVING</span> <span class="keyword">count</span>(*) &gt; <span class="number">10</span>) t1,</span><br><span class="line">  (<span class="keyword">SELECT</span> i_brand, <span class="keyword">count</span>(*) <span class="keyword">AS</span> b <span class="keyword">FROM</span> item <span class="keyword">GROUP</span> <span class="keyword">BY</span> i_brand <span class="keyword">HAVING</span> <span class="keyword">count</span>(*) &gt; <span class="number">20</span>) t2</span><br><span class="line"><span class="keyword">WHERE</span> t1.i_brand &lt;&gt; t2.i_brand;</span><br></pre></td></tr></table></figure>
+<p><img src="image-20210427202305622-20210507210542337.png" alt="image-20210427202305622"></p>
+<p>具体算法如下:</p>
+<ul>
+<li>输入: 原始表达式</li>
+<li>输出: common subexpression 已经被替换过的表达式</li>
+<li>DetectMatches() 用于找出公共的表达式, 论文中又引用了其他两篇论文<ul>
+<li>Exploiting Common Subexpressions for Cloud Query Processing.</li>
+<li>Efﬁcient Exploitation of Similar Subexpressions for Query Processing.</li>
+</ul>
+</li>
+<li>InsertCTEConsumers() 把表达式中的公共子表达式替换为对应的 CTEConsumer</li>
+<li>最后, 在每组公共子表达式的 LCA(最近公共祖先) 处插入一个CTEAnchor</li>
+</ul>
+<p><img src="image-20210427202537374-20210507210542586.png" alt="image-20210427202537374"></p>
+
+            </div>
+          
+
+    
+      <footer class="post-footer">
+        <div class="post-tags">
+          
+            <a href="/tags/OLAP/">OLAP</a>
+          
+            <a href="/tags/Optimizer/">Optimizer</a>
+          
+            <a href="/tags/SQL/">SQL</a>
+          
+            <a href="/tags/CTE/">CTE</a>
+          
+        </div>
+
+        
+        
+  <nav class="post-nav">
+    
+    
+      <a class="next" href="/2021/04/25/Calcite Not in 转 cross join 优化/">
+        <span class="next-text nav-default">Calcite Not in 转 cross join</span>
+        <span class="prev-text nav-mobile">Next</span>
+        <i class="iconfont icon-right"></i>
+      </a>
+    
+  </nav>
+
+        
+  <div class="comments" id="comments">
+    
+  </div>
+
+
+      </footer>
+    
+  </article>
+
+    </div>
+
+      </div>
+
+      <footer id="colophon"><span class="copyright-year">
+    
+        &copy;
+    
+        2012 -
+    
+    2021
+    <span class="footer-author">陶加涛.</span>
+    <span class="power-by">
+        Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>
+    </span>
+</span>
+
+      </footer>
+
+      <div class="back-to-top" id="back-to-top">
+        <i class="iconfont icon-up"></i>
+      </div>
+    </div>
+    
+
+
+    
+
+
+
+
+  
+    <script type="text/javascript" src="/lib/jquery/jquery-3.1.1.min.js"></script>
+  
+
+  
+
+    <script type="text/javascript" src="/js/src/theme.js?v=1.1"></script>
+<script type="text/javascript" src="/js/src/bootstrap.js?v=1.1"></script>
+
+  </body>
+</html>

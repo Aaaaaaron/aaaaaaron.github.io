@@ -1,6 +1,6 @@
 <!DOCTYPE html>
-<html lang="">
-  <head><meta name="generator" content="Hexo 3.8.0">
+<html lang>
+  <head><meta name="generator" content="Hexo 3.9.0">
     
 <meta charset="UTF-8">
 <meta http-equiv="X-UA-Compatible" content="IE=edge">
@@ -161,7 +161,7 @@
 <h3 id="Exec-部分"><a href="#Exec-部分" class="headerlink" title="Exec 部分"></a>Exec 部分</h3><p>负责数据文件扫描的 spark plan 是 <code>FileSourceScanExec</code>, 借一张图来简要说明怎么会走到这个 Exec.</p>
 <p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/00014.jpeg" alt="Spark SQL 内核剖析"></p>
 <p>从图中可以看到, 从 SQL 生成了一颗逻辑执行计划树. 每个逻辑执行计划的节点都会转换成对应的一个物理执行计划(也是一颗树状结构). </p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20181118165922.png" alt=""></p>
+<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20181118165922.png" alt></p>
 <p>由于 Spark 会使用 Codegen,  <code>WholeStageCodegenExec</code> 是所有 Exec 的入口点. <code>child.asInstanceOf[CodegenSupport].inputRDDs()</code> 处于所有的 exec 的最头部, 会沿着 exec 树一层层调用下去最后会走到:<code>FileSourceScanExec#inputRDD</code>, 如图:</p>
 <p>先到 <code>WholeStageCodegenExec</code> 的 <code>doExecute</code>, 这里要下面会提到的有两个地方, 一个是 <code>inputRDDs</code>, 另一个是 <code>buffer.hasNext</code> :<br><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">doExecute</span></span>(): <span class="type">RDD</span>[<span class="type">InternalRow</span>] = &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">val</span> (ctx, cleanedSource) = doCodeGen()</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">val</span> rdds = child.asInstanceOf[<span class="type">CodegenSupport</span>].inputRDDs()</span><br><span class="line">  assert(rdds.size &lt;= <span class="number">2</span>, <span class="string">"Up to two input RDDs can be supported"</span>)</span><br><span class="line">  <span class="keyword">if</span> (rdds.length == <span class="number">1</span>) &#123;</span><br><span class="line">    rdds.head.mapPartitionsWithIndex &#123; (index, iter) =&gt;</span><br><span class="line">      <span class="keyword">val</span> (clazz, _) = <span class="type">CodeGenerator</span>.compile(cleanedSource)</span><br><span class="line">      <span class="keyword">val</span> buffer = clazz.generate(references).asInstanceOf[<span class="type">BufferedRowIterator</span>]</span><br><span class="line">      buffer.init(index, <span class="type">Array</span>(iter))</span><br><span class="line">      <span class="keyword">new</span> <span class="type">Iterator</span>[<span class="type">InternalRow</span>] &#123;</span><br><span class="line">        <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">hasNext</span></span>: <span class="type">Boolean</span> = &#123;</span><br><span class="line">          <span class="keyword">val</span> v = buffer.hasNext</span><br><span class="line">          <span class="keyword">if</span> (!v) durationMs += buffer.durationMs()</span><br><span class="line">          v</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">override</span> <span class="function"><span class="keyword">def</span> <span class="title">next</span></span>: <span class="type">InternalRow</span> = buffer.next()</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></p>
 <h3 id="FileSourceScanExec"><a href="#FileSourceScanExec" class="headerlink" title="FileSourceScanExec"></a>FileSourceScanExec</h3><p>inputRDD 首先会调用具体 <code>FileFormat</code> 实现类的 <code>buildReaderWithPartitionValues</code> ,因为我们用的是 parquet 作为例子, 所以这里会是 <code>ParquetFileFormat</code>, build 出来一个 <code>readFunction : ((PartitionedFile) =&gt; Iterator[InternalRow])</code>, 顾名思义后面会用这个 func 来读取文件.</p>
@@ -236,7 +236,7 @@ this.reader = new ParquetFileReader(
     
         2012 -
     
-    2019
+    2021
     <span class="footer-author">陶加涛.</span>
     <span class="power-by">
         Powered by <a class="hexo-link" href="https://hexo.io/">Hexo</a> and <a class="theme-link" href="https://github.com/henryhuang/hexo-theme-polarbearsimple">Polar Bear Simple</a>
