@@ -1,0 +1,50 @@
+extends base.pug
+
+block title
+  if page.category
+     title= page.category + " | " + config.title
+  if page.tag
+     title= page.tag + " | " + config.title
+  if page.archive
+     title= __('archive') + " | " + config.title
+
+block main
+  //- Blog title and subtitle
+  header.wrapper.header
+    .container.blog-title
+      a#logo.title(href=url_for('.'))= config.title
+      span.subtitle= config.subtitle
+      label#toggle-menu(for="menu", onclick)
+        i.fa.fa-bars
+    //- use checkbox hack for toggle nav-bar on small screens
+    input#menu(type="checkbox")
+    .container.nav-items
+      each nav, name in theme.menu
+        +a_with_current(nav, __(name))
+
+  article.wrapper
+    .post-entry
+      if page.category || page.tag
+        h1.label-title=  (page.category || page.tag)
+      .post
+        include _partial/postarchive.pug
+
+        // show all categories and tags
+        if !(page.category || page.tag)
+            h2 Categories
+            .all-categories
+              ul.tag-box.list-unstyled
+                for category in site.categories.sort('name').toArray()
+                  li
+                    a(href=url_for(category.path))= category.name
+                      span= category.posts.length
+            h2 Tags
+            .all-tags
+              ul.tag-box.list-unstyled
+                for tag in site.tags.sort('name').toArray()
+                  li
+                    a(href=url_for(tag.path))= tag.name
+                      span= tag.posts.length
+
+
+  include _partial/paginator.pug
