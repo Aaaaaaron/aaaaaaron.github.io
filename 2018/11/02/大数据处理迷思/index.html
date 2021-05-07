@@ -1,0 +1,35 @@
+<!DOCTYPE html><html><head><meta name="generator" content="Hexo 3.9.0"><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;OLAP-系统&quot;&gt;&lt;a href=&quot;#OLAP-系统&quot; class=&quot;headerlink&quot; title=&quot;OLAP 系统&quot;&gt;&lt;/a&gt;OLAP 系统&lt;/h3&gt;&lt;p&gt;No-SQL, New-SQL, 到了最后还是 SQL 好"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>大数据处理迷思 | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-link" href="/tags/BigData/">BigData</a><a class="post-tag-link" href="/tags/OLAP/">OLAP</a></div><div class="post-time">2018-11-02</div></div></div><div class="container post-header"><h1>大数据处理迷思</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#OLAP-系统"><span class="toc-number">1.</span> <span class="toc-text">OLAP 系统</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#什么是一个好的-OLAP-系统"><span class="toc-number">1.1.</span> <span class="toc-text">什么是一个好的 OLAP 系统</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#数据分析师之痛"><span class="toc-number">1.2.</span> <span class="toc-text">数据分析师之痛</span></a></li></ol></li></ol></details></div><div class="container post-content"><h3 id="OLAP-系统"><a href="#OLAP-系统" class="headerlink" title="OLAP 系统"></a>OLAP 系统</h3><p>No-SQL, New-SQL, 到了最后还是 SQL 好</p>
+<ol>
+<li>性能和稳定性的考量, 性能优先(MPP)? or 稳定性优先(DAG/MR)?</li>
+<li>让数据更适合被计算<ol>
+<li>将计算放在数据附近: Move compute logic, not data. 矛盾: 云, 存储和计算分离.</li>
+<li>做大宽表, 减少 join 开销.</li>
+<li>提前对数据进行分区/分桶/排序, 减少后续计算时候的 shuffle 以及 sort.</li>
+<li>对数据进行预计算, 减少后续计算的聚合开销. 并且预计算等于说自己 own 了数据(多了一步构建 cube 的操作), 且由于是预计算的, 还可以进一步把查询结果 cache 到 Redis 这样的系统中, 下次一模一样的查询来直接用 cache 的 result 就行了, 这个 QPS 超级高.</li>
+</ol>
+</li>
+<li>QPS 考量</li>
+<li>很重要一点, 客户/业务方要怎么使用我们的系统? 换句话说, 我们能让客户按我们推荐的方式使用我们系统吗? 举例来说, 时间分区列我们推荐使用 date, 但是用户使用到了 timestamp, 造成了很多小文件, 怎么避免这种错误使用?</li>
+<li>Schema change</li>
+<li>数据点更新</li>
+<li>如何调配资源</li>
+<li>上/下层生态?</li>
+<li>客户环境? 自己是否拥有集群环境</li>
+</ol>
+<h4 id="什么是一个好的-OLAP-系统"><a href="#什么是一个好的-OLAP-系统" class="headerlink" title="什么是一个好的 OLAP 系统"></a>什么是一个好的 OLAP 系统</h4><ol start="0">
+<li>最最重要的: 稳定性</li>
+<li>最重要的: 标准 SQL 支持</li>
+<li>低延迟, 高 QPS</li>
+<li>部署运维简单</li>
+<li>支持 schema change</li>
+<li>既能查聚合数据, 又可以查明细数据(此条对于预计算系统)</li>
+</ol>
+<h4 id="数据分析师之痛"><a href="#数据分析师之痛" class="headerlink" title="数据分析师之痛"></a>数据分析师之痛</h4><ol>
+<li>精确去重</li>
+<li>TopN</li>
+<li>多 join/子查询</li>
+</ol>
+</div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
+  $(".fancybox").fancybox();
+});
+</script></body></html>

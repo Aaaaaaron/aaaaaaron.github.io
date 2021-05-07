@@ -2,6 +2,48 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/2018/10/24/Spark-Shuffle/</loc>
+    
+    <lastmod>2021-05-07T14:47:12.441Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2018/12/19/Spark-PRC/</loc>
+    
+    <lastmod>2021-05-07T14:44:12.664Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2019/03/29/Spark-SQL-Join-Deep-Dive/</loc>
+    
+    <lastmod>2021-05-07T14:42:05.155Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2018/11/02/%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E8%BF%B7%E6%80%9D/</loc>
+    
+    <lastmod>2021-05-07T14:40:46.077Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2019/11/03/%E6%95%B4%E7%90%86-%E7%A3%81%E7%9B%98-I-O/</loc>
+    
+    <lastmod>2021-05-07T14:39:02.742Z</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/</loc>
+    
+    <lastmod>2021-05-07T14:38:50.223Z</lastmod>
+    
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/</loc>
     
     <lastmod>2021-05-07T14:34:56.390Z</lastmod>
@@ -65,13 +107,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2019/11/03/%E6%95%B4%E7%90%86-%E7%A3%81%E7%9B%98-I-O/</loc>
-    
-    <lastmod>2019-11-03T14:38:20.742Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2019/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/</loc>
     
     <lastmod>2019-11-02T15:38:53.651Z</lastmod>
@@ -86,13 +121,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2019/11/02/%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E8%BF%B7%E6%80%9D/</loc>
-    
-    <lastmod>2019-11-02T09:15:33.806Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/11/02/Hadoop-MR-%E5%92%8C-Spark-%E5%AF%B9%E6%AF%94/</loc>
     
     <lastmod>2019-11-02T07:22:12.278Z</lastmod>
@@ -103,20 +131,6 @@
     <loc>https://aaaaaaron.github.io/2018/12/30/Maven-%E6%89%93%E5%8C%85%E8%B6%9F%E5%9D%91%E4%B8%8E%E8%A7%A3%E6%B3%95/</loc>
     
     <lastmod>2019-11-01T14:11:30.776Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2019/06/29/Spark-SQL-Join-Deep-Dive/</loc>
-    
-    <lastmod>2019-10-17T13:21:12.576Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/</loc>
-    
-    <lastmod>2019-10-11T15:11:17.397Z</lastmod>
     
   </url>
   
@@ -156,13 +170,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/12/19/Spark-PRC/</loc>
-    
-    <lastmod>2018-12-19T07:05:59.830Z</lastmod>
-    
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/</loc>
     
     <lastmod>2018-11-18T04:25:40.002Z</lastmod>
@@ -173,13 +180,6 @@
     <loc>https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/</loc>
     
     <lastmod>2018-11-18T04:08:01.328Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/26/Spark-submit/</loc>
-    
-    <lastmod>2018-10-26T08:45:04.633Z</lastmod>
     
   </url>
   
@@ -201,13 +201,6 @@
     <loc>https://aaaaaaron.github.io/2018/08/22/Parquet-encoding-definitions-official/</loc>
     
     <lastmod>2018-10-25T14:59:07.970Z</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2018/10/24/Spark-Shuffle/</loc>
-    
-    <lastmod>2018-10-24T14:52:49.951Z</lastmod>
     
   </url>
   
