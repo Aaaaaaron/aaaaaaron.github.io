@@ -2,14 +2,35 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
-    <loc>https://aaaaaaron.github.io/2021/05/07/test/</loc>
+    <loc>https://aaaaaaron.github.io/2018/10/24/Spark-Shuffle/</loc>
     
     <lastmod>2021-05-07</lastmod>
     
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/2018/10/24/Spark-Shuffle/</loc>
+    <loc>https://aaaaaaron.github.io/2021/04/25/Calcite%20Not%20in%20%E8%BD%AC%20cross%20join%20%E4%BC%98%E5%8C%96/</loc>
+    
+    <lastmod>2021-05-07</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2020/02/09/Calcite%20Volcano%20Planner/</loc>
+    
+    <lastmod>2021-05-07</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2020/02/07/Kylin%20%E6%9F%A5%E8%AF%A2%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%B5%81%E7%A8%8B/</loc>
+    
+    <lastmod>2021-05-07</lastmod>
+    
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20%E4%BC%98%E5%8C%96/</loc>
     
     <lastmod>2021-05-07</lastmod>
     
@@ -59,34 +80,6 @@
   
   <url>
     <loc>https://aaaaaaron.github.io/2019/10/16/Spark-MapOutputTracker-Deep-Dive/</loc>
-    
-    <lastmod>2021-05-07</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2020/02/07/Kylin%20%E6%9F%A5%E8%AF%A2%E7%9A%84%E5%9F%BA%E6%9C%AC%E6%B5%81%E7%A8%8B/</loc>
-    
-    <lastmod>2021-05-07</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2020/02/09/Calcite%20Volcano%20Planner/</loc>
-    
-    <lastmod>2021-05-07</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2021/04/25/Calcite%20Not%20in%20%E8%BD%AC%20cross%20join%20%E4%BC%98%E5%8C%96/</loc>
-    
-    <lastmod>2021-05-07</lastmod>
-    
-  </url>
-  
-  <url>
-    <loc>https://aaaaaaron.github.io/2021/05/01/SQL%20CTE%20%E4%BC%98%E5%8C%96/</loc>
     
     <lastmod>2021-05-07</lastmod>
     

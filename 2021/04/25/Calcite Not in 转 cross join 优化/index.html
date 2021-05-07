@@ -19,9 +19,9 @@
 
 <p>最后看下这个 filter, 这个 filter 比较复杂, 还是直接举例把:</p>
 <p>原表:</p>
-<p><img src="image-20210414163537859.png" alt="image-20210414163537859"></p>
+<p>![image-20210414163537859](Calcite Not in 转 cross join 优化/image-20210414163537859.png)</p>
 <p>经过两轮 join 之后的表(USERS.ID=JOBS.AGE):</p>
-<p><img src="image-20210414171920321.png" alt="image-20210414171920321"></p>
+<p>![image-20210414171920321](Calcite Not in 转 cross join 优化/image-20210414171920321.png)</p>
 <hr>
 <p>首先来断下句: <code>t2.c = 0 OR (t2.i IS NULL AND (t2.ck &gt;= t2.c AND t2.AGE IS NOT NULL))</code></p>
 <ol>
@@ -92,9 +92,9 @@
 <h3 id="p-s"><a href="#p-s" class="headerlink" title="p.s."></a>p.s.</h3><p>SQL 是个三值系统 TRUE/FALSE/UNKNOWN, 其中 NULL 和所有值比较都是 UNKNOWN, 所以你不能写 col = null, 即使 col 真的有 null 值, 也出不来true, 只会出来 UNKNOWN, 正确的 NULL 值判断是 IS NULL/IS NOT NULL</p>
 <p>所以这里 xxx NOT IN 也不会把这条NULL值选出来, NULL NOT IN/IN 都不会选出任何值, 他们的结果既不为 TRUE, 也不为 FALSE.</p>
 <p>可以看到 jobs 插入了一个 users 不存在的值, 选出的结果会把 null 这行排除掉</p>
-<p><img src="image-20210414165506690.png" alt="image-20210414165506690"></p>
+<p>![image-20210414165506690](Calcite Not in 转 cross join 优化/image-20210414165506690.png)</p>
 <p>但是有一种例外, 当 A not in B, B表是个空表时, 可以选出 A 表所有数据, 可以看到 null 这行数据选了出来</p>
-<p><img src="image-20210414165201722.png" alt="image-20210414165201722"></p>
+<p>![image-20210414165201722](Calcite Not in 转 cross join 优化/image-20210414165201722.png)</p>
 </div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
   $(".fancybox").fancybox();
 });
