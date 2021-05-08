@@ -1,4 +1,219 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;0-启动开销&quot;&gt;&lt;a href=&quot;#0-启动开销&quot; class=&quot;headerlink&quot; title=&quot;0. 启动开销&quot;&gt;&lt;/a&gt;0. 启动开销&lt;/h3&gt;&lt;p&gt;总结: Spark 计算比 MapReduce 快的根本原因在于DAG计算模型, 但 MR 真正的缺点是抽象层次太低, 大量底层逻辑需要开发者手工完成. 但是也不是说 MR 就已经没用了, 没有最好的技术, 只有合适你需求的技术."><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Hadoop MR 和 Spark 对比 | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-time">2018-11-02</div></div></div><div class="container post-header"><h1>Hadoop MR 和 Spark 对比</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#0-%E5%90%AF%E5%8A%A8%E5%BC%80%E9%94%80"><span class="toc-number">1.</span> <span class="toc-text">0. 启动开销</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E5%90%AF%E5%8A%A8%E5%BC%80%E9%94%80"><span class="toc-number">2.</span> <span class="toc-text">1. 启动开销</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-DAG-%E4%BC%98%E5%8C%96"><span class="toc-number">3.</span> <span class="toc-text">2. DAG 优化</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B6%88%E9%99%A4%E4%BA%86%E5%86%97%E4%BD%99%E7%9A%84-HDFS-%E8%AF%BB%E5%86%99"><span class="toc-number">3.1.</span> <span class="toc-text">消除了冗余的 HDFS 读写</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E6%B6%88%E9%99%A4%E4%BA%86%E5%86%97%E4%BD%99%E7%9A%84-MapReduce-%E9%98%B6%E6%AE%B5"><span class="toc-number">3.2.</span> <span class="toc-text">消除了冗余的 MapReduce 阶段</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-Cache"><span class="toc-number">4.</span> <span class="toc-text">3. Cache</span></a></li></ol></details></div><div class="container post-content"><h3 id="0-启动开销"><a href="#0-启动开销" class="headerlink" title="0. 启动开销"></a>0. 启动开销</h3><p>总结: Spark 计算比 MapReduce 快的根本原因在于DAG计算模型, 但 MR 真正的缺点是抽象层次太低, 大量底层逻辑需要开发者手工完成. 但是也不是说 MR 就已经没用了, 没有最好的技术, 只有合适你需求的技术.</p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;aaaaaaron.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.4.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;}}</script>
+<meta name="description" content="0. 启动开销总结: Spark 计算比 MapReduce 快的根本原因在于DAG计算模型, 但 MR 真正的缺点是抽象层次太低, 大量底层逻辑需要开发者手工完成. 但是也不是说 MR 就已经没用了, 没有最好的技术, 只有合适你需求的技术. 1. 启动开销Hadoop MapReduce 采用了多进程模型, 而Spark采用了多线程模型.  Hadoop MapReduce 每个 Mpa ta">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Hadoop MR 和 Spark 对比">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/11/02/Hadoop-MR-%E5%92%8C-Spark-%E5%AF%B9%E6%AF%94/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="0. 启动开销总结: Spark 计算比 MapReduce 快的根本原因在于DAG计算模型, 但 MR 真正的缺点是抽象层次太低, 大量底层逻辑需要开发者手工完成. 但是也不是说 MR 就已经没用了, 没有最好的技术, 只有合适你需求的技术. 1. 启动开销Hadoop MapReduce 采用了多进程模型, 而Spark采用了多线程模型.  Hadoop MapReduce 每个 Mpa ta">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-11-02T07:21:13.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:18:14.411Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="BigData">
+<meta property="article:tag" content="Spark">
+<meta property="article:tag" content="MR">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/11/02/Hadoop-MR-%E5%92%8C-Spark-%E5%AF%B9%E6%AF%94/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-Hans&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;aaaaaaron.github.io&#x2F;2018&#x2F;11&#x2F;02&#x2F;Hadoop-MR-%E5%92%8C-Spark-%E5%AF%B9%E6%AF%94&#x2F;&quot;,&quot;path&quot;:&quot;2018&#x2F;11&#x2F;02&#x2F;Hadoop-MR-和-Spark-对比&#x2F;&quot;,&quot;title&quot;:&quot;Hadoop MR 和 Spark 对比&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title>Hadoop MR 和 Spark 对比 | Jiatao Tao's blog</title><script src="/js/config.js"></script>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Jiatao Tao's blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">λ</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#0-%E5%90%AF%E5%8A%A8%E5%BC%80%E9%94%80"><span class="nav-number">1.</span> <span class="nav-text">0. 启动开销</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E5%90%AF%E5%8A%A8%E5%BC%80%E9%94%80"><span class="nav-number">2.</span> <span class="nav-text">1. 启动开销</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-DAG-%E4%BC%98%E5%8C%96"><span class="nav-number">3.</span> <span class="nav-text">2. DAG 优化</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B6%88%E9%99%A4%E4%BA%86%E5%86%97%E4%BD%99%E7%9A%84-HDFS-%E8%AF%BB%E5%86%99"><span class="nav-number">3.1.</span> <span class="nav-text">消除了冗余的 HDFS 读写</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E6%B6%88%E9%99%A4%E4%BA%86%E5%86%97%E4%BD%99%E7%9A%84-MapReduce-%E9%98%B6%E6%AE%B5"><span class="nav-number">3.2.</span> <span class="nav-text">消除了冗余的 MapReduce 阶段</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-Cache"><span class="nav-number">4.</span> <span class="nav-text">3. Cache</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/11/02/Hadoop-MR-%E5%92%8C-Spark-%E5%AF%B9%E6%AF%94/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Hadoop MR 和 Spark 对比
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-11-02 15:21:13" itemprop="dateCreated datePublished" datetime="2018-11-02T15:21:13+08:00">2018-11-02</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-05-08 11:18:14" itemprop="dateModified" datetime="2021-05-08T11:18:14+08:00">2021-05-08</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h3 id="0-启动开销"><a href="#0-启动开销" class="headerlink" title="0. 启动开销"></a>0. 启动开销</h3><p>总结: Spark 计算比 MapReduce 快的根本原因在于DAG计算模型, 但 MR 真正的缺点是抽象层次太低, 大量底层逻辑需要开发者手工完成. 但是也不是说 MR 就已经没用了, 没有最好的技术, 只有合适你需求的技术.</p>
 <h3 id="1-启动开销"><a href="#1-启动开销" class="headerlink" title="1. 启动开销"></a>1. 启动开销</h3><p>Hadoop MapReduce 采用了多进程模型, 而Spark采用了多线程模型. </p>
 <p>Hadoop MapReduce 每个 Mpa task/Reduce Task 都是一个 JVM, 是基于进程的, task 的启动时间在秒级, 然后用完后又立即释放, 不能被其他任务重用; Spark executor 是常驻的, taks 是基于线程的, 而且由于在一个 JVM 中, 方便数据共享.</p>
 <p>但是基于进程的好处是每个 task 都可以控制自己的资源粒度, 而线程的资源隔离并没有保证.</p>
@@ -8,7 +223,80 @@
 <h4 id="消除了冗余的-MapReduce-阶段"><a href="#消除了冗余的-MapReduce-阶段" class="headerlink" title="消除了冗余的 MapReduce 阶段"></a>消除了冗余的 MapReduce 阶段</h4><p>Spark lazy evaluation, 减少不必要的 stage, 可以减少 shuffle 次数, 要是没有 shuffle, Spark可以在内存中一次性完成这些操作.</p>
 <h3 id="3-Cache"><a href="#3-Cache" class="headerlink" title="3. Cache"></a>3. Cache</h3><p>Spark 可以指定 Cache 某个 RDD, 以加速后面计算.</p>
 <p>TBD: 从更高维度剖析 Hadoop MR 和 SQL 系统的区别.</p>
-</div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/BigData/" rel="tag"># BigData</a>
+              <a href="/tags/Spark/" rel="tag"># Spark</a>
+              <a href="/tags/MR/" rel="tag"># MR</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/11/01/Spark-Read-Deep-Dive/" rel="prev" title="Spark Paruqet Read Deep Dive">
+                  <i class="fa fa-chevron-left"></i> Spark Paruqet Read Deep Dive
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/11/02/%E5%A4%A7%E6%95%B0%E6%8D%AE%E5%A4%84%E7%90%86%E8%BF%B7%E6%80%9D/" rel="next" title="大数据处理迷思">
+                  大数据处理迷思 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+<script src="/js/comments.js"></script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

@@ -1,4 +1,226 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;0-开篇&quot;&gt;&lt;a href=&quot;#0-开篇&quot; class=&quot;headerlink&quot; title=&quot;0. 开篇&quot;&gt;&lt;/a&gt;0. 开篇&lt;/h1&gt;&lt;p&gt;Spark 的 bucket 原理上其实和 repartition 非常相似(其实对数据的操作都是一样的), 但是 Spark 的 repartition 是用来调整 Dataframe 的分区数, 而 bucketing 机制相比, 更多了以下的功能:"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Spark bucketing Deep Dive | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/BigData/" rel="tag">BigData</a><a class="post-tag-none-link" href="/tags/Spark/" rel="tag">Spark</a></div><div class="post-time">2019-12-31</div></div></div><div class="container post-header"><h1>Spark bucketing Deep Dive</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#0-%E5%BC%80%E7%AF%87"><span class="toc-number">1.</span> <span class="toc-text">0. 开篇</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#1-%E5%9F%BA%E7%A1%80"><span class="toc-number">2.</span> <span class="toc-text">1. 基础</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#2-%E4%BC%98%E5%8C%96-Bucket-Pruning"><span class="toc-number">3.</span> <span class="toc-text">2. 优化: Bucket Pruning</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#2-1-Strategy-%E9%83%A8%E5%88%86"><span class="toc-number">3.1.</span> <span class="toc-text">2.1 Strategy 部分</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-2-Exec-%E9%83%A8%E5%88%86"><span class="toc-number">3.2.</span> <span class="toc-text">2.2 Exec 部分</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#3-%E4%BC%98%E5%8C%96-Bucket-Join"><span class="toc-number">4.</span> <span class="toc-text">3. 优化: Bucket Join</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#3-1-%E6%A6%82%E8%BF%B0"><span class="toc-number">4.1.</span> <span class="toc-text">3.1 概述</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BE%8B%E5%AD%90%E4%B8%80"><span class="toc-number">4.1.1.</span> <span class="toc-text">例子一</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E5%89%8D"><span class="toc-number">4.1.1.1.</span> <span class="toc-text">优化前</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E5%90%8E"><span class="toc-number">4.1.1.2.</span> <span class="toc-text">优化后</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BE%8B%E5%AD%90%E4%BA%8C"><span class="toc-number">4.1.2.</span> <span class="toc-text">例子二</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E5%89%8D-1"><span class="toc-number">4.1.2.1.</span> <span class="toc-text">优化前</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BC%98%E5%8C%96%E5%90%8E-1"><span class="toc-number">4.1.2.2.</span> <span class="toc-text">优化后</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-2-%E5%8E%9F%E7%90%86%E8%AF%B4%E6%98%8E"><span class="toc-number">4.1.3.</span> <span class="toc-text">3.2 原理说明</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#1-%E6%B7%BB%E5%8A%A0-exchange-%E8%8A%82%E7%82%B9"><span class="toc-number">4.1.3.0.1.</span> <span class="toc-text">1. 添加 exchange 节点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-%E6%B7%BB%E5%8A%A0-sort-%E8%8A%82%E7%82%B9"><span class="toc-number">4.1.3.0.2.</span> <span class="toc-text">2. 添加 sort 节点</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#2-%E6%9B%BF%E6%8D%A2-children"><span class="toc-number">4.1.3.0.3.</span> <span class="toc-text">2. 替换 children</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E4%BC%98%E5%8C%96-SMJ-%E6%9D%A1%E4%BB%B6"><span class="toc-number">4.1.3.0.4.</span> <span class="toc-text">优化 SMJ 条件</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%97%AE%E9%A2%98"><span class="toc-number">5.</span> <span class="toc-text">问题</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%86%99%E5%85%A5-debug-%E6%88%AA%E5%9B%BE"><span class="toc-number">6.</span> <span class="toc-text">写入 debug 截图</span></a></li></ol></details></div><div class="container post-content"><h1 id="0-开篇"><a href="#0-开篇" class="headerlink" title="0. 开篇"></a>0. 开篇</h1><p>Spark 的 bucket 原理上其实和 repartition 非常相似(其实对数据的操作都是一样的), 但是 Spark 的 repartition 是用来调整 Dataframe 的分区数, 而 bucketing 机制相比, 更多了以下的功能:</p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;aaaaaaron.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.4.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;}}</script>
+<meta name="description" content="0. 开篇Spark 的 bucket 原理上其实和 repartition 非常相似(其实对数据的操作都是一样的), 但是 Spark 的 repartition 是用来调整 Dataframe 的分区数, 而 bucketing 机制相比, 更多了以下的功能:  当有点查的时候, 可以 pruning 掉不必要的文件. 当 join 的双边都有 bucketBy 且满足一定条件之后, 可以进行">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark bucketing Deep Dive">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="0. 开篇Spark 的 bucket 原理上其实和 repartition 非常相似(其实对数据的操作都是一样的), 但是 Spark 的 repartition 是用来调整 Dataframe 的分区数, 而 bucketing 机制相比, 更多了以下的功能:  当有点查的时候, 可以 pruning 掉不必要的文件. 当 join 的双边都有 bucketBy 且满足一定条件之后, 可以进行">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/78b48f23-6c82-4db0-9237-ecfcadbe8248-20210508113716354.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/20191019131517-20210508113251983.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/20191019201545-20210508113430256.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/2d709ebe-ee49-495a-8971-c8cf988cabf2-20210508114216719.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/20191019202151-20210508114058946.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/20191018084225-20210508113437602.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/20191018084345-20210508113440064.png">
+<meta property="article:published_time" content="2019-12-31T09:10:27.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:48:40.530Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="BigData">
+<meta property="article:tag" content="Spark">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/78b48f23-6c82-4db0-9237-ecfcadbe8248-20210508113716354.png">
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-Hans&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;aaaaaaron.github.io&#x2F;2019&#x2F;12&#x2F;31&#x2F;Spark-Bucketing-Deep-Dive&#x2F;&quot;,&quot;path&quot;:&quot;2019&#x2F;12&#x2F;31&#x2F;Spark-Bucketing-Deep-Dive&#x2F;&quot;,&quot;title&quot;:&quot;Spark bucketing Deep Dive&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title>Spark bucketing Deep Dive | Jiatao Tao's blog</title><script src="/js/config.js"></script>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Jiatao Tao's blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">λ</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-%E5%BC%80%E7%AF%87"><span class="nav-number">1.</span> <span class="nav-text">0. 开篇</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%9F%BA%E7%A1%80"><span class="nav-number">2.</span> <span class="nav-text">1. 基础</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-%E4%BC%98%E5%8C%96-Bucket-Pruning"><span class="nav-number">3.</span> <span class="nav-text">2. 优化: Bucket Pruning</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-Strategy-%E9%83%A8%E5%88%86"><span class="nav-number">3.1.</span> <span class="nav-text">2.1 Strategy 部分</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-Exec-%E9%83%A8%E5%88%86"><span class="nav-number">3.2.</span> <span class="nav-text">2.2 Exec 部分</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-%E4%BC%98%E5%8C%96-Bucket-Join"><span class="nav-number">4.</span> <span class="nav-text">3. 优化: Bucket Join</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-%E6%A6%82%E8%BF%B0"><span class="nav-number">4.1.</span> <span class="nav-text">3.1 概述</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B%E5%AD%90%E4%B8%80"><span class="nav-number">4.1.1.</span> <span class="nav-text">例子一</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E5%89%8D"><span class="nav-number">4.1.1.1.</span> <span class="nav-text">优化前</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E5%90%8E"><span class="nav-number">4.1.1.2.</span> <span class="nav-text">优化后</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BE%8B%E5%AD%90%E4%BA%8C"><span class="nav-number">4.1.2.</span> <span class="nav-text">例子二</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E5%89%8D-1"><span class="nav-number">4.1.2.1.</span> <span class="nav-text">优化前</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#%E4%BC%98%E5%8C%96%E5%90%8E-1"><span class="nav-number">4.1.2.2.</span> <span class="nav-text">优化后</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-%E5%8E%9F%E7%90%86%E8%AF%B4%E6%98%8E"><span class="nav-number">4.1.3.</span> <span class="nav-text">3.2 原理说明</span></a><ol class="nav-child"><li class="nav-item nav-level-5"><a class="nav-link" href="#1-%E6%B7%BB%E5%8A%A0-exchange-%E8%8A%82%E7%82%B9"><span class="nav-number">4.1.3.0.1.</span> <span class="nav-text">1. 添加 exchange 节点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E6%B7%BB%E5%8A%A0-sort-%E8%8A%82%E7%82%B9"><span class="nav-number">4.1.3.0.2.</span> <span class="nav-text">2. 添加 sort 节点</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#2-%E6%9B%BF%E6%8D%A2-children"><span class="nav-number">4.1.3.0.3.</span> <span class="nav-text">2. 替换 children</span></a></li><li class="nav-item nav-level-5"><a class="nav-link" href="#%E4%BC%98%E5%8C%96-SMJ-%E6%9D%A1%E4%BB%B6"><span class="nav-number">4.1.3.0.4.</span> <span class="nav-text">优化 SMJ 条件</span></a></li></ol></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">5.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%86%99%E5%85%A5-debug-%E6%88%AA%E5%9B%BE"><span class="nav-number">6.</span> <span class="nav-text">写入 debug 截图</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2019/12/31/Spark-Bucketing-Deep-Dive/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spark bucketing Deep Dive
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-12-31 17:10:27" itemprop="dateCreated datePublished" datetime="2019-12-31T17:10:27+08:00">2019-12-31</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-05-08 11:48:40" itemprop="dateModified" datetime="2021-05-08T11:48:40+08:00">2021-05-08</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="0-开篇"><a href="#0-开篇" class="headerlink" title="0. 开篇"></a>0. 开篇</h1><p>Spark 的 bucket 原理上其实和 repartition 非常相似(其实对数据的操作都是一样的), 但是 Spark 的 repartition 是用来调整 Dataframe 的分区数, 而 bucketing 机制相比, 更多了以下的功能:</p>
 <ol>
 <li>当有点查的时候, 可以 pruning 掉不必要的文件.</li>
 <li>当 join 的双边都有 bucketBy 且满足一定条件之后, 可以进行 bucket join, 极大的优化 join 大-大表 join 性能(能优化掉 shuffle, 这个真的是大杀器).</li>
@@ -47,16 +269,21 @@
 
 <h1 id="3-优化-Bucket-Join"><a href="#3-优化-Bucket-Join" class="headerlink" title="3. 优化: Bucket Join"></a>3. 优化: Bucket Join</h1><h2 id="3-1-概述"><a href="#3-1-概述" class="headerlink" title="3.1 概述"></a>3.1 概述</h2><p>Bucket 还有一个很大的用处是可以用来做 Bucket Join, 这也是我觉得非常黑魔法的一个特性. 众所周知, SQL 的 join 是非常耗费时间的, Spark 为此也做了多种策略, 可以参考我之前的这篇博客 <a href="https://aaaaaaron.github.io/2019/06/29/Spark-SQL-Join-Deep-Dive/">Spark SQL Join Deep Dive</a>, 对于 大-大表进行 join, Spark 一般会选择 <code>SortMergeJoin</code> (SMJ), 因为SMJ 对比 HashJoin 来说, 不需要把一侧分片的数据都加载到内存中去, 提升了系统稳定性, 但是缺点是慢, 见下面两个例子:</p>
 <h3 id="例子一"><a href="#例子一" class="headerlink" title="例子一"></a>例子一</h3><p>这个是最简单一个例子, 两个表直接 join, 无子查询.</p>
-<h4 id="优化前"><a href="#优化前" class="headerlink" title="优化前"></a>优化前</h4><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_78b48f23-6c82-4db0-9237-ecfcadbe8248.png"></p>
-<h4 id="优化后"><a href="#优化后" class="headerlink" title="优化后"></a>优化后</h4><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191019131517.png"></p>
+<h4 id="优化前"><a href="#优化前" class="headerlink" title="优化前"></a>优化前</h4><img src="/2019/12/31/Spark-Bucketing-Deep-Dive/78b48f23-6c82-4db0-9237-ecfcadbe8248-20210508113716354.png" alt="img" style="zoom:50%;">
+
+<h4 id="优化后"><a href="#优化后" class="headerlink" title="优化后"></a>优化后</h4><img src="/2019/12/31/Spark-Bucketing-Deep-Dive/20191019131517-20210508113251983.png" style="zoom:50%;">
+
 <p>可以见到, 由于是一个 SMJ, 而我们的源表又没有任何处理, 所以 Spark 自动给执行计划上加上了几个 exchange(shuffle) 和 sort, 对大数据有点了解的同学都知道, 这两步操作会十分的耗费时间与资源. 而要是启用了 Bucket Join 之后, 执行计划图会变成什么样呢? 可以见下图, 可以见之前的 exchange 和 sort 都没有了, 整体 query 时间从 40s+ 下降到 5s(图一到图三).</p>
 <h3 id="例子二"><a href="#例子二" class="headerlink" title="例子二"></a>例子二</h3><p>我们来看更复杂的一个例子:</p>
 <figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="built_in">COUNT</span>(<span class="operator">*</span>)</span><br><span class="line"><span class="keyword">FROM</span> test_kylin_fact t1</span><br><span class="line"><span class="keyword">JOIN</span></span><br><span class="line">  (<span class="keyword">SELECT</span> lstg_format_name</span><br><span class="line">   <span class="keyword">FROM</span> test_kylin_fact</span><br><span class="line">   <span class="keyword">GROUP</span> <span class="keyword">BY</span> lstg_format_name) t2 <span class="keyword">ON</span> t1.lstg_format_name <span class="operator">=</span> t2.lstg_format_name</span><br><span class="line"><span class="keyword">GROUP</span> <span class="keyword">BY</span> t1.lstg_format_name</span><br></pre></td></tr></table></figure>
 
-<h4 id="优化前-1"><a href="#优化前-1" class="headerlink" title="优化前"></a>优化前</h4><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191019201545.png"></p>
-<h4 id="优化后-1"><a href="#优化后-1" class="headerlink" title="优化后"></a>优化后</h4><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/%E4%BC%81%E4%B8%9A%E5%BE%AE%E4%BF%A1%E6%88%AA%E5%9B%BE_2d709ebe-ee49-495a-8971-c8cf988cabf2.png"></p>
+<h4 id="优化前-1"><a href="#优化前-1" class="headerlink" title="优化前"></a>优化前</h4><img src="/2019/12/31/Spark-Bucketing-Deep-Dive/20191019201545-20210508113430256.png" style="zoom:50%;">
+
+<h4 id="优化后-1"><a href="#优化后-1" class="headerlink" title="优化后"></a>优化后</h4><img src="/2019/12/31/Spark-Bucketing-Deep-Dive/2d709ebe-ee49-495a-8971-c8cf988cabf2-20210508114216719.png" alt="img" style="zoom:50%;">
+
 <p>有意思的是, 去掉最后一个 group by, 执行图会变成这样, 这个就留给读者朋友们自己去想了.</p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191019202151.png"></p>
+<img src="/2019/12/31/Spark-Bucketing-Deep-Dive/20191019202151-20210508114058946.png" alt="img" style="zoom:50%;">
+
 <h3 id="3-2-原理说明"><a href="#3-2-原理说明" class="headerlink" title="3.2 原理说明"></a>3.2 原理说明</h3><p>我们先来看下 SMJ 的原理:</p>
 <ol>
 <li>为了让两条记录能连接到一起, 需要将具有相同 key 的记录分发到同一个分区, 这一步会导致 shuffle(Exchange).</li>
@@ -88,9 +315,81 @@
 <li>DF 的每个 partition 都会有 bucket num 个文件, 比如 <code>df.repartition(5).write.format(&quot;parquet&quot;).option(&quot;path&quot;, &quot;/tmp/bueket&quot;).bucketBy(3, &quot;id&quot;)</code> 会产生15个文件, 由于这个限制, 我们使用 repartition 重新实现了类似 bucket 的功能.</li>
 </ol>
 <h1 id="写入-debug-截图"><a href="#写入-debug-截图" class="headerlink" title="写入 debug 截图"></a>写入 debug 截图</h1><p>TBD, 后面写个文章介绍</p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084225.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20191018084345.png"></p>
-</div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+<img src="/2019/12/31/Spark-Bucketing-Deep-Dive/20191018084225-20210508113437602.png" style="zoom:50%;">
+
+<img src="/2019/12/31/Spark-Bucketing-Deep-Dive/20191018084345-20210508113440064.png" style="zoom: 37%;">
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/BigData/" rel="tag"># BigData</a>
+              <a href="/tags/Spark/" rel="tag"># Spark</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2019/11/03/%E6%95%B4%E7%90%86-%E7%A3%81%E7%9B%98-I-O/" rel="prev" title="[整理] 磁盘 I/O">
+                  <i class="fa fa-chevron-left"></i> [整理] 磁盘 I/O
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2020/02/07/Kylin-query-process/" rel="next" title="Kylin 查询的基本流程">
+                  Kylin 查询的基本流程 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+<script src="/js/comments.js"></script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

@@ -1,6 +1,223 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;Spark-Catalyst-的实现分析&quot;&gt;&lt;a href=&quot;#Spark-Catalyst-的实现分析&quot; class=&quot;headerlink&quot; title=&quot;Spark Catalyst 的实现分析&quot;&gt;&lt;/a&gt;Spark Catalyst 的实现分析&lt;/h1&gt;&lt;p&gt;&lt;strong&gt;转载自:&lt;/strong&gt;&lt;a href=&quot;https://github.com/ColZer/DigAndBuried/blob/master/spark/spark-catalyst.md#spark-catalyst%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90&quot;&gt;Spark Catalyst 的实现分析&lt;/a&gt;"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Spark Catalyst Deep Dive | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/BigData/" rel="tag">BigData</a><a class="post-tag-none-link" href="/tags/Spark/" rel="tag">Spark</a></div><div class="post-time">2018-07-19</div></div></div><div class="container post-header"><h1>Spark Catalyst Deep Dive</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Spark-Catalyst-%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90"><span class="toc-number">1.</span> <span class="toc-text">Spark Catalyst 的实现分析</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#1-Row"><span class="toc-number">1.1.</span> <span class="toc-text">1. Row</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#2-Expression"><span class="toc-number">1.2.</span> <span class="toc-text">2. Expression</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#Expression-%E5%A4%A7%E4%BD%93%E5%BD%92%E7%B1%BB"><span class="toc-number">1.2.1.</span> <span class="toc-text">Expression 大体归类</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-1-Attribute-%E8%AF%A6%E8%A7%A3"><span class="toc-number">1.2.2.</span> <span class="toc-text">2.1 Attribute 详解</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-2-Expression-Codegen"><span class="toc-number">1.2.3.</span> <span class="toc-text">2.2 Expression Codegen</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#3-LogicalPlan"><span class="toc-number">1.3.</span> <span class="toc-text">3. LogicalPlan</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#4-Expression-%E5%92%8C-Plan-%E7%9A%84-Tree-%E6%94%AF%E6%8C%81%E7%9A%84%E6%93%8D%E4%BD%9C"><span class="toc-number">1.4.</span> <span class="toc-text">4. Expression 和 Plan 的 Tree 支持的操作</span></a></li></ol></li></ol></details></div><div class="container post-content"><h1 id="Spark-Catalyst-的实现分析"><a href="#Spark-Catalyst-的实现分析" class="headerlink" title="Spark Catalyst 的实现分析"></a>Spark Catalyst 的实现分析</h1><p><strong>转载自:</strong><a target="_blank" rel="noopener" href="https://github.com/ColZer/DigAndBuried/blob/master/spark/spark-catalyst.md#spark-catalyst%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90">Spark Catalyst 的实现分析</a></p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;aaaaaaron.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.4.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;}}</script>
+<meta name="description" content="Spark Catalyst 的实现分析转载自:Spark Catalyst 的实现分析 Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark Catalyst Deep Dive">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/07/19/Spark-Catalyst-Deep-Dive/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="Spark Catalyst 的实现分析转载自:Spark Catalyst 的实现分析 Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/07/19/Spark-Catalyst-Deep-Dive/Catalyst-Optimizer-diagram.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/07/19/Spark-Catalyst-Deep-Dive/project-20210508110606340.png">
+<meta property="article:published_time" content="2018-07-19T10:15:40.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:08:05.828Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="BigData">
+<meta property="article:tag" content="Spark">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2018/07/19/Spark-Catalyst-Deep-Dive/Catalyst-Optimizer-diagram.png">
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/07/19/Spark-Catalyst-Deep-Dive/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-Hans&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;aaaaaaron.github.io&#x2F;2018&#x2F;07&#x2F;19&#x2F;Spark-Catalyst-Deep-Dive&#x2F;&quot;,&quot;path&quot;:&quot;2018&#x2F;07&#x2F;19&#x2F;Spark-Catalyst-Deep-Dive&#x2F;&quot;,&quot;title&quot;:&quot;Spark Catalyst Deep Dive&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title>Spark Catalyst Deep Dive | Jiatao Tao's blog</title><script src="/js/config.js"></script>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Jiatao Tao's blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">λ</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Spark-Catalyst-%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90"><span class="nav-number">1.</span> <span class="nav-text">Spark Catalyst 的实现分析</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-Row"><span class="nav-number">1.1.</span> <span class="nav-text">1. Row</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-Expression"><span class="nav-number">1.2.</span> <span class="nav-text">2. Expression</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Expression-%E5%A4%A7%E4%BD%93%E5%BD%92%E7%B1%BB"><span class="nav-number">1.2.1.</span> <span class="nav-text">Expression 大体归类</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-Attribute-%E8%AF%A6%E8%A7%A3"><span class="nav-number">1.2.2.</span> <span class="nav-text">2.1 Attribute 详解</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-Expression-Codegen"><span class="nav-number">1.2.3.</span> <span class="nav-text">2.2 Expression Codegen</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-LogicalPlan"><span class="nav-number">1.3.</span> <span class="nav-text">3. LogicalPlan</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-Expression-%E5%92%8C-Plan-%E7%9A%84-Tree-%E6%94%AF%E6%8C%81%E7%9A%84%E6%93%8D%E4%BD%9C"><span class="nav-number">1.4.</span> <span class="nav-text">4. Expression 和 Plan 的 Tree 支持的操作</span></a></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/07/19/Spark-Catalyst-Deep-Dive/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Spark Catalyst Deep Dive
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-07-19 18:15:40" itemprop="dateCreated datePublished" datetime="2018-07-19T18:15:40+08:00">2018-07-19</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-05-08 11:08:05" itemprop="dateModified" datetime="2021-05-08T11:08:05+08:00">2021-05-08</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="Spark-Catalyst-的实现分析"><a href="#Spark-Catalyst-的实现分析" class="headerlink" title="Spark Catalyst 的实现分析"></a>Spark Catalyst 的实现分析</h1><p><strong>转载自:</strong><a target="_blank" rel="noopener" href="https://github.com/ColZer/DigAndBuried/blob/master/spark/spark-catalyst.md#spark-catalyst%E7%9A%84%E5%AE%9E%E7%8E%B0%E5%88%86%E6%9E%90">Spark Catalyst 的实现分析</a></p>
 <p>Spark SQL 和 Catalyst 分别对应了 SQL 执行期以及解析期的优化工作，因此 Catalyst 的理解是 Spark SQL 的第一步。在一些 Catalyst 的介绍以及讲座中，下面一张图是必出现，它描述了从 SQL 语句到最后执行 Plan 的生成过程中，除了 Spark SQL，其他 SQL 引擎的工作原理也基本一致，比如 Hive 之类的。</p>
-<p><img src="https://databricks.com/wp-content/uploads/2016/06/Catalyst-Optimizer-diagram.png"></p>
+<p><img src="/2018/07/19/Spark-Catalyst-Deep-Dive/Catalyst-Optimizer-diagram.png"></p>
 <p>本文核心也是介绍 Catalyst 内部的实现，但是不是按照这张图的步骤来介绍 Catalyst 的实现原理，而是按照 SQL 给人最直接几个概念，比如 Row，Expression，Plan 来逐步介绍它们的内部实现。</p>
 <p>看过 Spark SQL 或者 Catalyst 人都知道，相比 Spark Core 的代码，这一块真的挺复杂了，各种算法逻辑，复杂的 Scala 语法元素，以及各种性能优化，代码自动生成，可能得需要几倍的时间，反复的琢磨，才能梳理清楚。</p>
 <h2 id="1-Row"><a href="#1-Row" class="headerlink" title="1. Row"></a>1. Row</h2><p>Spark SQL 中处理的数据与传统 RDD 最大区别在处理的每行数据的类型表示，传统 RDD 不对每行数据进行类型要求，可以任何复杂数据结构，比如 Map, 或者自己自定义的类之类的，而 Spark SQL 中为<code>Row</code>。</p>
@@ -51,14 +268,14 @@
 </tr>
 </thead>
 <tbody><tr>
-<td>数据输入：</td>
+<td>Expression</td>
 <td></td>
-<td>Expression 为 Tree 结构，中间节点都为加工类型表单，而叶子节点即为数据产生节点</td>
+<td>Expression为Tree结构，中间节点都为加工类型表单，而叶子节点即为数据产生节点</td>
 </tr>
 <tr>
 <td>Attribute</td>
 <td></td>
-<td>Catalyst 里面最为重要的概念，可以理解为表的属性，在 sql 处理各个阶段会有不同的形态，比如 UnresolvedAttribute-&gt;AttributeReference-&gt;BoundReference，后面会具体分析</td>
+<td>Catalyst里面最为重要的概念，可以理解为表的属性，在sql处理各个阶段会有不同的形态，比如UnresolvedAttribute-&gt;AttributeReference-&gt;BoundReference，后面会具体分析</td>
 </tr>
 <tr>
 <td>Literal</td>
@@ -78,7 +295,7 @@
 <tr>
 <td>其他一些输入</td>
 <td></td>
-<td>比如获取 sql 计算过程中的任务对应的 InputFileName，SparkPartitionID</td>
+<td>比如获取sql计算过程中的任务对应的InputFileName，SparkPartitionID</td>
 </tr>
 <tr>
 <td>基本计算功能：</td>
@@ -88,27 +305,27 @@
 <tr>
 <td>arithmetic</td>
 <td>nullSafeEval</td>
-<td>数学 Expression，支持<code>-</code>,<code>+</code>,<code>abs</code>, <code>+</code>,<code>-</code>,<code>*</code>,<code>/</code>,<code>%</code>,<code>max</code>,<code>min</code>,<code>pmod</code>数学运算符</td>
+<td>数学Expression，支持<code>-</code>,<code>+</code>,<code>abs</code>, <code>+</code>,<code>-</code>,<code>*</code>,<code>/</code>,<code>%</code>,<code>max</code>,<code>min</code>,<code>pmod</code>数学运算符</td>
 </tr>
 <tr>
 <td>bitwiseExpressions</td>
 <td>nullSafeEval</td>
-<td>位运算数，支持 IntegralType 类型的<code>and</code>,<code>or</code>,<code>not</code>,<code>xor</code>位运算</td>
+<td>位运算数，支持IntegralType类型的<code>and</code>,<code>or</code>,<code>not</code>,<code>xor</code>位运算</td>
 </tr>
 <tr>
 <td>mathExpressions</td>
 <td>nullSafeEval</td>
-<td>数学函数，支持<code>cos</code>,<code>Sqrt</code>之类 30 多种,相当于 Math 包</td>
+<td>数学函数，支持<code>cos</code>,<code>Sqrt</code>之类30多种,相当于Math包</td>
 </tr>
 <tr>
 <td>stringExpressions</td>
 <td>nullSafeEval</td>
-<td>字符串函数，支持<code>Substring</code>,<code>Length</code>之类 30 多种，相当于 String 包</td>
+<td>字符串函数，支持<code>Substring</code>,<code>Length</code>之类30多种，相当于String包</td>
 </tr>
 <tr>
 <td>decimalExpressions</td>
 <td>nullSafeEval</td>
-<td>Decimal 类型的支持，支持<code>Unscaled</code>,<code>MakeDecimal</code>操作</td>
+<td>Decimal类型的支持，支持<code>Unscaled</code>,<code>MakeDecimal</code>操作</td>
 </tr>
 <tr>
 <td>datetimeExpressions</td>
@@ -128,7 +345,7 @@
 <tr>
 <td>misc</td>
 <td>nullSafeEval</td>
-<td>功能函数包，支持 MD5，crc32 之类的函数功能</td>
+<td>功能函数包，支持MD5，crc32之类的函数功能</td>
 </tr>
 <tr>
 <td>基本逻辑计算功能：</td>
@@ -137,23 +354,23 @@
 </tr>
 <tr>
 <td>predicates</td>
-<td>eval/nullSafeEval 类型</td>
-<td>支持子 Expression 之间的逻辑运算，比如<code>AND</code>,<code>In</code>,<code>Or</code>，输出 Bool 类型</td>
+<td>eval/nullSafeEval类型</td>
+<td>支持子Expression之间的逻辑运算，比如<code>AND</code>,<code>In</code>,<code>Or</code>，输出Bool类型</td>
 </tr>
 <tr>
 <td>regexpExpressions</td>
 <td>nullSafeEval</td>
-<td>支持 LIKE 相关操作</td>
+<td>支持LIKE相关操作</td>
 </tr>
 <tr>
 <td>conditionalExpressions</td>
 <td>eval</td>
-<td>支持 case，if，great，least 四种逻辑判断运算</td>
+<td>支持case，if，great，least四种逻辑判断运算</td>
 </tr>
 <tr>
 <td>nullExpressions</td>
 <td>eval/RuntimeReplaceable</td>
-<td>与 NULL/NA 相关的判断或者 IF 判断功能，大部分都为 RuntimeReplaceable，会被进行优化处理</td>
+<td>与NULL/NA相关的判断或者IF判断功能，大部分都为RuntimeReplaceable，会被进行优化处理</td>
 </tr>
 <tr>
 <td>其他类型：</td>
@@ -163,12 +380,12 @@
 <tr>
 <td>complexTypeCreator</td>
 <td>eval</td>
-<td>SparkSql 是支持复杂数据结构，比如 Array，Map，Struct，这类 Expression 支持在 sql 语句上生成它们，比如 select array</td>
+<td>SparkSql是支持复杂数据结构，比如Array，Map，Struct，这类Expression支持在sql语句上生成它们，比如select array</td>
 </tr>
 <tr>
 <td>Generator</td>
 <td>eval</td>
-<td>支持 flatmap 类似的操作，即将 Row 转变为多个 Row，支持 Explode 和自定义 UserDefinedGenerator 两种，其中 Explode 支持将数组和 map 拆开为多个 Row。</td>
+<td>支持flatmap类似的操作，即将Row转变为多个Row，支持Explode和自定义UserDefinedGenerator两种，其中Explode支持将数组和map拆开为多个Row。</td>
 </tr>
 </tbody></table>
 <h3 id="2-1-Attribute-详解"><a href="#2-1-Attribute-详解" class="headerlink" title="2.1 Attribute 详解"></a>2.1 Attribute 详解</h3><p>Attribute 直译为属性，在 SQL 中，可以简单理解为输入的 Table 中的字段，Attribute 通过 Name 字段来进行命名。SQL 语句通过 Parse 生成 AST 以后，SQL 语句中的每个字段都会解析为 UnresolvedAttribute，它是属于 Attribute 的一个子类，比如<code>SELECT a</code>中的<code>a</code>就表示为<code>UnresolvedAttribute(&quot;a&quot;)</code>，还有一个特殊的 UnresolvedAttribute，既为 SQL 语句中的<code>＊</code>，它表示为<code>Star</code>，属于 UnresolvedAttribute 类型的子类。</p>
@@ -203,7 +420,7 @@ funtion(row) &#123;
 <p>Expression 层面的 Codegen 的实现其实很简单，这里就是不详细去描述，后面会重新针对 codegen，包括 Whole Stage Codegen 一起做一次大大专题进行分析。</p>
 <h2 id="3-LogicalPlan"><a href="#3-LogicalPlan" class="headerlink" title="3. LogicalPlan"></a>3. LogicalPlan</h2><p>如上所言，在 SQL 语句中，除了 SELECT FROM 等关键字以外，其他大部分元素都可以理解为 Expression，那么用什么来表示剩下的 SELECT FROM 这些关键字呢？毕竟 Expression 只是一些 Eval 功能函数或者代码片段，需要一个东西来串联这些片段，这个东西就是<code>Plan</code>，注意，我这里说的是<code>Plan</code>，是一个统称，而不是仅指向<code>LogicalPlan</code>。如开言图所示，在 SQL 解析以及优化，到最后过程中，都是以<code>Plan</code>而存在，只是每一步<code>Plan</code>功能不同而已。</p>
 <p><code>Plan</code>表现形式也是 Tree，节点之间的关系可以理解为一种操作次序，比如 Plan 叶子节点表示从磁盘读取 DB 文件，而 Root 节点表示最终数据的输出；下面是<code>Plan</code>最常见的实例截图。</p>
-<p><img src="../image/project.png" alt="Alt text"></p>
+<p><img src="/2018/07/19/Spark-Catalyst-Deep-Dive/project-20210508110606340.png" alt="Alt text"></p>
 <p>用 SQL 语句来表示这个 Plan 即为:<code>SELECT project FROM table, table WHERE filter</code>。</p>
 <p>Expression 功能是对输入 Row 进行加工，输出可能是 Any 数据类型。而 Plan 输出类型为<code>def output: Seq[Attribute]</code>表示的一组 Attribute，比如上面的<code>Project</code>和<code>Table</code>肯定是输出一个由<code>Seq[Attribute]</code>类型表示的 Row，<code>Filter</code>感觉是输出 Ture/False，但是这里说的 Plan，而不是 Filter 类型的 Expreesion，Filter 类型的 Plan 会在内部根据 Expression 计算结果来判断是否返回 Row，但是 Row 返回的类型肯定也是由<code>Seq[Attribute]</code>表示的。</p>
 <p>另外 Expression 与 Plan 关系是被包含，比如<code>Filter</code>肯定是基于一个<code>Expression</code>计算结果进行判断，<code>Project</code>内部元素要么是直接为<code>Star</code>，或者为<code>Attribute</code>，或者为复杂的<code>Expression</code>，比如<code>SUM</code>。</p>
@@ -329,7 +546,79 @@ funtion(row) &#123;
 <blockquote>
 <p>本文主要是针对 catalyst 内部实现做了一些简洁的分析，注重分析与 catalyst 相关的三个概念<code>Row，Expression，Plan</code>，因为对三个概念的理解与否，将决定是否可以看懂 spark sql 后面相关细节。<br>同时，Spark SQL 真的很复杂，如果想真的完全理解 Spark SQL 内部的具体细节，这条路还是很长！fighting！</p>
 </blockquote>
-</div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/BigData/" rel="tag"># BigData</a>
+              <a href="/tags/Spark/" rel="tag"># Spark</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/07/19/Java-Streaming-Deep-Dive/" rel="prev" title="Java Streaming Deep Dive">
+                  <i class="fa fa-chevron-left"></i> Java Streaming Deep Dive
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/07/19/Elixir/" rel="next" title="Elixir 基础部分">
+                  Elixir 基础部分 <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+<script src="/js/comments.js"></script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

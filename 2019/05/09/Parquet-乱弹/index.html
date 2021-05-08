@@ -1,7 +1,239 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="&lt;a href=&quot;http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf&quot;&gt;http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf&lt;/a&gt;"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Parquet 乱弹 | Jiatao Tao's blog</title><meta name="robots" content="noindex"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/Parquet/" rel="tag">Parquet</a></div><div class="post-time">2019-05-09</div></div></div><div class="container post-header"><h1>Parquet 乱弹</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#page"><span class="toc-number">1.</span> <span class="toc-text">page</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%AF%BB"><span class="toc-number"></span> <span class="toc-text">读</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E7%94%9F-parquet"><span class="toc-number"></span> <span class="toc-text">原生 parquet</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#spark"><span class="toc-number"></span> <span class="toc-text">spark</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#code"><span class="toc-number"></span> <span class="toc-text">code</span></a></details></div><div class="container post-content"><p><a target="_blank" rel="noopener" href="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf">http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf</a></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509164025.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509165611.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509170805.png"></p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;aaaaaaron.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.4.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;}}</script>
+<meta name="description" content="http:&#x2F;&#x2F;lvheyang.com&#x2F;wp-content&#x2F;uploads&#x2F;2016&#x2F;02&#x2F;%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf     recommended to set the parquet block s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Parquet 乱弹">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="http:&#x2F;&#x2F;lvheyang.com&#x2F;wp-content&#x2F;uploads&#x2F;2016&#x2F;02&#x2F;%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf     recommended to set the parquet block s">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509164025.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509165611.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509170805.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509182510.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104542.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104910.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105205.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105231.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105342.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105441.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103634.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103701.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528110659.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528110909.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528111155.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103907.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103951.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104202.png">
+<meta property="article:published_time" content="2019-05-09T08:30:34.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:13:53.923Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="Parquet">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509164025.png">
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-Hans&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;aaaaaaron.github.io&#x2F;2019&#x2F;05&#x2F;09&#x2F;Parquet-%E4%B9%B1%E5%BC%B9&#x2F;&quot;,&quot;path&quot;:&quot;2019&#x2F;05&#x2F;09&#x2F;Parquet-乱弹&#x2F;&quot;,&quot;title&quot;:&quot;Parquet 乱弹&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title>Parquet 乱弹 | Jiatao Tao's blog</title><meta name="robots" content="noindex"><script src="/js/config.js"></script>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Jiatao Tao's blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">λ</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#page"><span class="nav-number">1.</span> <span class="nav-text">page</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BB"><span class="nav-number"></span> <span class="nav-text">读</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%94%9F-parquet"><span class="nav-number"></span> <span class="nav-text">原生 parquet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#spark"><span class="nav-number"></span> <span class="nav-text">spark</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#code"><span class="nav-number"></span> <span class="nav-text">code</span></a></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Parquet 乱弹
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2019-05-09 16:30:34" itemprop="dateCreated datePublished" datetime="2019-05-09T16:30:34+08:00">2019-05-09</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-05-08 11:13:53" itemprop="dateModified" datetime="2021-05-08T11:13:53+08:00">2021-05-08</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <p><a target="_blank" rel="noopener" href="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf">http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf</a></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509164025.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509165611.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509170805.png"></p>
 <hr>
 <p>recommended to set the parquet block size to match the MFS chunk size for optimal performance.  The default MFS chunk size is 256 MB. </p>
 <p>A typical Hadoop job is IO bound, not CPU bound, so a light and fast compression codec will actually improve performance. </p>
@@ -13,7 +245,7 @@
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">usage: parquet-tools cat [option...] &lt;input&gt;</span><br><span class="line">usage: parquet-tools head [option...] &lt;input&gt;</span><br><span class="line">usage: parquet-tools schema [option...] &lt;input&gt;</span><br><span class="line">usage: parquet-tools meta [option...] &lt;input&gt;</span><br><span class="line">usage: parquet-tools dump [option...] &lt;input&gt;</span><br><span class="line">usage: parquet-tools merge [option...] &lt;input&gt; [&lt;input&gt; ...] &lt;output&gt;</span><br></pre></td></tr></table></figure>
 
 <hr>
-<p>for spark:<br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190509182510.png"></p>
+<p>for spark:<br><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509182510.png"></p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testParquetRead</span><span class="params">(<span class="keyword">double</span>[] data, CompressionCodecName compress)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    Configuration conf = <span class="keyword">new</span> Configuration();</span><br><span class="line">    List&lt;Type&gt; fields = Lists.newArrayList();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; <span class="number">3</span>; i++) &#123;</span><br><span class="line">        fields.add(<span class="keyword">new</span> PrimitiveType(Type.Repetition.REQUIRED, PrimitiveType.PrimitiveTypeName.DOUBLE, <span class="string">&quot;f&quot;</span> + i));</span><br><span class="line">    &#125;</span><br><span class="line">    MessageType schema = <span class="keyword">new</span> MessageType(<span class="string">&quot;ori&quot;</span>, fields);</span><br><span class="line"></span><br><span class="line">    writeFile(conf, schema, data, compress);</span><br><span class="line">    testRowGroupRead(conf, schema);</span><br><span class="line">    testSimpleRead(conf, data.length);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">writeFile</span><span class="params">(Configuration conf, MessageType schema, <span class="keyword">double</span>[] data, CompressionCodecName compress)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    GroupWriteSupport.setSchema(schema, conf);</span><br><span class="line">    ParquetWriter&lt;Group&gt; writer = <span class="keyword">new</span> ParquetWriter&lt;&gt;(path, <span class="keyword">new</span> GroupWriteSupport(), compress, <span class="number">10</span> * <span class="number">1024</span> * <span class="number">1024</span>,</span><br><span class="line">            <span class="number">1024</span> * <span class="number">1024</span>, <span class="number">1048576</span>, <span class="keyword">true</span>, <span class="keyword">false</span>, PARQUET_2_0, conf);</span><br><span class="line"></span><br><span class="line">    SimpleGroupFactory simpleGroupFactory = <span class="keyword">new</span> SimpleGroupFactory(schema);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">double</span> v : data) &#123;</span><br><span class="line">        writer.write(simpleGroupFactory.newGroup().append(<span class="string">&quot;f0&quot;</span>, v).append(<span class="string">&quot;f1&quot;</span>, v).append(<span class="string">&quot;f2&quot;</span>, v));</span><br><span class="line">    &#125;</span><br><span class="line">    writer.close();</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testRowGroupRead</span><span class="params">(Configuration conf, MessageType messageType)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    ParquetMetadata footer = ParquetFileReader.readFooter(conf, path, ParquetMetadataConverter.NO_FILTER);</span><br><span class="line">    ParquetFileReader parquetFileReader = <span class="keyword">new</span> ParquetFileReader(conf, footer.getFileMetaData(), path,</span><br><span class="line">            footer.getBlocks(), messageType.getColumns());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">long</span> t = System.currentTimeMillis();</span><br><span class="line">    <span class="keyword">int</span> totalRowCount = <span class="number">0</span>;</span><br><span class="line">    PageReadStore pageReadStore = parquetFileReader.readNextRowGroup();</span><br><span class="line">    <span class="keyword">while</span> (pageReadStore != <span class="keyword">null</span>) &#123;</span><br><span class="line">        totalRowCount += pageReadStore.getRowCount();</span><br><span class="line">        <span class="keyword">for</span> (ColumnDescriptor columnDescriptor : footer.getFileMetaData().getSchema().getColumns()) &#123;</span><br><span class="line">            pageReadStore.getPageReader(columnDescriptor).readPage();</span><br><span class="line">        &#125;</span><br><span class="line">        pageReadStore = parquetFileReader.readNextRowGroup();</span><br><span class="line">    &#125;</span><br><span class="line">    System.out.println(<span class="string">&quot;Row Group read style take:&quot;</span> + (System.currentTimeMillis() - t));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">testSimpleRead</span><span class="params">(Configuration conf, <span class="keyword">int</span> n)</span> <span class="keyword">throws</span> IOException </span>&#123;</span><br><span class="line">    ParquetReader&lt;Group&gt; reader = ParquetReader.builder(<span class="keyword">new</span> GroupReadSupport(), path).withConf(conf).build();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">long</span> t = System.currentTimeMillis();</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; n; i++) &#123;</span><br><span class="line">        Group group = reader.read();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">int</span> j = <span class="number">0</span>; j &lt; <span class="number">10</span>; j++) &#123;</span><br><span class="line">            group.getDouble(<span class="string">&quot;m&quot;</span> + j, <span class="number">0</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    System.out.println(<span class="string">&quot;Simple read take:&quot;</span> + (System.currentTimeMillis() - t));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 
@@ -25,25 +257,84 @@
 <hr>
 <hr>
 <hr>
-<h1 id="读"><a href="#读" class="headerlink" title="读"></a>读</h1><h2 id="原生-parquet"><a href="#原生-parquet" class="headerlink" title="原生 parquet"></a>原生 parquet</h2><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528104542.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528104910.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528105205.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528105231.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528105342.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528105441.png"></p>
+<h1 id="读"><a href="#读" class="headerlink" title="读"></a>读</h1><h2 id="原生-parquet"><a href="#原生-parquet" class="headerlink" title="原生 parquet"></a>原生 parquet</h2><p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104542.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104910.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105205.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105231.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105342.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105441.png"></p>
 <hr>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528103634.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528103701.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103634.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103701.png"></p>
 <p>ColumnChunkPageReadStore(RowGroupImpl)</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line">public <span class="type">DataPage</span> readPage() &#123;</span><br><span class="line">  <span class="keyword">if</span> (compressedPages.isEmpty()) &#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">null</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="type">DataPage</span> compressedPage = compressedPages.remove(<span class="number">0</span>);</span><br><span class="line">  <span class="keyword">final</span> int currentPageIndex = pageIndex++;</span><br><span class="line">  <span class="keyword">return</span> compressedPage.accept(<span class="keyword">new</span> <span class="type">DataPage</span>.<span class="type">Visitor</span>&lt;<span class="type">DataPage</span>&gt;() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    public <span class="type">DataPage</span> visit(<span class="type">DataPageV1</span> dataPageV1) &#123;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="type">BytesInput</span> decompressed = decompressor.decompress(dataPageV1.getBytes(), dataPageV1.getUncompressedSize());</span><br><span class="line">        <span class="keyword">if</span> (offsetIndex == <span class="literal">null</span>) &#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">new</span> <span class="type">DataPageV1</span>(</span><br><span class="line">              decompressed,</span><br><span class="line">              dataPageV1.getValueCount(),</span><br><span class="line">              dataPageV1.getUncompressedSize(),</span><br><span class="line">              dataPageV1.getStatistics(),</span><br><span class="line">              dataPageV1.getRlEncoding(),</span><br><span class="line">              dataPageV1.getDlEncoding(),</span><br><span class="line">              dataPageV1.getValueEncoding());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          long firstRowIndex = offsetIndex.getFirstRowIndex(currentPageIndex);</span><br><span class="line">          <span class="keyword">return</span> <span class="keyword">new</span> <span class="type">DataPageV1</span>(</span><br><span class="line">              decompressed,</span><br><span class="line">              dataPageV1.getValueCount(),</span><br><span class="line">              dataPageV1.getUncompressedSize(),</span><br><span class="line">              firstRowIndex,</span><br><span class="line">              <span class="type">Math</span>.toIntExact(offsetIndex.getLastRowIndex(currentPageIndex, rowCount) - firstRowIndex + <span class="number">1</span>),</span><br><span class="line">              dataPageV1.getStatistics(),</span><br><span class="line">              dataPageV1.getRlEncoding(),</span><br><span class="line">              dataPageV1.getDlEncoding(),</span><br><span class="line">              dataPageV1.getValueEncoding());</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">catch</span> (<span class="type">IOException</span> e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">ParquetDecodingException</span>(<span class="string">&quot;could not decompress page&quot;</span>, e);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    public <span class="type">DataPage</span> visit(<span class="type">DataPageV2</span> dataPageV2) &#123;</span><br><span class="line">      <span class="keyword">if</span> (!dataPageV2.isCompressed()) &#123;</span><br><span class="line">        <span class="keyword">if</span> (offsetIndex == <span class="literal">null</span>) &#123;</span><br><span class="line">          <span class="keyword">return</span> dataPageV2;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="type">DataPageV2</span>.uncompressed(</span><br><span class="line">              dataPageV2.getRowCount(),</span><br><span class="line">              dataPageV2.getNullCount(),</span><br><span class="line">              dataPageV2.getValueCount(),</span><br><span class="line">              offsetIndex.getFirstRowIndex(currentPageIndex),</span><br><span class="line">              dataPageV2.getRepetitionLevels(),</span><br><span class="line">              dataPageV2.getDefinitionLevels(),</span><br><span class="line">              dataPageV2.getDataEncoding(),</span><br><span class="line">              dataPageV2.getData(),</span><br><span class="line">              dataPageV2.getStatistics());</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">try</span> &#123;</span><br><span class="line">        int uncompressedSize = <span class="type">Math</span>.toIntExact(</span><br><span class="line">            dataPageV2.getUncompressedSize()</span><br><span class="line">                - dataPageV2.getDefinitionLevels().size()</span><br><span class="line">                - dataPageV2.getRepetitionLevels().size());</span><br><span class="line">        <span class="type">BytesInput</span> decompressed = decompressor.decompress(dataPageV2.getData(), uncompressedSize);</span><br><span class="line">        <span class="keyword">if</span> (offsetIndex == <span class="literal">null</span>) &#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="type">DataPageV2</span>.uncompressed(</span><br><span class="line">              dataPageV2.getRowCount(),</span><br><span class="line">              dataPageV2.getNullCount(),</span><br><span class="line">              dataPageV2.getValueCount(),</span><br><span class="line">              dataPageV2.getRepetitionLevels(),</span><br><span class="line">              dataPageV2.getDefinitionLevels(),</span><br><span class="line">              dataPageV2.getDataEncoding(),</span><br><span class="line">              decompressed,</span><br><span class="line">              dataPageV2.getStatistics());</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">          <span class="keyword">return</span> <span class="type">DataPageV2</span>.uncompressed(</span><br><span class="line">              dataPageV2.getRowCount(),</span><br><span class="line">              dataPageV2.getNullCount(),</span><br><span class="line">              dataPageV2.getValueCount(),</span><br><span class="line">              offsetIndex.getFirstRowIndex(currentPageIndex),</span><br><span class="line">              dataPageV2.getRepetitionLevels(),</span><br><span class="line">              dataPageV2.getDefinitionLevels(),</span><br><span class="line">              dataPageV2.getDataEncoding(),</span><br><span class="line">              decompressed,</span><br><span class="line">              dataPageV2.getStatistics());</span><br><span class="line">        &#125;</span><br><span class="line">      &#125; <span class="keyword">catch</span> (<span class="type">IOException</span> e) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">ParquetDecodingException</span>(<span class="string">&quot;could not decompress page&quot;</span>, e);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<h2 id="spark"><a href="#spark" class="headerlink" title="spark"></a>spark</h2><p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528110659.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528110909.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528111155.png"></p>
-<p><strong>spark 读的调用栈</strong><br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528103907.png"></p>
-<p><strong>Vectorized read</strong><br><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528103951.png"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/20190528104202.png"></p>
-<h2 id="code"><a href="#code" class="headerlink" title="code"></a>code</h2><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Reads `total` values from this columnReader into column.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">void readBatch(int total, <span class="type">WritableColumnVector</span> column) <span class="keyword">throws</span> <span class="type">IOException</span> &#123;</span><br><span class="line">  int rowId = <span class="number">0</span>;</span><br><span class="line">  <span class="type">WritableColumnVector</span> dictionaryIds = <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">if</span> (dictionary != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="comment">// SPARK-16334: We only maintain a single dictionary per row batch, so that it can be used to</span></span><br><span class="line">    <span class="comment">// decode all previous dictionary encoded pages if we ever encounter a non-dictionary encoded</span></span><br><span class="line">    <span class="comment">// page.</span></span><br><span class="line">    dictionaryIds = column.reserveDictionaryIds(total);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">while</span> (total &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// Compute the number of values we want to read in this page.</span></span><br><span class="line">    int leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    <span class="keyword">if</span> (leftInPage == <span class="number">0</span>) &#123;</span><br><span class="line">      readPage();</span><br><span class="line">      leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    &#125;</span><br><span class="line">    int num = <span class="type">Math</span>.min(total, leftInPage);</span><br><span class="line">    <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span> typeName =</span><br><span class="line">      descriptor.getPrimitiveType().getPrimitiveTypeName();</span><br><span class="line">    <span class="keyword">if</span> (isCurrentPageDictionaryEncoded) &#123;</span><br><span class="line">      <span class="comment">// Read and decode dictionary ids.</span></span><br><span class="line">      defColumn.readIntegers(</span><br><span class="line">          num, dictionaryIds, column, rowId, maxDefLevel, (<span class="type">VectorizedValuesReader</span>) dataColumn);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// TIMESTAMP_MILLIS encoded as INT64 can&#x27;t be lazily decoded as we need to post process</span></span><br><span class="line">      <span class="comment">// the values to add microseconds precision.</span></span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() || (rowId == <span class="number">0</span> &amp;&amp;</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT32</span> ||</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT64</span> &amp;&amp;</span><br><span class="line">            originalType != <span class="type">OriginalType</span>.<span class="type">TIMESTAMP_MILLIS</span>) ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">FLOAT</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">DOUBLE</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">BINARY</span>))) &#123;</span><br><span class="line">        <span class="comment">// Column vector supports lazy decoding of dictionary values so just set the dictionary.</span></span><br><span class="line">        <span class="comment">// We can&#x27;t do this if rowId != 0 AND the column doesn&#x27;t have a dictionary (i.e. some</span></span><br><span class="line">        <span class="comment">// non-dictionary encoded values have already been added).</span></span><br><span class="line">        column.setDictionary(<span class="keyword">new</span> <span class="type">ParquetDictionary</span>(dictionary));</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        decodeDictionaryIds(rowId, num, column, dictionaryIds);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() &amp;&amp; rowId != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// This batch already has dictionary encoded values but this new page is not. The batch</span></span><br><span class="line">        <span class="comment">// does not support a mix of dictionary and not so we will decode the dictionary.</span></span><br><span class="line">        decodeDictionaryIds(<span class="number">0</span>, rowId, column, column.getDictionaryIds());</span><br><span class="line">      &#125;</span><br><span class="line">      column.setDictionary(<span class="literal">null</span>);</span><br><span class="line">      switch (typeName) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BOOLEAN</span>:</span><br><span class="line">          readBooleanBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT32</span>:</span><br><span class="line">          readIntBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT64</span>:</span><br><span class="line">          readLongBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT96</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FLOAT</span>:</span><br><span class="line">          readFloatBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">DOUBLE</span>:</span><br><span class="line">          readDoubleBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BINARY</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FIXED_LEN_BYTE_ARRAY</span>:</span><br><span class="line">          readFixedLenByteArrayBatch(</span><br><span class="line">            rowId, num, column, descriptor.getPrimitiveType().getTypeLength());</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IOException</span>(<span class="string">&quot;Unsupported type: &quot;</span> + typeName);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    valuesRead += num;</span><br><span class="line">    rowId += num;</span><br><span class="line">    total -= num;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><!-- flag of hidden posts --></div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+<h2 id="spark"><a href="#spark" class="headerlink" title="spark"></a>spark</h2><p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528110659.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528110909.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528111155.png"></p>
+<p><strong>spark 读的调用栈</strong><br><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103907.png"></p>
+<p><strong>Vectorized read</strong><br><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103951.png"></p>
+<p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104202.png"></p>
+<h2 id="code"><a href="#code" class="headerlink" title="code"></a>code</h2><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Reads `total` values from this columnReader into column.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">void readBatch(int total, <span class="type">WritableColumnVector</span> column) <span class="keyword">throws</span> <span class="type">IOException</span> &#123;</span><br><span class="line">  int rowId = <span class="number">0</span>;</span><br><span class="line">  <span class="type">WritableColumnVector</span> dictionaryIds = <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">if</span> (dictionary != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="comment">// SPARK-16334: We only maintain a single dictionary per row batch, so that it can be used to</span></span><br><span class="line">    <span class="comment">// decode all previous dictionary encoded pages if we ever encounter a non-dictionary encoded</span></span><br><span class="line">    <span class="comment">// page.</span></span><br><span class="line">    dictionaryIds = column.reserveDictionaryIds(total);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">while</span> (total &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// Compute the number of values we want to read in this page.</span></span><br><span class="line">    int leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    <span class="keyword">if</span> (leftInPage == <span class="number">0</span>) &#123;</span><br><span class="line">      readPage();</span><br><span class="line">      leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    &#125;</span><br><span class="line">    int num = <span class="type">Math</span>.min(total, leftInPage);</span><br><span class="line">    <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span> typeName =</span><br><span class="line">      descriptor.getPrimitiveType().getPrimitiveTypeName();</span><br><span class="line">    <span class="keyword">if</span> (isCurrentPageDictionaryEncoded) &#123;</span><br><span class="line">      <span class="comment">// Read and decode dictionary ids.</span></span><br><span class="line">      defColumn.readIntegers(</span><br><span class="line">          num, dictionaryIds, column, rowId, maxDefLevel, (<span class="type">VectorizedValuesReader</span>) dataColumn);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// TIMESTAMP_MILLIS encoded as INT64 can&#x27;t be lazily decoded as we need to post process</span></span><br><span class="line">      <span class="comment">// the values to add microseconds precision.</span></span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() || (rowId == <span class="number">0</span> &amp;&amp;</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT32</span> ||</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT64</span> &amp;&amp;</span><br><span class="line">            originalType != <span class="type">OriginalType</span>.<span class="type">TIMESTAMP_MILLIS</span>) ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">FLOAT</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">DOUBLE</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">BINARY</span>))) &#123;</span><br><span class="line">        <span class="comment">// Column vector supports lazy decoding of dictionary values so just set the dictionary.</span></span><br><span class="line">        <span class="comment">// We can&#x27;t do this if rowId != 0 AND the column doesn&#x27;t have a dictionary (i.e. some</span></span><br><span class="line">        <span class="comment">// non-dictionary encoded values have already been added).</span></span><br><span class="line">        column.setDictionary(<span class="keyword">new</span> <span class="type">ParquetDictionary</span>(dictionary));</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        decodeDictionaryIds(rowId, num, column, dictionaryIds);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() &amp;&amp; rowId != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// This batch already has dictionary encoded values but this new page is not. The batch</span></span><br><span class="line">        <span class="comment">// does not support a mix of dictionary and not so we will decode the dictionary.</span></span><br><span class="line">        decodeDictionaryIds(<span class="number">0</span>, rowId, column, column.getDictionaryIds());</span><br><span class="line">      &#125;</span><br><span class="line">      column.setDictionary(<span class="literal">null</span>);</span><br><span class="line">      switch (typeName) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BOOLEAN</span>:</span><br><span class="line">          readBooleanBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT32</span>:</span><br><span class="line">          readIntBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT64</span>:</span><br><span class="line">          readLongBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT96</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FLOAT</span>:</span><br><span class="line">          readFloatBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">DOUBLE</span>:</span><br><span class="line">          readDoubleBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BINARY</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FIXED_LEN_BYTE_ARRAY</span>:</span><br><span class="line">          readFixedLenByteArrayBatch(</span><br><span class="line">            rowId, num, column, descriptor.getPrimitiveType().getTypeLength());</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IOException</span>(<span class="string">&quot;Unsupported type: &quot;</span> + typeName);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    valuesRead += num;</span><br><span class="line">    rowId += num;</span><br><span class="line">    total -= num;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><!-- flag of hidden posts -->
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Parquet/" rel="tag"># Parquet</a>
+          </div>
+
+        
+
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+<script src="/js/comments.js"></script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

@@ -1,5 +1,221 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;Glossary&quot;&gt;&lt;a href=&quot;#Glossary&quot; class=&quot;headerlink&quot; title=&quot;Glossary&quot;&gt;&lt;/a&gt;Glossary&lt;/h1&gt;&lt;ul&gt;
-&lt;li&gt;&lt;p&gt;Row group: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column in the dataset."><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Learning Parquet | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/Parquet/" rel="tag">Parquet</a></div><div class="post-time">2018-10-30</div></div></div><div class="container post-header"><h1>Learning Parquet</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Glossary"><span class="toc-number">1.</span> <span class="toc-text">Glossary</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Unit-of-parallelization"><span class="toc-number">1.1.</span> <span class="toc-text">Unit of parallelization</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Deep"><span class="toc-number">2.</span> <span class="toc-text">Deep</span></a></li></ol></details></div><div class="container post-content"><h1 id="Glossary"><a href="#Glossary" class="headerlink" title="Glossary"></a>Glossary</h1><ul>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;aaaaaaron.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.4.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;}}</script>
+<meta name="description" content="Glossary Row group: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column i">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Learning Parquet">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="Glossary Row group: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column i">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/FileLayout.gif">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/FileFormat.gif">
+<meta property="article:published_time" content="2018-10-30T11:09:46.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:11:48.349Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="BigData">
+<meta property="article:tag" content="Parquet">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/FileLayout.gif">
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-Hans&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;aaaaaaron.github.io&#x2F;2018&#x2F;10&#x2F;30&#x2F;Learning-Parquet&#x2F;&quot;,&quot;path&quot;:&quot;2018&#x2F;10&#x2F;30&#x2F;Learning-Parquet&#x2F;&quot;,&quot;title&quot;:&quot;Learning Parquet&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title>Learning Parquet | Jiatao Tao's blog</title><script src="/js/config.js"></script>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Jiatao Tao's blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">λ</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Glossary"><span class="nav-number">1.</span> <span class="nav-text">Glossary</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Unit-of-parallelization"><span class="nav-number">1.1.</span> <span class="nav-text">Unit of parallelization</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Deep"><span class="nav-number">2.</span> <span class="nav-text">Deep</span></a></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/10/30/Learning-Parquet/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Learning Parquet
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-10-30 19:09:46" itemprop="dateCreated datePublished" datetime="2018-10-30T19:09:46+08:00">2018-10-30</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2021-05-08 11:11:48" itemprop="dateModified" datetime="2021-05-08T11:11:48+08:00">2021-05-08</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="Glossary"><a href="#Glossary" class="headerlink" title="Glossary"></a>Glossary</h1><ul>
 <li><p>Row group: A logical horizontal partitioning of the data into rows. There is no physical structure that is guaranteed for a row group. A row group consists of a column chunk for each column in the dataset.</p>
 </li>
 <li><p>Column chunk: A chunk of the data for a particular column. These live in a particular row group and is guaranteed to be contiguous in the file.</p>
@@ -13,9 +229,9 @@
 <li>IO - Column chunk</li>
 <li>Encoding/Compression - Page</li>
 </ul>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/FileLayout.gif"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/FileFormat.gif"></p>
-<p><img src="https://aron-blog-1257818292.cos.ap-shanghai.myqcloud.com/Parquet%20%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F.png"></p>
+<p><img src="/2018/10/30/Learning-Parquet/FileLayout.gif"></p>
+<p><img src="/2018/10/30/Learning-Parquet/FileFormat.gif"></p>
+<p>![](Learning-Parquet/Parquet 文件格式.png)</p>
 <h1 id="Deep"><a href="#Deep" class="headerlink" title="Deep"></a>Deep</h1><p>正是因为有 row group, 才使得 parquet 文件 splitable, 且每个 split 都有完整的 record(Spark 中也是根据 row group 来切 split 的). </p>
 <p>Row groups are used to keep all the columns of each record in the same HDFS block so records can be reassembled from a single block.</p>
 <p>你只可以 sort 一个 column, 所以 sort 你最常 filter 的列.</p>
@@ -32,7 +248,79 @@
 
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/*</span></span><br><span class="line"><span class="comment">   * Builder to concatenate the buffers of the discontinuous parts for the same column. These parts are generated as a</span></span><br><span class="line"><span class="comment">   * result of the column-index based filtering when some pages might be skipped at reading.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChunkListBuilder</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">ChunkData</span> </span>&#123;</span><br><span class="line">      <span class="keyword">final</span> List&lt;ByteBuffer&gt; buffers = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">      OffsetIndex offsetIndex;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> Map&lt;ChunkDescriptor, ChunkData&gt; map = <span class="keyword">new</span> HashMap&lt;&gt;();</span><br><span class="line">    <span class="keyword">private</span> ChunkDescriptor lastDescriptor;</span><br><span class="line">    <span class="keyword">private</span> SeekableInputStream f;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * PageReader for a single column chunk. A column chunk contains</span></span><br><span class="line"><span class="comment">   * several pages, which are yielded one by one in order.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * This implementation is provided with a list of pages, each of which</span></span><br><span class="line"><span class="comment">   * is decompressed and passed through.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ColumnChunkPageReader</span> <span class="keyword">implements</span> <span class="title">PageReader</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> BytesInputDecompressor decompressor;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> valueCount;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;DataPage&gt; compressedPages;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> DictionaryPage compressedDictionaryPage;</span><br><span class="line">    <span class="comment">// null means no page synchronization is required; firstRowIndex will not be returned by the pages</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> OffsetIndex offsetIndex;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> rowCount;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> pageIndex = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    ColumnChunkPageReader(BytesInputDecompressor decompressor, List&lt;DataPage&gt; compressedPages,</span><br><span class="line">        DictionaryPage compressedDictionaryPage, OffsetIndex offsetIndex, <span class="keyword">long</span> rowCount) &#123;</span><br><span class="line">      <span class="keyword">this</span>.decompressor = decompressor;</span><br><span class="line">      <span class="keyword">this</span>.compressedPages = <span class="keyword">new</span> LinkedList&lt;DataPage&gt;(compressedPages);</span><br><span class="line">      <span class="keyword">this</span>.compressedDictionaryPage = compressedDictionaryPage;</span><br><span class="line">      <span class="keyword">long</span> count = <span class="number">0</span>;</span><br><span class="line">      <span class="keyword">for</span> (DataPage p : compressedPages) &#123;</span><br><span class="line">        count += p.getValueCount();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">this</span>.valueCount = count;</span><br><span class="line">      <span class="keyword">this</span>.offsetIndex = offsetIndex;</span><br><span class="line">      <span class="keyword">this</span>.rowCount = rowCount;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line">  <span class="comment">/**</span></span><br><span class="line"><span class="comment">   * PageReader for a single column chunk. A column chunk contains</span></span><br><span class="line"><span class="comment">   * several pages, which are yielded one by one in order.</span></span><br><span class="line"><span class="comment">   *</span></span><br><span class="line"><span class="comment">   * This implementation is provided with a list of pages, each of which</span></span><br><span class="line"><span class="comment">   * is decompressed and passed through.</span></span><br><span class="line"><span class="comment">   */</span></span><br><span class="line">  <span class="keyword">static</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">ColumnChunkPageReader</span> <span class="keyword">implements</span> <span class="title">PageReader</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> BytesInputDecompressor decompressor;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> valueCount;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;DataPage&gt; compressedPages;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> DictionaryPage compressedDictionaryPage;</span><br><span class="line">    <span class="comment">// null means no page synchronization is required; firstRowIndex will not be returned by the pages</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> OffsetIndex offsetIndex;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> <span class="keyword">long</span> rowCount;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> pageIndex = <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    ColumnChunkPageReader(BytesInputDecompressor decompressor, List&lt;DataPage&gt; compressedPages,</span><br><span class="line">        DictionaryPage compressedDictionaryPage, OffsetIndex offsetIndex, <span class="keyword">long</span> rowCount) &#123;</span><br><span class="line">      <span class="keyword">this</span>.decompressor = decompressor;</span><br><span class="line">      <span class="keyword">this</span>.compressedPages = <span class="keyword">new</span> LinkedList&lt;DataPage&gt;(compressedPages);</span><br><span class="line">      <span class="keyword">this</span>.compressedDictionaryPage = compressedDictionaryPage;</span><br><span class="line">      <span class="keyword">long</span> count = <span class="number">0</span>;</span><br><span class="line">      <span class="keyword">for</span> (DataPage p : compressedPages) &#123;</span><br><span class="line">        count += p.getValueCount();</span><br><span class="line">      &#125;</span><br><span class="line">      <span class="keyword">this</span>.valueCount = count;</span><br><span class="line">      <span class="keyword">this</span>.offsetIndex = offsetIndex;</span><br><span class="line">      <span class="keyword">this</span>.rowCount = rowCount;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/BigData/" rel="tag"># BigData</a>
+              <a href="/tags/Parquet/" rel="tag"># Parquet</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/10/24/Spark-executor-log/" rel="prev" title="寻找 Spark executor 日志">
+                  <i class="fa fa-chevron-left"></i> 寻找 Spark executor 日志
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/11/01/Spark-Read-Deep-Dive/" rel="next" title="Spark Paruqet Read Deep Dive">
+                  Spark Paruqet Read Deep Dive <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+<script src="/js/comments.js"></script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>

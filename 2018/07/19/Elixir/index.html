@@ -1,4 +1,217 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;0-写在前面&quot;&gt;&lt;a href=&quot;#0-写在前面&quot; class=&quot;headerlink&quot; title=&quot;0. 写在前面&quot;&gt;&lt;/a&gt;0. 写在前面&lt;/h1&gt;&lt;h2 id=&quot;编程时应该关注数据装换&quot;&gt;&lt;a href=&quot;#编程时应该关注数据装换&quot; class=&quot;headerlink&quot; title=&quot;编程时应该关注数据装换&quot;&gt;&lt;/a&gt;编程时应该关注数据装换&lt;/h2&gt;&lt;p&gt;用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据."><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Elixir 基础部分 | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/Elixir/" rel="tag">Elixir</a></div><div class="post-time">2018-07-19</div></div></div><div class="container post-header"><h1>Elixir 基础部分</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#0-%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="toc-number">1.</span> <span class="toc-text">0. 写在前面</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%BC%96%E7%A8%8B%E6%97%B6%E5%BA%94%E8%AF%A5%E5%85%B3%E6%B3%A8%E6%95%B0%E6%8D%AE%E8%A3%85%E6%8D%A2"><span class="toc-number">1.1.</span> <span class="toc-text">编程时应该关注数据装换</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%80%9F%E5%8A%A9%E7%AE%A1%E9%81%93%E6%9D%A5%E7%BB%84%E5%90%88%E8%BD%AC%E6%8D%A2"><span class="toc-number">1.2.</span> <span class="toc-text">借助管道来组合转换</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E6%98%AF%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E5%99%A8"><span class="toc-number">1.3.</span> <span class="toc-text">函数是数据转换器</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%8D%A2%E4%B8%80%E7%A7%8D%E6%96%B9%E5%BC%8F%E6%80%9D%E8%80%83"><span class="toc-number">1.4.</span> <span class="toc-text">换一种方式思考</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#1-%E5%B8%B8%E8%A7%84%E7%BC%96%E7%A8%8B"><span class="toc-number">2.</span> <span class="toc-text">1. 常规编程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D"><span class="toc-number">2.1.</span> <span class="toc-text">模式匹配</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%94%A8-%E4%B8%8B%E5%88%92%E7%BA%BF-%E5%BF%BD%E7%95%A5%E5%8C%B9%E9%85%8D%E5%80%BC"><span class="toc-number">2.1.1.</span> <span class="toc-text">用_(下划线)忽略匹配值</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%8E%E5%8F%A6%E4%B8%80%E4%B8%AA%E8%A7%92%E5%BA%A6%E7%9C%8B%E7%AD%89%E5%8F%B7"><span class="toc-number">2.2.</span> <span class="toc-text">从另一个角度看等号</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%80%A7"><span class="toc-number">2.3.</span> <span class="toc-text">不可变性</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%95%B0%E6%8D%AE%E6%89%8D%E6%98%AF%E5%B7%B2%E7%9F%A5%E7%9A%84"><span class="toc-number">2.4.</span> <span class="toc-text">不可变数据才是已知的</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%80%A7%E5%AF%B9%E6%80%A7%E8%83%BD%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="toc-number">2.5.</span> <span class="toc-text">不可变性对性能的影响</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%A4%8D%E5%88%B6%E6%95%B0%E6%8D%AE"><span class="toc-number">2.5.1.</span> <span class="toc-text">复制数据</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="toc-number">2.5.2.</span> <span class="toc-text">垃圾回收</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#elixir%E5%9F%BA%E7%A1%80"><span class="toc-number">2.6.</span> <span class="toc-text">elixir基础</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B"><span class="toc-number">2.6.1.</span> <span class="toc-text">基本类型</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0"><span class="toc-number">2.7.</span> <span class="toc-text">匿名函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%B8%80%E4%B8%AA%E5%87%BD%E6%95%B0-%E5%A4%9A%E4%B8%AA%E5%87%BD%E6%95%B0%E4%BD%93"><span class="toc-number">2.7.1.</span> <span class="toc-text">一个函数,多个函数体</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%94%E5%9B%9E%E5%87%BD%E6%95%B0%E7%9A%84%E5%87%BD%E6%95%B0"><span class="toc-number">2.7.2.</span> <span class="toc-text">返回函数的函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%AE%B0%E4%BD%8F%E5%8E%9F%E5%A7%8B%E7%8E%AF%E5%A2%83%E7%9A%84%E5%87%BD%E6%95%B0-%E9%97%AD%E5%8C%85"><span class="toc-number">2.7.3.</span> <span class="toc-text">记住原始环境的函数(闭包)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%8F%82%E6%95%B0%E5%8C%96%E5%87%BD%E6%95%B0"><span class="toc-number">2.7.4.</span> <span class="toc-text">参数化函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B0%86%E5%87%BD%E6%95%B0%E4%BD%9C%E4%B8%BA%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92"><span class="toc-number">2.7.5.</span> <span class="toc-text">将函数作为参数传递</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#amp-%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="toc-number">2.7.6.</span> <span class="toc-text">&amp;运算符</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%A8%A1%E5%9D%97%E4%B8%8E%E5%87%BD%E6%95%B0"><span class="toc-number">2.8.</span> <span class="toc-text">模块与函数</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E4%BD%93%E6%98%AF%E4%BB%A3%E7%A0%81%E5%9D%97"><span class="toc-number">2.8.1.</span> <span class="toc-text">函数体是代码块</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E4%B8%8E%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D"><span class="toc-number">2.8.2.</span> <span class="toc-text">函数调用与模式匹配</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%93%A8%E5%85%B5%E5%AD%90%E5%8F%A5"><span class="toc-number">2.8.3.</span> <span class="toc-text">哨兵子句</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0"><span class="toc-number">2.8.4.</span> <span class="toc-text">默认参数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%A7%81%E6%9C%89%E5%87%BD%E6%95%B0"><span class="toc-number">2.8.5.</span> <span class="toc-text">私有函数</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#gt-%E7%AE%A1%E9%81%93%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="toc-number">2.8.6.</span> <span class="toc-text">|&gt; 管道运算符</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BD%BF%E7%94%A8%E5%A4%B4%E9%83%A8%E5%92%8C%E5%B0%BE%E9%83%A8%E6%9E%84%E9%80%A0%E5%88%97%E8%A1%A8"><span class="toc-number">2.8.7.</span> <span class="toc-text">使用头部和尾部构造列表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%9B%E5%BB%BA%E6%98%A0%E5%B0%84%E5%87%BD%E6%95%B0-Map"><span class="toc-number">2.8.8.</span> <span class="toc-text">创建映射函数(Map)</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8%E9%80%92%E5%BD%92%E8%BF%87%E7%A8%8B%E4%B8%AD%E8%B7%9F%E8%B8%AA%E5%80%BC"><span class="toc-number">2.8.9.</span> <span class="toc-text">在递归过程中跟踪值</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Reduce%E6%A8%A1%E5%BC%8F"><span class="toc-number">2.8.10.</span> <span class="toc-text">Reduce模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%9B%B4%E5%A4%8D%E6%9D%82%E7%9A%84%E5%88%97%E8%A1%A8%E6%A8%A1%E5%BC%8F"><span class="toc-number">2.8.11.</span> <span class="toc-text">更复杂的列表模式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%88%97%E8%A1%A8%E4%B8%AD%E7%9A%84%E5%88%97%E8%A1%A8"><span class="toc-number">2.8.12.</span> <span class="toc-text">列表中的列表</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%8D%E6%9D%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-Maps-Keyword-Lists-Sets-and-Structs"><span class="toc-number">2.9.</span> <span class="toc-text">复杂数据结构(Maps, Keyword Lists, Sets, and Structs)</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D%E5%92%8C%E6%9B%B4%E6%96%B0%E6%95%A3%E5%88%97%E8%A1%A8"><span class="toc-number">2.9.1.</span> <span class="toc-text">模式匹配和更新散列表</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%95%AA%E5%A4%96-%E7%B1%BB%E5%9E%8B%E6%98%AF%E4%BB%80%E4%B9%88"><span class="toc-number">2.9.2.</span> <span class="toc-text">番外:类型是什么</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%84%E7%90%86%E9%9B%86%E5%90%88-Enum%E4%B8%8EStream"><span class="toc-number">2.10.</span> <span class="toc-text">处理集合-Enum与Stream</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Actor%E7%BB%BC%E8%BF%B0"><span class="toc-number">3.</span> <span class="toc-text">Actor综述</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%98%9F%E5%88%97%E5%BC%8F%E4%BF%A1%E7%AE%B1"><span class="toc-number">4.</span> <span class="toc-text">队列式信箱</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B"><span class="toc-number">5.</span> <span class="toc-text">管理进程</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%B3%BB%E7%BB%9F%E8%BF%9B%E7%A8%8B"><span class="toc-number">5.1.</span> <span class="toc-text">系统进程</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E5%86%85%E6%A0%B8%E6%A8%A1%E5%BC%8F-error-kernel"><span class="toc-number">6.</span> <span class="toc-text">错误处理内核模式(error-kernel)</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%BB%BB%E5%85%B6%E5%B4%A9%E6%BA%83"><span class="toc-number">6.1.</span> <span class="toc-text">任其崩溃</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%B0%8F%E6%80%BB%E7%BB%93"><span class="toc-number">6.2.</span> <span class="toc-text">小总结</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#OTP"><span class="toc-number">7.</span> <span class="toc-text">OTP</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E9%87%8D%E5%90%AF%E7%AD%96%E7%95%A5"><span class="toc-number">7.1.</span> <span class="toc-text">重启策略</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%A4%8D%E4%B9%A0"><span class="toc-number">7.2.</span> <span class="toc-text">复习</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%BF%90%E7%94%A8%E5%A4%9A%E7%BA%BF%E7%A8%8B"><span class="toc-number">8.</span> <span class="toc-text">运用多线程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%9C%A8%E8%BF%9B%E7%A8%8B%E9%97%B4%E5%8F%91%E9%80%81%E6%B6%88%E6%81%AF"><span class="toc-number">8.0.1.</span> <span class="toc-text">在进程间发送消息</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%BE%AA%E7%8E%AF%E9%80%92%E5%BD%92%E5%92%8C%E6%A0%88"><span class="toc-number">8.0.2.</span> <span class="toc-text">循环递归和栈</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E5%BC%80%E9%94%80"><span class="toc-number">8.0.3.</span> <span class="toc-text">进程开销</span></a></li></ol></li></ol></li></ol></details></div><div class="container post-content"><h1 id="0-写在前面"><a href="#0-写在前面" class="headerlink" title="0. 写在前面"></a>0. 写在前面</h1><h2 id="编程时应该关注数据装换"><a href="#编程时应该关注数据装换" class="headerlink" title="编程时应该关注数据装换"></a>编程时应该关注数据装换</h2><p>用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据.</p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+
+
+  <link rel="apple-touch-icon" sizes="180x180" href="/images/apple-touch-icon-next.png">
+  <link rel="icon" type="image/png" sizes="32x32" href="/images/favicon-32x32-next.png">
+  <link rel="icon" type="image/png" sizes="16x16" href="/images/favicon-16x16-next.png">
+  <link rel="mask-icon" href="/images/logo.svg" color="#222">
+
+<link rel="stylesheet" href="/css/main.css">
+
+
+
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@5.15.3/css/all.min.css" integrity="sha256-2H3fkXt6FEmrReK448mDVGKb3WW2ZZw35gI7vqHOE4Y=" crossorigin="anonymous">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/animate.css@3.1.1/animate.min.css" integrity="sha256-PR7ttpcvz8qrF57fur/yAx1qXMFJeJFiA6pSzWi0OIE=" crossorigin="anonymous">
+
+<script class="next-config" data-name="main" type="application/json">{&quot;hostname&quot;:&quot;aaaaaaron.github.io&quot;,&quot;root&quot;:&quot;&#x2F;&quot;,&quot;images&quot;:&quot;&#x2F;images&quot;,&quot;scheme&quot;:&quot;Gemini&quot;,&quot;version&quot;:&quot;8.4.0&quot;,&quot;exturl&quot;:false,&quot;sidebar&quot;:{&quot;position&quot;:&quot;left&quot;,&quot;display&quot;:&quot;post&quot;,&quot;padding&quot;:18,&quot;offset&quot;:12},&quot;copycode&quot;:false,&quot;bookmark&quot;:{&quot;enable&quot;:false,&quot;color&quot;:&quot;#222&quot;,&quot;save&quot;:&quot;auto&quot;},&quot;fancybox&quot;:false,&quot;mediumzoom&quot;:false,&quot;lazyload&quot;:false,&quot;pangu&quot;:false,&quot;comments&quot;:{&quot;style&quot;:&quot;tabs&quot;,&quot;active&quot;:null,&quot;storage&quot;:true,&quot;lazyload&quot;:false,&quot;nav&quot;:null},&quot;motion&quot;:{&quot;enable&quot;:true,&quot;async&quot;:false,&quot;transition&quot;:{&quot;post_block&quot;:&quot;fadeIn&quot;,&quot;post_header&quot;:&quot;fadeInDown&quot;,&quot;post_body&quot;:&quot;fadeInDown&quot;,&quot;coll_header&quot;:&quot;fadeInLeft&quot;,&quot;sidebar&quot;:&quot;fadeInUp&quot;}},&quot;prism&quot;:false,&quot;i18n&quot;:{&quot;placeholder&quot;:&quot;Searching...&quot;,&quot;empty&quot;:&quot;We didn&#39;t find any results for the search: ${query}&quot;,&quot;hits_time&quot;:&quot;${hits} results found in ${time} ms&quot;,&quot;hits&quot;:&quot;${hits} results found&quot;}}</script>
+<meta name="description" content="0. 写在前面编程时应该关注数据装换用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据. 面向对象的一个缺点是 你想传入一个功能块(方法,函数),但是一定是要包在一个类里">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Elixir 基础部分">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/07/19/Elixir/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="0. 写在前面编程时应该关注数据装换用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据. 面向对象的一个缺点是 你想传入一个功能块(方法,函数),但是一定是要包在一个类里">
+<meta property="og:locale">
+<meta property="article:published_time" content="2018-07-19T12:44:00.000Z">
+<meta property="article:modified_time" content="2018-10-24T14:49:18.000Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="Elixir">
+<meta name="twitter:card" content="summary">
+
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/07/19/Elixir/">
+
+
+
+<script class="next-config" data-name="page" type="application/json">{&quot;sidebar&quot;:&quot;&quot;,&quot;isHome&quot;:false,&quot;isPost&quot;:true,&quot;lang&quot;:&quot;zh-Hans&quot;,&quot;comments&quot;:true,&quot;permalink&quot;:&quot;https:&#x2F;&#x2F;aaaaaaron.github.io&#x2F;2018&#x2F;07&#x2F;19&#x2F;Elixir&#x2F;&quot;,&quot;path&quot;:&quot;2018&#x2F;07&#x2F;19&#x2F;Elixir&#x2F;&quot;,&quot;title&quot;:&quot;Elixir 基础部分&quot;}</script>
+
+<script class="next-config" data-name="calendar" type="application/json">&quot;&quot;</script>
+<title>Elixir 基础部分 | Jiatao Tao's blog</title><script src="/js/config.js"></script>
+  
+
+
+
+
+  <noscript>
+    <link rel="stylesheet" href="/css/noscript.css">
+  </noscript>
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" class="use-motion">
+  <div class="headband"></div>
+
+  <main class="main">
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar" role="button">
+    </div>
+  </div>
+
+  <div class="site-meta">
+
+    <a href="/" class="brand" rel="start">
+      <i class="logo-line"></i>
+      <h1 class="site-title">Jiatao Tao's blog</h1>
+      <i class="logo-line"></i>
+    </a>
+      <p class="site-subtitle" itemprop="description">λ</p>
+  </div>
+
+  <div class="site-nav-right">
+    <div class="toggle popup-trigger">
+    </div>
+  </div>
+</div>
+
+
+
+
+
+
+
+</div>
+        
+  
+  <div class="toggle sidebar-toggle" role="button">
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+    <span class="toggle-line"></span>
+  </div>
+
+  <aside class="sidebar">
+
+    <div class="sidebar-inner sidebar-nav-active sidebar-toc-active">
+      <ul class="sidebar-nav">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <div class="sidebar-panel-container">
+        <!--noindex-->
+        <div class="post-toc-wrap sidebar-panel">
+            <div class="post-toc animated"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-%E5%86%99%E5%9C%A8%E5%89%8D%E9%9D%A2"><span class="nav-number">1.</span> <span class="nav-text">0. 写在前面</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%BC%96%E7%A8%8B%E6%97%B6%E5%BA%94%E8%AF%A5%E5%85%B3%E6%B3%A8%E6%95%B0%E6%8D%AE%E8%A3%85%E6%8D%A2"><span class="nav-number">1.1.</span> <span class="nav-text">编程时应该关注数据装换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%80%9F%E5%8A%A9%E7%AE%A1%E9%81%93%E6%9D%A5%E7%BB%84%E5%90%88%E8%BD%AC%E6%8D%A2"><span class="nav-number">1.2.</span> <span class="nav-text">借助管道来组合转换</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E6%98%AF%E6%95%B0%E6%8D%AE%E8%BD%AC%E6%8D%A2%E5%99%A8"><span class="nav-number">1.3.</span> <span class="nav-text">函数是数据转换器</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%8D%A2%E4%B8%80%E7%A7%8D%E6%96%B9%E5%BC%8F%E6%80%9D%E8%80%83"><span class="nav-number">1.4.</span> <span class="nav-text">换一种方式思考</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-%E5%B8%B8%E8%A7%84%E7%BC%96%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">1. 常规编程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D"><span class="nav-number">2.1.</span> <span class="nav-text">模式匹配</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%94%A8-%E4%B8%8B%E5%88%92%E7%BA%BF-%E5%BF%BD%E7%95%A5%E5%8C%B9%E9%85%8D%E5%80%BC"><span class="nav-number">2.1.1.</span> <span class="nav-text">用_(下划线)忽略匹配值</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8E%E5%8F%A6%E4%B8%80%E4%B8%AA%E8%A7%92%E5%BA%A6%E7%9C%8B%E7%AD%89%E5%8F%B7"><span class="nav-number">2.2.</span> <span class="nav-text">从另一个角度看等号</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%80%A7"><span class="nav-number">2.3.</span> <span class="nav-text">不可变性</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%95%B0%E6%8D%AE%E6%89%8D%E6%98%AF%E5%B7%B2%E7%9F%A5%E7%9A%84"><span class="nav-number">2.4.</span> <span class="nav-text">不可变数据才是已知的</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8D%E5%8F%AF%E5%8F%98%E6%80%A7%E5%AF%B9%E6%80%A7%E8%83%BD%E7%9A%84%E5%BD%B1%E5%93%8D"><span class="nav-number">2.5.</span> <span class="nav-text">不可变性对性能的影响</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%A4%8D%E5%88%B6%E6%95%B0%E6%8D%AE"><span class="nav-number">2.5.1.</span> <span class="nav-text">复制数据</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9E%83%E5%9C%BE%E5%9B%9E%E6%94%B6"><span class="nav-number">2.5.2.</span> <span class="nav-text">垃圾回收</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#elixir%E5%9F%BA%E7%A1%80"><span class="nav-number">2.6.</span> <span class="nav-text">elixir基础</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E7%B1%BB%E5%9E%8B"><span class="nav-number">2.6.1.</span> <span class="nav-text">基本类型</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8C%BF%E5%90%8D%E5%87%BD%E6%95%B0"><span class="nav-number">2.7.</span> <span class="nav-text">匿名函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%B8%80%E4%B8%AA%E5%87%BD%E6%95%B0-%E5%A4%9A%E4%B8%AA%E5%87%BD%E6%95%B0%E4%BD%93"><span class="nav-number">2.7.1.</span> <span class="nav-text">一个函数,多个函数体</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%94%E5%9B%9E%E5%87%BD%E6%95%B0%E7%9A%84%E5%87%BD%E6%95%B0"><span class="nav-number">2.7.2.</span> <span class="nav-text">返回函数的函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%B0%E4%BD%8F%E5%8E%9F%E5%A7%8B%E7%8E%AF%E5%A2%83%E7%9A%84%E5%87%BD%E6%95%B0-%E9%97%AD%E5%8C%85"><span class="nav-number">2.7.3.</span> <span class="nav-text">记住原始环境的函数(闭包)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%8F%82%E6%95%B0%E5%8C%96%E5%87%BD%E6%95%B0"><span class="nav-number">2.7.4.</span> <span class="nav-text">参数化函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B0%86%E5%87%BD%E6%95%B0%E4%BD%9C%E4%B8%BA%E5%8F%82%E6%95%B0%E4%BC%A0%E9%80%92"><span class="nav-number">2.7.5.</span> <span class="nav-text">将函数作为参数传递</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#amp-%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="nav-number">2.7.6.</span> <span class="nav-text">&amp;运算符</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A8%A1%E5%9D%97%E4%B8%8E%E5%87%BD%E6%95%B0"><span class="nav-number">2.8.</span> <span class="nav-text">模块与函数</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E4%BD%93%E6%98%AF%E4%BB%A3%E7%A0%81%E5%9D%97"><span class="nav-number">2.8.1.</span> <span class="nav-text">函数体是代码块</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%87%BD%E6%95%B0%E8%B0%83%E7%94%A8%E4%B8%8E%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D"><span class="nav-number">2.8.2.</span> <span class="nav-text">函数调用与模式匹配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%93%A8%E5%85%B5%E5%AD%90%E5%8F%A5"><span class="nav-number">2.8.3.</span> <span class="nav-text">哨兵子句</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%BB%98%E8%AE%A4%E5%8F%82%E6%95%B0"><span class="nav-number">2.8.4.</span> <span class="nav-text">默认参数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%A7%81%E6%9C%89%E5%87%BD%E6%95%B0"><span class="nav-number">2.8.5.</span> <span class="nav-text">私有函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#gt-%E7%AE%A1%E9%81%93%E8%BF%90%E7%AE%97%E7%AC%A6"><span class="nav-number">2.8.6.</span> <span class="nav-text">|&gt; 管道运算符</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BD%BF%E7%94%A8%E5%A4%B4%E9%83%A8%E5%92%8C%E5%B0%BE%E9%83%A8%E6%9E%84%E9%80%A0%E5%88%97%E8%A1%A8"><span class="nav-number">2.8.7.</span> <span class="nav-text">使用头部和尾部构造列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%9B%E5%BB%BA%E6%98%A0%E5%B0%84%E5%87%BD%E6%95%B0-Map"><span class="nav-number">2.8.8.</span> <span class="nav-text">创建映射函数(Map)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E9%80%92%E5%BD%92%E8%BF%87%E7%A8%8B%E4%B8%AD%E8%B7%9F%E8%B8%AA%E5%80%BC"><span class="nav-number">2.8.9.</span> <span class="nav-text">在递归过程中跟踪值</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Reduce%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.8.10.</span> <span class="nav-text">Reduce模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9B%B4%E5%A4%8D%E6%9D%82%E7%9A%84%E5%88%97%E8%A1%A8%E6%A8%A1%E5%BC%8F"><span class="nav-number">2.8.11.</span> <span class="nav-text">更复杂的列表模式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%97%E8%A1%A8%E4%B8%AD%E7%9A%84%E5%88%97%E8%A1%A8"><span class="nav-number">2.8.12.</span> <span class="nav-text">列表中的列表</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%8D%E6%9D%82%E6%95%B0%E6%8D%AE%E7%BB%93%E6%9E%84-Maps-Keyword-Lists-Sets-and-Structs"><span class="nav-number">2.9.</span> <span class="nav-text">复杂数据结构(Maps, Keyword Lists, Sets, and Structs)</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%A8%A1%E5%BC%8F%E5%8C%B9%E9%85%8D%E5%92%8C%E6%9B%B4%E6%96%B0%E6%95%A3%E5%88%97%E8%A1%A8"><span class="nav-number">2.9.1.</span> <span class="nav-text">模式匹配和更新散列表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%95%AA%E5%A4%96-%E7%B1%BB%E5%9E%8B%E6%98%AF%E4%BB%80%E4%B9%88"><span class="nav-number">2.9.2.</span> <span class="nav-text">番外:类型是什么</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%84%E7%90%86%E9%9B%86%E5%90%88-Enum%E4%B8%8EStream"><span class="nav-number">2.10.</span> <span class="nav-text">处理集合-Enum与Stream</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Actor%E7%BB%BC%E8%BF%B0"><span class="nav-number">3.</span> <span class="nav-text">Actor综述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%98%9F%E5%88%97%E5%BC%8F%E4%BF%A1%E7%AE%B1"><span class="nav-number">4.</span> <span class="nav-text">队列式信箱</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%AE%A1%E7%90%86%E8%BF%9B%E7%A8%8B"><span class="nav-number">5.</span> <span class="nav-text">管理进程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%B3%BB%E7%BB%9F%E8%BF%9B%E7%A8%8B"><span class="nav-number">5.1.</span> <span class="nav-text">系统进程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%94%99%E8%AF%AF%E5%A4%84%E7%90%86%E5%86%85%E6%A0%B8%E6%A8%A1%E5%BC%8F-error-kernel"><span class="nav-number">6.</span> <span class="nav-text">错误处理内核模式(error-kernel)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%BB%E5%85%B6%E5%B4%A9%E6%BA%83"><span class="nav-number">6.1.</span> <span class="nav-text">任其崩溃</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%B0%8F%E6%80%BB%E7%BB%93"><span class="nav-number">6.2.</span> <span class="nav-text">小总结</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#OTP"><span class="nav-number">7.</span> <span class="nav-text">OTP</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%87%8D%E5%90%AF%E7%AD%96%E7%95%A5"><span class="nav-number">7.1.</span> <span class="nav-text">重启策略</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%A4%8D%E4%B9%A0"><span class="nav-number">7.2.</span> <span class="nav-text">复习</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%BF%90%E7%94%A8%E5%A4%9A%E7%BA%BF%E7%A8%8B"><span class="nav-number">8.</span> <span class="nav-text">运用多线程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%9C%A8%E8%BF%9B%E7%A8%8B%E9%97%B4%E5%8F%91%E9%80%81%E6%B6%88%E6%81%AF"><span class="nav-number">8.0.1.</span> <span class="nav-text">在进程间发送消息</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%BE%AA%E7%8E%AF%E9%80%92%E5%BD%92%E5%92%8C%E6%A0%88"><span class="nav-number">8.0.2.</span> <span class="nav-text">循环递归和栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E5%BC%80%E9%94%80"><span class="nav-number">8.0.3.</span> <span class="nav-text">进程开销</span></a></li></ol></li></ol></li></ol></div>
+        </div>
+        <!--/noindex-->
+
+        <div class="site-overview-wrap sidebar-panel">
+          <div class="site-author site-overview-item animated" itemprop="author" itemscope itemtype="http://schema.org/Person">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap site-overview-item animated">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">18</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+
+
+
+        </div>
+      </div>
+    </div>
+  </aside>
+  <div class="sidebar-dimmer"></div>
+
+
+    </header>
+
+    
+  <div class="back-to-top" role="button" aria-label="Back to top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+<noscript>
+  <div class="noscript-warning">Theme NexT works best with JavaScript enabled</div>
+</noscript>
+
+
+    <div class="main-inner post posts-expand">
+
+
+  
+
+
+<div class="post-block">
+  
+  
+
+  <article itemscope itemtype="http://schema.org/Article" class="post-content" lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/07/19/Elixir/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/avatar.gif">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">
+          Elixir 基础部分
+        </h1>
+
+        <div class="post-meta-container">
+          <div class="post-meta">
+    <span class="post-meta-item">
+      <span class="post-meta-item-icon">
+        <i class="far fa-calendar"></i>
+      </span>
+      <span class="post-meta-item-text">Posted on</span>
+
+      <time title="Created: 2018-07-19 20:44:00" itemprop="dateCreated datePublished" datetime="2018-07-19T20:44:00+08:00">2018-07-19</time>
+    </span>
+      <span class="post-meta-item">
+        <span class="post-meta-item-icon">
+          <i class="far fa-calendar-check"></i>
+        </span>
+        <span class="post-meta-item-text">Edited on</span>
+        <time title="Modified: 2018-10-24 22:49:18" itemprop="dateModified" datetime="2018-10-24T22:49:18+08:00">2018-10-24</time>
+      </span>
+
+  
+</div>
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+        <h1 id="0-写在前面"><a href="#0-写在前面" class="headerlink" title="0. 写在前面"></a>0. 写在前面</h1><h2 id="编程时应该关注数据装换"><a href="#编程时应该关注数据装换" class="headerlink" title="编程时应该关注数据装换"></a>编程时应该关注数据装换</h2><p>用类和对象思考问题:类定义了行为,实例保存着状态.开发者构造类层次结构,为问题建模.OOP的时候,我们考虑的是状态,调用对象的方法和向某个对象传递其他对象.在这些调用中,对象更新自己或者其他对象的状态.类规范了每一个实例可以干什么,它是统治者,控制着实例的数据状态,目标是隐藏数据.</p>
 <p>面向对象的一个缺点是 你想传入一个功能块(方法,函数),但是一定是要包在一个类里面,虽然有匿名函数,但是写法还是很丑,把函数当做一等公民(基本数据类型),直接传入函数的方式是最佳的.</p>
 <p>真实世界里,并没有多少真正的层次结构,我们想要把事情搞定,而不是<strong>维护状态</strong>.我不要隐藏数据,我要转换数据.</p>
 <h2 id="借助管道来组合转换"><a href="#借助管道来组合转换" class="headerlink" title="借助管道来组合转换"></a>借助管道来组合转换</h2><p>UNIX的设计理念是将每个工具设计的小巧,功能单一,易于组合.每个工具都是获取输入,转换输入内容,并以下一个工具能使用的格式输出.这使得UNIX工具能一设计者预想不到的方式组合,而且这种模式还是高可靠的,每种工具之做好一件事,使之更容易测试.而且命令管道可以并行工作.</p>
@@ -268,7 +481,78 @@
 <h3 id="循环递归和栈"><a href="#循环递归和栈" class="headerlink" title="循环递归和栈"></a>循环递归和栈</h3><p><strong>尾递归优化:</strong> 函数的最后一件事是调用自己,就没有必要调用,只需要简单的跳到函数开始的地方,如果函数调用有参数,就把原始参数替换掉.,但是递归调用必须是最后一个执行的,下面的方式就不行.因为他还要将之后的结果*n.注释下面的是可以进行尾递归优化的(把乘法移到了递归里面),要增加一个累加器.</p>
 <figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">def factorial(0), do: 1</span><br><span class="line">def factorial(n), do: n * factorial(n-1)</span><br><span class="line">#############################</span><br><span class="line">def factorial(n), do: _fact(n, 1)</span><br><span class="line">defp _fact(0, acc), do: acc</span><br><span class="line">defp _fact(n, acc), do: _fact(n-1, acc*n)</span><br></pre></td></tr></table></figure>
 
-<h3 id="进程开销"><a href="#进程开销" class="headerlink" title="进程开销"></a>进程开销</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">defmodule Chain do</span><br><span class="line">  def counter( next_pid ) do</span><br><span class="line">    receive do</span><br><span class="line">     n -&gt;</span><br><span class="line">       send next_pid, n+1</span><br><span class="line">     end</span><br><span class="line">  end</span><br><span class="line"></span><br><span class="line">  def create_processes( n ) do</span><br><span class="line">    last = Enum.reduce 1..n, self,</span><br><span class="line">                  fn ( _, send_to ) -&gt;</span><br><span class="line">                    spawn(Chain, :counter, [ send_to ])</span><br><span class="line">                  end</span><br><span class="line"></span><br><span class="line">    send last, 0</span><br><span class="line"></span><br><span class="line">    recevie do</span><br><span class="line">      final_answer when is_integer( final_answer ) -&gt;</span><br><span class="line">        &quot;Result is #&#123; inspect( final_answer ) &#125;&quot;</span><br><span class="line">    end</span><br><span class="line">  end</span><br><span class="line"></span><br><span class="line">  def run( n ) do</span><br><span class="line">    IO.puts inspect :timer.tc(Chain, :create_processes, [n])</span><br><span class="line">  end</span><br><span class="line">end</span><br></pre></td></tr></table></figure></div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+<h3 id="进程开销"><a href="#进程开销" class="headerlink" title="进程开销"></a>进程开销</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line">defmodule Chain do</span><br><span class="line">  def counter( next_pid ) do</span><br><span class="line">    receive do</span><br><span class="line">     n -&gt;</span><br><span class="line">       send next_pid, n+1</span><br><span class="line">     end</span><br><span class="line">  end</span><br><span class="line"></span><br><span class="line">  def create_processes( n ) do</span><br><span class="line">    last = Enum.reduce 1..n, self,</span><br><span class="line">                  fn ( _, send_to ) -&gt;</span><br><span class="line">                    spawn(Chain, :counter, [ send_to ])</span><br><span class="line">                  end</span><br><span class="line"></span><br><span class="line">    send last, 0</span><br><span class="line"></span><br><span class="line">    recevie do</span><br><span class="line">      final_answer when is_integer( final_answer ) -&gt;</span><br><span class="line">        &quot;Result is #&#123; inspect( final_answer ) &#125;&quot;</span><br><span class="line">    end</span><br><span class="line">  end</span><br><span class="line"></span><br><span class="line">  def run( n ) do</span><br><span class="line">    IO.puts inspect :timer.tc(Chain, :create_processes, [n])</span><br><span class="line">  end</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+    <footer class="post-footer">
+          <div class="post-tags">
+              <a href="/tags/Elixir/" rel="tag"># Elixir</a>
+          </div>
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-item">
+                <a href="/2018/07/19/Spark-Catalyst-Deep-Dive/" rel="prev" title="Spark Catalyst Deep Dive">
+                  <i class="fa fa-chevron-left"></i> Spark Catalyst Deep Dive
+                </a>
+            </div>
+            <div class="post-nav-item">
+                <a href="/2018/08/22/Parquet-encoding-definitions-official/" rel="next" title="Parquet encoding definitions(official)">
+                  Parquet encoding definitions(official) <i class="fa fa-chevron-right"></i>
+                </a>
+            </div>
+          </div>
+    </footer>
+  </article>
+</div>
+
+
+
+
+
+<script src="/js/comments.js"></script>
+</div>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+
+
+<div class="copyright">
+  &copy; 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" rel="noopener" target="_blank">Hexo</a> & <a href="https://theme-next.js.org/" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+    </div>
+  </footer>
+
+  
+  <script src="https://cdn.jsdelivr.net/npm/animejs@3.2.1/lib/anime.min.js" integrity="sha256-XL2inqUJaslATFnHdJOi9GfQ60on8Wx1C2H8DYiN1xY=" crossorigin="anonymous"></script>
+<script src="/js/utils.js"></script><script src="/js/motion.js"></script><script src="/js/next-boot.js"></script>
+
+  
+
+
+
+
+
+
+  
+
+
+
+
+
+</body>
+</html>
