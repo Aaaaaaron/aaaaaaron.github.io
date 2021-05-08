@@ -1,10 +1,9 @@
-{% extends "_layout.swig" %}
-{% import '_macro/post.swig' as post_template %}
-
-{% block title %} {{ page.title }} - {{ config.title }} {% endblock %}
-
-{% block content %}
-    <div id="primary">
-        {{ post_template.render(page) }}
-    </div>
-{% endblock %}
+<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="&lt;img src=&quot;/2019/10/13/Spark-%E8%B0%83%E5%BA%A6%E7%B3%BB%E7%BB%9F/20191013145050.png&quot;&gt;"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Spark 调度系统 | Jiatao Tao's blog</title><meta name="robots" content="noindex"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/BigData/" rel="tag">BigData</a><a class="post-tag-none-link" href="/tags/Spark/" rel="tag">Spark</a></div><div class="post-time">2019-10-13</div></div></div><div class="container post-header"><h1>Spark 调度系统</h1></div><div class="container post-content"><p><img src="/2019/10/13/Spark-%E8%B0%83%E5%BA%A6%E7%B3%BB%E7%BB%9F/20191013145050.png"></p>
+<p>SparkContext在一开始就会初始化 _schedulerBackend、_taskScheduler、_dagScheduler这三个实例(<code>SparkContext.createTaskScheduler</code>)</p>
+<p>用户提交的Job首先会被转换为一系列RDD，然后才交给DAGScheduler.runJob进行处理. 这些 RDD 会被划分成为多个 stage, stage 之间存在着依赖关系. Job中所有Stage的提交过程包括反向驱动与正向提交。</p>
+<p><img src="/2019/10/13/Spark-%E8%B0%83%E5%BA%A6%E7%B3%BB%E7%BB%9F/20191013155718.png"></p>
+<p>注: 第一幅图片来自于<a target="_blank" rel="noopener" href="https://smartcxr.github.io/2019/05/01/Spark%E4%BD%9C%E4%B8%9A%E6%89%A7%E8%A1%8C%E5%8E%9F%E7%90%86/">博客</a></p>
+<!-- flag of hidden posts --></div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
+  $(".fancybox").fancybox();
+});
+</script></body></html>

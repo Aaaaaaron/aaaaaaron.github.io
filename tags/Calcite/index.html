@@ -1,16 +1,4 @@
-{% extends "_layout.swig" %}
-{% import '_macro/archive.swig' as archive_template %}
-
-{% block title %}
-  {% if page.archive %}
-    {{ __('menu.archives') }} - {{ config.title }}
-  {% elif page.tag %}
-    {{ page.tag }} - {{ config.title }}
-  {% elif page.category %}
-    {{ page.category }} - {{ config.title }}
-  {% endif %}
-{% endblock %}
-
-{% block content %}
-  {{ archive_template.render() }}
-{% endblock %}
+<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Jiatao Tao's blog | λ</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><header class="wrapper header"><div class="container blog-title"><a class="title" id="logo" href="/.">Jiatao Tao's blog</a><span class="subtitle">λ</span><label id="toggle-menu" for="menu" onclick><i class="fa fa-bars"></i></label></div><input id="menu" type="checkbox"><div class="container nav-items"><a class="sidebar-nav-item" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></div></header><article class="wrapper"><div class="post-entry"><div class="post"><div class="post-archive"><h2>2021</h2><ul class="listing"><li><span class="date">2021/04/25</span><a href="/2021/04/25/Calcite-Not-in-opt/" title="Calcite Not in 转 cross join">Calcite Not in 转 cross join</a></li></ul><h2>2020</h2><ul class="listing"><li><span class="date">2020/02/09</span><a href="/2020/02/09/Calcite-Volcano-Planner/" title="Calcite Volcano Planner">Calcite Volcano Planner</a></li><li><span class="date">2020/02/08</span><a href="/2020/02/08/Calcite%20-%20Parser%20%E9%83%A8%E5%88%86/" title="Calcite - Parser 部分">Calcite - Parser 部分</a></li></ul></div></div></div></article><div class="wrapper page-navigator-wrapper"></div><footer class="footer wrapper"><div class="social"><a href="mailto:tao@apache.org" target="_blank"><i class="fa fa-envelope-o"></i></a><a href="https://github.com/github.com/aaaaaaron/" target="_blank"><i class="fa fa-github"></i></a><a href="/atom.xml" target="_blank"><i class="fa fa-rss"></i></a></div><div class="footer-content">© 2021 <a href="/" rel="nofollow">Jiatao Tao's blog</a>. Powered by <a rel="nofollow" target="_blank" href="https://hexo.io">Hexo</a>. Theme <a target="_blank" href="https://github.com/lotabout/hexo-theme-noise">noise</a>.</div></footer><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
+  $(".fancybox").fancybox();
+});
+</script></body></html>

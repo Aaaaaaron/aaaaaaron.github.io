@@ -1,10 +1,101 @@
-{% extends "_layout.swig" %}
-{% import '_macro/post.swig' as post_template %}
+<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="&lt;strong&gt;SQL:&lt;/strong&gt;"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Calcite Not in 转 cross join | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/Calcite/" rel="tag">Calcite</a><a class="post-tag-none-link" href="/tags/OLAP/" rel="tag">OLAP</a><a class="post-tag-none-link" href="/tags/Optimizer/" rel="tag">Optimizer</a></div><div class="post-time">2021-04-25</div></div></div><div class="container post-header"><h1>Calcite Not in 转 cross join</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#cross-join"><span class="toc-number">1.</span> <span class="toc-text">cross join</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#left-join"><span class="toc-number">2.</span> <span class="toc-text">left join</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#filter"><span class="toc-number">3.</span> <span class="toc-text">filter</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%80%9D%E8%80%83"><span class="toc-number">4.</span> <span class="toc-text">思考</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#p-s"><span class="toc-number">5.</span> <span class="toc-text">p.s.</span></a></li></ol></details></div><div class="container post-content"><p><strong>SQL:</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="operator">*</span></span><br><span class="line"><span class="keyword">FROM</span> users</span><br><span class="line"><span class="keyword">WHERE</span> age <span class="keyword">NOT</span> <span class="keyword">IN</span></span><br><span class="line">    ( <span class="keyword">SELECT</span> id</span><br><span class="line">     <span class="keyword">FROM</span> jobs )</span><br></pre></td></tr></table></figure>
 
-{% block title %} {{ page.title }} - {{ config.title }} {% endblock %}
+<p><strong>Plan:</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">EnumerableProject(ID<span class="operator">=</span>[$<span class="number">0</span>], NAME<span class="operator">=</span>[$<span class="number">1</span>], AGE<span class="operator">=</span>[$<span class="number">2</span>])</span><br><span class="line">  EnumerableFilter(<span class="keyword">condition</span><span class="operator">=</span>[<span class="keyword">OR</span>(<span class="operator">=</span>($<span class="number">3</span>, <span class="number">0</span>), <span class="keyword">AND</span>(<span class="keyword">IS</span> <span class="keyword">NULL</span>($<span class="number">5</span>), <span class="operator">&gt;=</span>($<span class="number">4</span>, $<span class="number">3</span>), <span class="keyword">IS</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span>($<span class="number">2</span>)))])</span><br><span class="line">    EnumerableProject(ID<span class="operator">=</span>[$<span class="number">0</span>], NAME<span class="operator">=</span>[$<span class="number">1</span>], AGE<span class="operator">=</span>[$<span class="number">2</span>], c<span class="operator">=</span>[$<span class="number">3</span>], ck<span class="operator">=</span>[$<span class="number">4</span>], i<span class="operator">=</span>[$<span class="number">6</span>])</span><br><span class="line">      EnumerableHashJoin(<span class="keyword">condition</span><span class="operator">=</span>[<span class="operator">=</span>($<span class="number">2</span>, $<span class="number">5</span>)], joinType<span class="operator">=</span>[<span class="keyword">left</span>])</span><br><span class="line">        EnumerableNestedLoopJoin(<span class="keyword">condition</span><span class="operator">=</span>[<span class="literal">true</span>], joinType<span class="operator">=</span>[<span class="keyword">inner</span>])</span><br><span class="line">          EnumerableTableScan(<span class="keyword">table</span><span class="operator">=</span>[users])</span><br><span class="line">          EnumerableHashAggregate(<span class="keyword">group</span><span class="operator">=</span>[&#123;&#125;], c<span class="operator">=</span>[<span class="built_in">COUNT</span>()], ck<span class="operator">=</span>[<span class="built_in">COUNT</span>($<span class="number">0</span>)])</span><br><span class="line">            EnumerableTableScan(<span class="keyword">table</span><span class="operator">=</span>[jobs])</span><br><span class="line">        EnumerableProject(id<span class="operator">=</span>[$<span class="number">0</span>], i<span class="operator">=</span>[<span class="literal">true</span>])</span><br><span class="line">          EnumerableHashAggregate(<span class="keyword">group</span><span class="operator">=</span>[&#123;<span class="number">0</span>&#125;])</span><br><span class="line">            EnumerableTableScan(<span class="keyword">table</span><span class="operator">=</span>[jobs])</span><br></pre></td></tr></table></figure>
 
-{% block content %}
-    <div id="primary">
-        {{ post_template.render(page) }}
-    </div>
-{% endblock %}
+<p><strong>Plan 转回 SQL</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> ID,</span><br><span class="line">       NAME,</span><br><span class="line">       AGE</span><br><span class="line"><span class="keyword">FROM</span></span><br><span class="line">  (<span class="keyword">SELECT</span> users.ID,</span><br><span class="line">          users.NAME,</span><br><span class="line">          users.AGE</span><br><span class="line">          t.c,</span><br><span class="line">          t.ck,</span><br><span class="line">          t1.i</span><br><span class="line">   <span class="keyword">FROM</span> default.users</span><br><span class="line">   <span class="keyword">CROSS</span> <span class="keyword">JOIN</span></span><br><span class="line">     (<span class="keyword">SELECT</span> <span class="built_in">COUNT</span>(<span class="number">1</span>) <span class="keyword">AS</span> c,</span><br><span class="line">             <span class="built_in">COUNT</span>(ID) <span class="keyword">AS</span> ck</span><br><span class="line">      <span class="keyword">FROM</span> default.jobs) <span class="keyword">AS</span> t</span><br><span class="line">   <span class="keyword">LEFT</span> <span class="keyword">JOIN</span></span><br><span class="line">     (<span class="keyword">SELECT</span> ID <span class="keyword">AS</span> id,</span><br><span class="line">             <span class="literal">TRUE</span> <span class="keyword">AS</span> i</span><br><span class="line">      <span class="keyword">FROM</span> default.jobs</span><br><span class="line">      <span class="keyword">GROUP</span> <span class="keyword">BY</span> ID) <span class="keyword">AS</span> t1 <span class="keyword">ON</span> users.AGE <span class="operator">=</span> t1.id) <span class="keyword">AS</span> t2</span><br><span class="line"><span class="keyword">WHERE</span> t2.c <span class="operator">=</span> <span class="number">0</span></span><br><span class="line">  <span class="keyword">OR</span> t2.i <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br><span class="line">  <span class="keyword">AND</span> (t2.ck <span class="operator">&gt;=</span> t2.c</span><br><span class="line">       <span class="keyword">AND</span> t2.AGE <span class="keyword">IS</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span>)</span><br></pre></td></tr></table></figure>
+
+<p>NOT IN 转换成了两个 join, 一个是 cross join, 另一个是 left join, 下面对这俩 join 进行分析</p>
+<h3 id="cross-join"><a href="#cross-join" class="headerlink" title="cross join"></a>cross join</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">EnumerableNestedLoopJoin(<span class="keyword">condition</span><span class="operator">=</span>[<span class="literal">true</span>], joinType<span class="operator">=</span>[<span class="keyword">inner</span>])</span><br><span class="line">  EnumerableTableScan(<span class="keyword">table</span><span class="operator">=</span>[users])</span><br><span class="line">  EnumerableHashAggregate(<span class="keyword">group</span><span class="operator">=</span>[&#123;&#125;], c<span class="operator">=</span>[<span class="built_in">COUNT</span>()], ck<span class="operator">=</span>[<span class="built_in">COUNT</span>($<span class="number">0</span>)])</span><br><span class="line">    EnumerableTableScan(<span class="keyword">table</span><span class="operator">=</span>[jobs])</span><br></pre></td></tr></table></figure>
+
+<p>这里先对 jobs 求了 count(*) 和 count(id), 如果 id 没有 null 值, c 和 ck 的值应该是一样的, 注意这个语句只会出来一行数据, 然后这个 cross join 相当于users 拼上了两列(c, ck)</p>
+<h3 id="left-join"><a href="#left-join" class="headerlink" title="left join"></a>left join</h3><figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">EnumerableHashJoin(<span class="keyword">condition</span><span class="operator">=</span>[<span class="operator">=</span>($<span class="number">2</span>, $<span class="number">5</span>)], joinType<span class="operator">=</span>[<span class="keyword">left</span>])</span><br><span class="line">  EnumerableNestedLoopJoin(<span class="keyword">condition</span><span class="operator">=</span>[<span class="literal">true</span>], joinType<span class="operator">=</span>[<span class="keyword">inner</span>])</span><br><span class="line">  EnumerableProject(id<span class="operator">=</span>[$<span class="number">0</span>], i<span class="operator">=</span>[<span class="literal">true</span>])</span><br><span class="line">    EnumerableHashAggregate(<span class="keyword">group</span><span class="operator">=</span>[&#123;<span class="number">0</span>&#125;])</span><br><span class="line">      EnumerableTableScan(<span class="keyword">table</span><span class="operator">=</span>[jobs])</span><br></pre></td></tr></table></figure>
+
+<p>把上面的 cross join 作为输入, 并且再次 join 了一次 jobs 表(on age = id), 注意, 这里是把 age 和 id 相等的值 join 了起来, 由于是 left join, 右表无匹配则为 null</p>
+<h3 id="filter"><a href="#filter" class="headerlink" title="filter"></a>filter</h3><p>小知识点: AND 级别高于 OR, 并不是左结合</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">WHERE</span> t2.c <span class="operator">=</span> <span class="number">0</span></span><br><span class="line">  <span class="keyword">OR</span> t2.i <span class="keyword">IS</span> <span class="keyword">NULL</span></span><br><span class="line">  <span class="keyword">AND</span> (t2.ck <span class="operator">&gt;=</span> t2.c</span><br><span class="line">       <span class="keyword">AND</span> t2.AGE <span class="keyword">IS</span> <span class="keyword">NOT</span> <span class="keyword">NULL</span>)</span><br></pre></td></tr></table></figure>
+
+<p>最后看下这个 filter, 这个 filter 比较复杂, 还是直接举例把:</p>
+<p>原表:</p>
+<p><img src="/2021/04/25/Calcite-Not-in-opt/image-20210414163537859.png" alt="image-20210414163537859"></p>
+<p>经过两轮 join 之后的表(USERS.ID=JOBS.AGE):</p>
+<p><img src="/2021/04/25/Calcite-Not-in-opt/image-20210414171920321.png" alt="image-20210414171920321"></p>
+<hr>
+<p>首先来断下句: <code>t2.c = 0 OR (t2.i IS NULL AND (t2.ck &gt;= t2.c AND t2.AGE IS NOT NULL))</code></p>
+<ol>
+<li><code>t2.c = 0</code>:当 JOBS 表为空时的条件, 直接把 USERS 表所有数据选出即可.</li>
+<li><code>t2.i IS NULL AND (t2.ck &gt;= t2.c AND t2.AGE IS NOT NULL)</code></li>
+</ol>
+<ul>
+<li><code>t2.i IS NULL</code>: 是当 JOBS 表不为空, i 为 null 代表没有 join 上的值, 符合 not in 语义, 上面例子选出这俩条</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">ID</th>
+<th align="left">NAME</th>
+<th align="left">AGE</th>
+<th align="left">JOBS.ID</th>
+<th align="left">C</th>
+<th align="left">CK</th>
+<th align="left">I</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+</tr>
+<tr>
+<td align="left">1</td>
+<td align="left">TOM</td>
+<td align="left">1</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+</tr>
+</tbody></table>
+<ul>
+<li><code>t2.ck &gt;= t2.c</code>: 当 JOBS 表ID有 NULL 值时, 整个查询返回空. 举个例子更容易理解: <code>select &#39;true&#39; where 3 not in (1, 2, null)</code>, 这个返回是空, 直接看 not in 比较难理解, 可以改成=, &lt;&gt;来看: <code>select &#39;true&#39; where 3 &lt;&gt; 1 and 3 &lt;&gt; 2 and 3 &lt;&gt; null</code>, <code>3 &lt;&gt; null</code> 为UNKNOWN, 既不是 true 也不是 false, 所以这里没有数据返回.</li>
+<li><code>t2.AGE IS NOT NULL</code>: 当 JOBS 表不为空, 需要剔除 USERS 表 age 为 NULL 的行, NULL not in tbl 无法出来值(当 tbl 表有数据时), 再剔除第一条为 null 的, 得到结果</li>
+</ul>
+<table>
+<thead>
+<tr>
+<th align="left">ID</th>
+<th align="left">NAME</th>
+<th align="left">AGE</th>
+<th align="left">JOBS.ID</th>
+<th align="left">C</th>
+<th align="left">CK</th>
+<th align="left">I</th>
+</tr>
+</thead>
+<tbody><tr>
+<td align="left">1</td>
+<td align="left">TOM</td>
+<td align="left">1</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+<td align="left">NULL</td>
+</tr>
+</tbody></table>
+<h3 id="思考"><a href="#思考" class="headerlink" title="思考"></a>思考</h3><p>为什么不直接把 <code>a.id not in(select id from b)</code> 转换成 <code>left join on a.id = b.id where b.id IS NULL</code>, 需要增加一个 cross join? 答案是当 a.id 存在 null 且 b 表有数据, 会把 null 这行多选出来. 如果再加上 <code>a.id IS NOT NULL</code>可行吗? 答案还是不行的, 因为当 b 表无数据, 需要把 a.id null 这行取出来(令人头疼).所以这里加了个 cross join 是非常巧妙的.</p>
+<h3 id="p-s"><a href="#p-s" class="headerlink" title="p.s."></a>p.s.</h3><p>SQL 是个三值系统 TRUE/FALSE/UNKNOWN, 其中 NULL 和所有值比较都是 UNKNOWN, 所以你不能写 col = null, 即使 col 真的有 null 值, 也出不来true, 只会出来 UNKNOWN, 正确的 NULL 值判断是 IS NULL/IS NOT NULL</p>
+<p>所以这里 xxx NOT IN 也不会把这条NULL值选出来, NULL NOT IN/IN 都不会选出任何值, 他们的结果既不为 TRUE, 也不为 FALSE.</p>
+<p>可以看到 jobs 插入了一个 users 不存在的值, 选出的结果会把 null 这行排除掉</p>
+<p><img src="/2021/04/25/Calcite-Not-in-opt/image-20210414165506690.png" alt="image-20210414165506690"></p>
+<p>但是有一种例外, 当 A not in B, B表是个空表时, 可以选出 A 表所有数据, 可以看到 null 这行数据选了出来</p>
+<p><img src="/2021/04/25/Calcite-Not-in-opt/image-20210414165201722.png" alt="image-20210414165201722"></p>
+</div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
+  $(".fancybox").fancybox();
+});
+</script></body></html>
