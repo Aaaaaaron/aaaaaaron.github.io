@@ -80,8 +80,8 @@ pagination_dir: page
 # theme: crisp
 # theme: aloha
 # theme: polarbearsimple
-# theme: noise
-theme: next
+theme: noise
+# theme: next
 
 noise:
   compact_index: true
