@@ -7,10 +7,11 @@ title: Jiatao Tao's blog
 subtitle: λ
 description: 
 keywords:
-author: 陶加涛
+author: Jiatao Tao
 language: zh-Hans
 timezone:
-avatar: "https://gitee.com/Meldoy/image/raw/master/life/head.jpg"
+# avatar: "https://gitee.com/Meldoy/image/raw/master/life/head.png"
+avatar: "/head.png"
 
 # URL
 ## If your site is put in a subdirectory, set url as 'http://yoursite.com/child' and root as '/child/'
@@ -80,8 +81,8 @@ pagination_dir: page
 # theme: crisp
 # theme: aloha
 # theme: polarbearsimple
-theme: noise
-# theme: next
+# theme: noise
+theme: next
 
 noise:
   compact_index: true
