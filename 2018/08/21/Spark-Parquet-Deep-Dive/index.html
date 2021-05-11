@@ -1,4 +1,241 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="ParquetFileFormat#buildReaderWithPartitionValues"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Spark Parquet Deep Dive | Jiatao Tao's blog</title><meta name="robots" content="noindex"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/BigData/" rel="tag">BigData</a><a class="post-tag-none-link" href="/tags/Spark/" rel="tag">Spark</a></div><div class="post-time">2018-08-21</div></div></div><div class="container post-header"><h1>Spark Parquet Deep Dive</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#ColumnarBatch"><span class="toc-number">1.</span> <span class="toc-text">ColumnarBatch</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#ColumnVector"><span class="toc-number">2.</span> <span class="toc-text">ColumnVector</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Something-interesting-about-decimal-in-Spark"><span class="toc-number">3.</span> <span class="toc-text">Something interesting about decimal in Spark.</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#data-flow"><span class="toc-number">4.</span> <span class="toc-text">data flow</span></a></li></ol></details></div><div class="container post-content"><p>ParquetFileFormat#buildReaderWithPartitionValues</p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="ParquetFileFormat#buildReaderWithPartitionValues 注意看 enableVectorizedReader. enable 了之后用的是VectorizedParquetRecordReader, 否则用的是ParquetRecordReader[UnsafeRow](new ParquetReadSupport(convertTz)). 1234567">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark Parquet Deep Dive">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="ParquetFileFormat#buildReaderWithPartitionValues 注意看 enableVectorizedReader. enable 了之后用的是VectorizedParquetRecordReader, 否则用的是ParquetRecordReader[UnsafeRow](new ParquetReadSupport(convertTz)). 1234567">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/71064933.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/4432890.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/77850304.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/54044866.jpg">
+<meta property="article:published_time" content="2018-08-21T07:11:45.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:16:26.590Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="BigData">
+<meta property="article:tag" content="Spark">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/71064933.jpg">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Spark Parquet Deep Dive | Jiatao Tao's blog</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about.html" rel="section"><i class="fa fa-fw fa-user-circle-o"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Spark Parquet Deep Dive
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-08-21 15:11:45" itemprop="dateCreated datePublished" datetime="2018-08-21T15:11:45+08:00">2018-08-21</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-05-08 11:16:26" itemprop="dateModified" datetime="2021-05-08T11:16:26+08:00">2021-05-08</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2018/08/21/Spark-Parquet-Deep-Dive/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/08/21/Spark-Parquet-Deep-Dive/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>ParquetFileFormat#buildReaderWithPartitionValues</p>
 <p>注意看 enableVectorizedReader. enable 了之后用的是<code>VectorizedParquetRecordReader</code>, 否则用的是<code>ParquetRecordReader[UnsafeRow](new ParquetReadSupport(convertTz))</code>.</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Try to push down filters when filter push-down is enabled.</span></span><br><span class="line"><span class="comment">// Notice: This push-down is RowGroups level, not individual records.</span></span><br><span class="line"><span class="keyword">if</span> (pushed.isDefined) &#123;</span><br><span class="line">  <span class="type">ParquetInputFormat</span>.setFilterPredicate(hadoopAttemptContext.getConfiguration, pushed.get)</span><br><span class="line">&#125;</span><br><span class="line"><span class="keyword">val</span> taskContext = <span class="type">Option</span>(<span class="type">TaskContext</span>.get())</span><br><span class="line"><span class="keyword">if</span> (enableVectorizedReader) &#123;</span><br><span class="line">  <span class="keyword">val</span> vectorizedReader = <span class="keyword">new</span> <span class="type">VectorizedParquetRecordReader</span>(</span><br><span class="line">    convertTz.orNull, enableOffHeapColumnVector &amp;&amp; taskContext.isDefined, capacity)</span><br><span class="line">  <span class="keyword">val</span> iter = <span class="keyword">new</span> <span class="type">RecordReaderIterator</span>(vectorizedReader)</span><br><span class="line">  <span class="comment">// SPARK-23457 Register a task completion lister before `initialization`.</span></span><br><span class="line">  taskContext.foreach(_.addTaskCompletionListener[<span class="type">Unit</span>](_ =&gt; iter.close()))</span><br><span class="line">  vectorizedReader.initialize(split, hadoopAttemptContext)</span><br><span class="line">  logDebug(<span class="string">s&quot;Appending <span class="subst">$partitionSchema</span> <span class="subst">$&#123;file.partitionValues&#125;</span>&quot;</span>)</span><br><span class="line">  vectorizedReader.initBatch(partitionSchema, file.partitionValues)</span><br><span class="line">  <span class="keyword">if</span> (returningBatch) &#123;</span><br><span class="line">    vectorizedReader.enableReturningBatches()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// UnsafeRowParquetRecordReader appends the columns internally to avoid another copy.</span></span><br><span class="line">  iter.asInstanceOf[<span class="type">Iterator</span>[<span class="type">InternalRow</span>]]</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  logDebug(<span class="string">s&quot;Falling back to parquet-mr&quot;</span>)</span><br><span class="line">  <span class="comment">// ParquetRecordReader returns UnsafeRow</span></span><br><span class="line">  <span class="keyword">val</span> reader = <span class="keyword">if</span> (pushed.isDefined &amp;&amp; enableRecordFilter) &#123;</span><br><span class="line">    <span class="keyword">val</span> parquetFilter = <span class="type">FilterCompat</span>.get(pushed.get, <span class="literal">null</span>)</span><br><span class="line">    <span class="keyword">new</span> <span class="type">ParquetRecordReader</span>[<span class="type">UnsafeRow</span>](<span class="keyword">new</span> <span class="type">ParquetReadSupport</span>(convertTz), parquetFilter)</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="keyword">new</span> <span class="type">ParquetRecordReader</span>[<span class="type">UnsafeRow</span>](<span class="keyword">new</span> <span class="type">ParquetReadSupport</span>(convertTz))</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">val</span> iter = <span class="keyword">new</span> <span class="type">RecordReaderIterator</span>(reader)</span><br><span class="line">  <span class="comment">// SPARK-23457 Register a task completion lister before `initialization`.</span></span><br><span class="line">  taskContext.foreach(_.addTaskCompletionListener[<span class="type">Unit</span>](_ =&gt; iter.close()))</span><br><span class="line">  reader.initialize(split, hadoopAttemptContext)</span><br><span class="line"></span><br><span class="line">  <span class="keyword">val</span> fullSchema = requiredSchema.toAttributes ++ partitionSchema.toAttributes</span><br><span class="line">  <span class="keyword">val</span> joinedRow = <span class="keyword">new</span> <span class="type">JoinedRow</span>()</span><br><span class="line">  <span class="keyword">val</span> appendPartitionColumns = <span class="type">GenerateUnsafeProjection</span>.generate(fullSchema, fullSchema)</span><br><span class="line"></span><br><span class="line">  <span class="comment">// This is a horrible erasure hack...  if we type the iterator above, then it actually check</span></span><br><span class="line">  <span class="comment">// the type in next() and we get a class cast exception.  If we make that function return</span></span><br><span class="line">  <span class="comment">// Object, then we can defer the cast until later!</span></span><br><span class="line">  <span class="keyword">if</span> (partitionSchema.length == <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// There is no partition columns</span></span><br><span class="line">    iter.asInstanceOf[<span class="type">Iterator</span>[<span class="type">InternalRow</span>]]</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    iter.asInstanceOf[<span class="type">Iterator</span>[<span class="type">InternalRow</span>]]</span><br><span class="line">      .map(d =&gt; appendPartitionColumns(joinedRow(d, file.partitionValues)))</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
@@ -43,7 +280,236 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * An adaptor from a Hadoop [[RecordReader]] to an [[Iterator]] over the values returned.</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * Note that this returns [[Object]]s instead of [[InternalRow]] because we rely on erasure to pass</span></span><br><span class="line"><span class="comment"> * column batches by pretending they are rows.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">RecordReaderIterator</span>[<span class="title">T</span>](<span class="title">private</span>[<span class="title">this</span>] <span class="title">var</span> <span class="title">rowReader</span>: <span class="title">RecordReader</span>[<span class="title">_</span>, <span class="title">T</span>]) <span class="keyword">extends</span> <span class="title">Iterator</span>[<span class="title">T</span>] <span class="title">with</span> <span class="title">Closeable</span> </span>&#123;</span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">var</span> havePair = <span class="keyword">false</span></span><br><span class="line">  <span class="keyword">private</span>[<span class="keyword">this</span>] <span class="keyword">var</span> finished = <span class="keyword">false</span></span><br><span class="line"></span><br><span class="line">  override def hasNext: Boolean = &#123;</span><br><span class="line">    <span class="keyword">if</span> (!finished &amp;&amp; !havePair) &#123;</span><br><span class="line">      finished = !rowReader.<span class="function">nextKeyValue</span></span><br><span class="line"><span class="function">      <span class="title">if</span> <span class="params">(finished)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// Close and release the reader here; close() will also be called when the task</span></span><br><span class="line">        <span class="comment">// completes, but for tasks that read from many files, it helps to release the</span></span><br><span class="line">        <span class="comment">// resources early.</span></span><br><span class="line">        close()</span><br><span class="line">      &#125;</span><br><span class="line">      havePair = !finished</span><br><span class="line">    &#125;</span><br><span class="line">    !finished</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function">override def <span class="title">next</span><span class="params">()</span>: T </span>= &#123;</span><br><span class="line">    <span class="keyword">if</span> (!hasNext) &#123;</span><br><span class="line">      <span class="keyword">throw</span> <span class="keyword">new</span> java.util.NoSuchElementException(<span class="string">&quot;End of stream&quot;</span>)</span><br><span class="line">    &#125;</span><br><span class="line">    havePair = <span class="keyword">false</span></span><br><span class="line">    rowReader.getCurrentValue</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p>最后在 ParquetFileFormat 中</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (enableVectorizedReader) &#123;</span><br><span class="line">  val vectorizedReader = <span class="keyword">new</span> VectorizedParquetRecordReader(convertTz.orNull, enableOffHeapColumnVector &amp;&amp; taskContext.isDefined, capacity)</span><br><span class="line">  val iter = <span class="keyword">new</span> RecordReaderIterator(vectorizedReader)</span><br><span class="line">  <span class="comment">// SPARK-23457 Register a task completion lister before `initialization`.</span></span><br><span class="line">  taskContext.foreach(_.addTaskCompletionListener[Unit](_ =&gt; iter.close()))</span><br><span class="line">  vectorizedReader.initialize(split, hadoopAttemptContext)</span><br><span class="line">  logDebug(s<span class="string">&quot;Appending $partitionSchema $&#123;file.partitionValues&#125;&quot;</span>)</span><br><span class="line">  vectorizedReader.initBatch(partitionSchema, file.partitionValues)</span><br><span class="line">  <span class="keyword">if</span> (returningBatch) &#123;</span><br><span class="line">    vectorizedReader.enableReturningBatches()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// UnsafeRowParquetRecordReader appends the columns internally to avoid another copy.</span></span><br><span class="line">  iter.asInstanceOf[Iterator[InternalRow]]</span><br><span class="line">&#125; <span class="keyword">else</span> &#123; ... &#125;</span><br></pre></td></tr></table></figure><!-- flag of hidden posts --></div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (enableVectorizedReader) &#123;</span><br><span class="line">  val vectorizedReader = <span class="keyword">new</span> VectorizedParquetRecordReader(convertTz.orNull, enableOffHeapColumnVector &amp;&amp; taskContext.isDefined, capacity)</span><br><span class="line">  val iter = <span class="keyword">new</span> RecordReaderIterator(vectorizedReader)</span><br><span class="line">  <span class="comment">// SPARK-23457 Register a task completion lister before `initialization`.</span></span><br><span class="line">  taskContext.foreach(_.addTaskCompletionListener[Unit](_ =&gt; iter.close()))</span><br><span class="line">  vectorizedReader.initialize(split, hadoopAttemptContext)</span><br><span class="line">  logDebug(s<span class="string">&quot;Appending $partitionSchema $&#123;file.partitionValues&#125;&quot;</span>)</span><br><span class="line">  vectorizedReader.initBatch(partitionSchema, file.partitionValues)</span><br><span class="line">  <span class="keyword">if</span> (returningBatch) &#123;</span><br><span class="line">    vectorizedReader.enableReturningBatches()</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="comment">// UnsafeRowParquetRecordReader appends the columns internally to avoid another copy.</span></span><br><span class="line">  iter.asInstanceOf[Iterator[InternalRow]]</span><br><span class="line">&#125; <span class="keyword">else</span> &#123; ... &#125;</span><br></pre></td></tr></table></figure><!-- flag of hidden posts -->
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/BigData/" rel="tag"><i class="fa fa-tag"></i> BigData</a>
+              <a href="/tags/Spark/" rel="tag"><i class="fa fa-tag"></i> Spark</a>
+          </div>
+
+        
+
+
+        
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#ColumnarBatch"><span class="nav-number">1.</span> <span class="nav-text">ColumnarBatch</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#ColumnVector"><span class="nav-number">2.</span> <span class="nav-text">ColumnVector</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Something-interesting-about-decimal-in-Spark"><span class="nav-number">3.</span> <span class="nav-text">Something interesting about decimal in Spark.</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#data-flow"><span class="nav-number">4.</span> <span class="nav-text">data flow</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="陶加涛"
+      src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://muzi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: {page: {
+            url: "https://aaaaaaron.github.io/2018/08/21/Spark-Parquet-Deep-Dive/",
+            identifier: "2018/08/21/Spark-Parquet-Deep-Dive/",
+            title: "Spark Parquet Deep Dive"
+          }
+        }
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://muzi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

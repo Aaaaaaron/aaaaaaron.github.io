@@ -1,4 +1,244 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="转载自&lt;a href=&quot;https://blog.bcmeng.com/post/druid-storage.html&quot;&gt;编程小梦&lt;/a&gt;"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Druid Storage 原理 | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/BigData/" rel="tag">BigData</a><a class="post-tag-none-link" href="/tags/Druid/" rel="tag">Druid</a></div><div class="post-time">2018-10-06</div></div></div><div class="container post-header"><h1>Druid Storage 原理</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#What-is-Druid"><span class="toc-number">1.</span> <span class="toc-text">What is Druid</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Why-Druid"><span class="toc-number">2.</span> <span class="toc-text">Why Druid</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Druid-%E6%9E%B6%E6%9E%84"><span class="toc-number">3.</span> <span class="toc-text">Druid 架构</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Historical-Nodes"><span class="toc-number">3.1.</span> <span class="toc-text">Historical Nodes</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Broker-Nodes"><span class="toc-number">3.2.</span> <span class="toc-text">Broker Nodes</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Coordinator-Nodes"><span class="toc-number">3.3.</span> <span class="toc-text">Coordinator Nodes</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Real-time-Node"><span class="toc-number">3.4.</span> <span class="toc-text">Real-time Node</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Zookeeper"><span class="toc-number">3.5.</span> <span class="toc-text">Zookeeper</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Metadata-Storage"><span class="toc-number">3.6.</span> <span class="toc-text">Metadata Storage</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Deep-Storage"><span class="toc-number">3.7.</span> <span class="toc-text">Deep Storage</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Column"><span class="toc-number">4.</span> <span class="toc-text">Column</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Segment"><span class="toc-number">5.</span> <span class="toc-text">Segment</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Segment-%E7%9A%84%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="toc-number">6.</span> <span class="toc-text">Segment 的存储格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E6%8C%87%E6%A0%87%E5%88%97%E7%9A%84%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="toc-number">7.</span> <span class="toc-text">指标列的存储格式</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Long-%E5%9E%8B%E6%8C%87%E6%A0%87"><span class="toc-number">7.1.</span> <span class="toc-text">Long 型指标</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Float-%E5%9E%8B%E6%8C%87%E6%A0%87"><span class="toc-number">7.2.</span> <span class="toc-text">Float 型指标</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#Complex-%E5%9E%8B%E6%8C%87%E6%A0%87"><span class="toc-number">7.3.</span> <span class="toc-text">Complex 型指标</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#String-%E7%BB%B4%E5%BA%A6%E7%9A%84%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="toc-number">8.</span> <span class="toc-text">String 维度的存储格式</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Segment-%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B"><span class="toc-number">9.</span> <span class="toc-text">Segment 生成过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Segment-load-%E8%BF%87%E7%A8%8B"><span class="toc-number">10.</span> <span class="toc-text">Segment load 过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Segment-Query-%E8%BF%87%E7%A8%8B"><span class="toc-number">11.</span> <span class="toc-text">Segment Query 过程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Druid-%E7%9A%84%E7%BC%96%E7%A0%81%E5%92%8C%E5%8E%8B%E7%BC%A9"><span class="toc-number">12.</span> <span class="toc-text">Druid 的编码和压缩</span></a></li></ol></details></div><div class="container post-content"><p>转载自<a target="_blank" rel="noopener" href="https://blog.bcmeng.com/post/druid-storage.html">编程小梦</a></p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="转载自编程小梦 What is DruidDruid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：   列式存储  倒排索引 （基于 Bitmap 实现）  分布式的 Shared-Nothing 架构 （高可用，易扩展是 Druid 的设计目标）  实时摄入 （数据被 Druid 实时摄入后便可以立即查询）  Why Druid为了能够提取利用大数据的商业">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Druid Storage 原理">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="转载自编程小梦 What is DruidDruid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：   列式存储  倒排索引 （基于 Bitmap 实现）  分布式的 Shared-Nothing 架构 （高可用，易扩展是 Druid 的设计目标）  实时摄入 （数据被 Druid 实时摄入后便可以立即查询）  Why Druid为了能够提取利用大数据的商业">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/55283969.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/98456054.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/34009295.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/29577015.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/8107893.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/79137485.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/34569900.jpg">
+<meta property="article:published_time" content="2018-10-06T12:49:18.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:11:20.254Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="BigData">
+<meta property="article:tag" content="Druid">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/55283969.jpg">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Druid Storage 原理 | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about.html" rel="section"><i class="fa fa-fw fa-user-circle-o"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Druid Storage 原理
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-10-06 20:49:18" itemprop="dateCreated datePublished" datetime="2018-10-06T20:49:18+08:00">2018-10-06</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-05-08 11:11:20" itemprop="dateModified" datetime="2021-05-08T11:11:20+08:00">2021-05-08</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/10/06/Druid-Storage-原理/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>转载自<a target="_blank" rel="noopener" href="https://blog.bcmeng.com/post/druid-storage.html">编程小梦</a></p>
 <h3 id="What-is-Druid"><a href="#What-is-Druid" class="headerlink" title="What is Druid"></a>What is Druid</h3><p>Druid 是一个开源的实时 OLAP 系统，可以对超大规模数据提供亚秒级查询，其具有以下特点：</p>
 <ol>
 <li> 列式存储</li>
@@ -100,7 +340,246 @@
 <h3 id="Druid-的编码和压缩"><a href="#Druid-的编码和压缩" class="headerlink" title="Druid 的编码和压缩"></a>Druid 的编码和压缩</h3><p>前面已经提到了，Druid 对 Long 型的指标进行了差分编码和 Table 编码，Long 型和 Float 型的指标进行了 LZ4 或者 LZF 压缩。</p>
 <p>其实编码和压缩本质上是一个东西，一切熵增的编码都是压缩。 在计算机领域，我们一般把针对特定类型的编码称之为编码，针对任意类型的通用编码称之为压缩。</p>
 <p>编码和压缩的本质就是让每一个 bit 尽可能带有更多的信息。</p>
-</div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/BigData/" rel="tag"><i class="fa fa-tag"></i> BigData</a>
+              <a href="/tags/Druid/" rel="tag"><i class="fa fa-tag"></i> Druid</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/08/26/Designing-Data-Intensive-Applications-Storage/" rel="prev" title="Designing Data-Intensive Applications(Storage)">
+      <i class="fa fa-chevron-left"></i> Designing Data-Intensive Applications(Storage)
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/16/Spark-map-vs-mapPartitions/" rel="next" title="Spark map vs mapPartitions">
+      Spark map vs mapPartitions <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#What-is-Druid"><span class="nav-number">1.</span> <span class="nav-text">What is Druid</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Why-Druid"><span class="nav-number">2.</span> <span class="nav-text">Why Druid</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Druid-%E6%9E%B6%E6%9E%84"><span class="nav-number">3.</span> <span class="nav-text">Druid 架构</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Column"><span class="nav-number">4.</span> <span class="nav-text">Column</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Segment"><span class="nav-number">5.</span> <span class="nav-text">Segment</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Segment-%E7%9A%84%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="nav-number">6.</span> <span class="nav-text">Segment 的存储格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%8C%87%E6%A0%87%E5%88%97%E7%9A%84%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="nav-number">7.</span> <span class="nav-text">指标列的存储格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#String-%E7%BB%B4%E5%BA%A6%E7%9A%84%E5%AD%98%E5%82%A8%E6%A0%BC%E5%BC%8F"><span class="nav-number">8.</span> <span class="nav-text">String 维度的存储格式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Segment-%E7%94%9F%E6%88%90%E8%BF%87%E7%A8%8B"><span class="nav-number">9.</span> <span class="nav-text">Segment 生成过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Segment-load-%E8%BF%87%E7%A8%8B"><span class="nav-number">10.</span> <span class="nav-text">Segment load 过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Segment-Query-%E8%BF%87%E7%A8%8B"><span class="nav-number">11.</span> <span class="nav-text">Segment Query 过程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Druid-%E7%9A%84%E7%BC%96%E7%A0%81%E5%92%8C%E5%8E%8B%E7%BC%A9"><span class="nav-number">12.</span> <span class="nav-text">Druid 的编码和压缩</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="陶加涛"
+      src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://muzi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: {page: {
+            url: "https://aaaaaaron.github.io/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/",
+            identifier: "2018/10/06/Druid-Storage-原理/",
+            title: "Druid Storage 原理"
+          }
+        }
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://muzi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

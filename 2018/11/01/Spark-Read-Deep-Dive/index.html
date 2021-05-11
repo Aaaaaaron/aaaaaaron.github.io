@@ -1,4 +1,240 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;读取流程&quot;&gt;&lt;a href=&quot;#读取流程&quot; class=&quot;headerlink&quot; title=&quot;读取流程&quot;&gt;&lt;/a&gt;读取流程&lt;/h2&gt;&lt;h3 id=&quot;入口点&quot;&gt;&lt;a href=&quot;#入口点&quot; class=&quot;headerlink&quot; title=&quot;入口点&quot;&gt;&lt;/a&gt;入口点&lt;/h3&gt;&lt;p&gt;我们以读取 parquet 文件为例, 使用 &lt;code&gt;ss.read.parquet(path)&lt;/code&gt; 读取文件的时候, 入口点是&lt;code&gt;sparkSession.baseRelationToDataFrame&lt;/code&gt;, 该方法接受一个 relation 返回一个 DataFrame. "><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Spark Paruqet Read Deep Dive | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/BigData/" rel="tag">BigData</a><a class="post-tag-none-link" href="/tags/Parquet/" rel="tag">Parquet</a><a class="post-tag-none-link" href="/tags/Spark/" rel="tag">Spark</a></div><div class="post-time">2018-11-01</div></div></div><div class="container post-header"><h1>Spark Paruqet Read Deep Dive</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%BB%E5%8F%96%E6%B5%81%E7%A8%8B"><span class="toc-number">1.</span> <span class="toc-text">读取流程</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%85%A5%E5%8F%A3%E7%82%B9"><span class="toc-number">1.1.</span> <span class="toc-text">入口点</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Strategy-%E9%83%A8%E5%88%86"><span class="toc-number">1.2.</span> <span class="toc-text">Strategy 部分</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#Exec-%E9%83%A8%E5%88%86"><span class="toc-number">1.3.</span> <span class="toc-text">Exec 部分</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#FileSourceScanExec"><span class="toc-number">1.4.</span> <span class="toc-text">FileSourceScanExec</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#Pushdown-filter"><span class="toc-number">1.4.1.</span> <span class="toc-text">Pushdown filter</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#FileIndex"><span class="toc-number">1.4.2.</span> <span class="toc-text">FileIndex</span></a></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#TBD"><span class="toc-number">2.</span> <span class="toc-text">TBD</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#FileScanRDD"><span class="toc-number">2.1.</span> <span class="toc-text">FileScanRDD</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#RecordReaderIterator"><span class="toc-number">2.1.1.</span> <span class="toc-text">RecordReaderIterator</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#initialize"><span class="toc-number">2.1.1.1.</span> <span class="toc-text">initialize</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#nextKeyValue"><span class="toc-number">2.1.1.2.</span> <span class="toc-text">nextKeyValue</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#getCurrentValue"><span class="toc-number">2.1.1.3.</span> <span class="toc-text">getCurrentValue</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#checkEndOfRowGroup"><span class="toc-number">2.1.1.4.</span> <span class="toc-text">checkEndOfRowGroup</span></a></li></ol></li></ol></li></ol></li></ol></details></div><div class="container post-content"><h2 id="读取流程"><a href="#读取流程" class="headerlink" title="读取流程"></a>读取流程</h2><h3 id="入口点"><a href="#入口点" class="headerlink" title="入口点"></a>入口点</h3><p>我们以读取 parquet 文件为例, 使用 <code>ss.read.parquet(path)</code> 读取文件的时候, 入口点是<code>sparkSession.baseRelationToDataFrame</code>, 该方法接受一个 relation 返回一个 DataFrame. </p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="读取流程入口点我们以读取 parquet 文件为例, 使用 ss.read.parquet(path) 读取文件的时候, 入口点是sparkSession.baseRelationToDataFrame, 该方法接受一个 relation 返回一个 DataFrame.  问题的关键在于如何得到这个 relation(具体来说是 HadoopFsRelation), 其代码在 DataSource">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark Paruqet Read Deep Dive">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="读取流程入口点我们以读取 parquet 文件为例, 使用 ss.read.parquet(path) 读取文件的时候, 入口点是sparkSession.baseRelationToDataFrame, 该方法接受一个 relation 返回一个 DataFrame.  问题的关键在于如何得到这个 relation(具体来说是 HadoopFsRelation), 其代码在 DataSource">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/00014.jpeg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/20181118165922.png">
+<meta property="article:published_time" content="2018-11-01T03:05:52.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:19:31.478Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="BigData">
+<meta property="article:tag" content="Parquet">
+<meta property="article:tag" content="Spark">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/00014.jpeg">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Spark Paruqet Read Deep Dive | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about.html" rel="section"><i class="fa fa-fw fa-user-circle-o"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Spark Paruqet Read Deep Dive
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-11-01 11:05:52" itemprop="dateCreated datePublished" datetime="2018-11-01T11:05:52+08:00">2018-11-01</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-05-08 11:19:31" itemprop="dateModified" datetime="2021-05-08T11:19:31+08:00">2021-05-08</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2018/11/01/Spark-Read-Deep-Dive/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/11/01/Spark-Read-Deep-Dive/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h2 id="读取流程"><a href="#读取流程" class="headerlink" title="读取流程"></a>读取流程</h2><h3 id="入口点"><a href="#入口点" class="headerlink" title="入口点"></a>入口点</h3><p>我们以读取 parquet 文件为例, 使用 <code>ss.read.parquet(path)</code> 读取文件的时候, 入口点是<code>sparkSession.baseRelationToDataFrame</code>, 该方法接受一个 relation 返回一个 DataFrame. </p>
 <p>问题的关键在于如何得到这个 relation(具体来说是 <code>HadoopFsRelation</code>), 其代码在 <code>DataSource#resolveRelation</code>, 里面代码比较多,因为要 infer schema 什么的, 所有代码最后只是要构造一个 <code>HadoopFsRelation</code>, 我们先来看 <code>HadoopFsRelation</code> 的定义:</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> <span class="class"><span class="keyword">class</span> <span class="title">HadoopFsRelation</span>(<span class="params"></span></span></span><br><span class="line"><span class="params"><span class="class">    location: <span class="type">FileIndex</span>,</span></span></span><br><span class="line"><span class="params"><span class="class">    partitionSchema: <span class="type">StructType</span>,</span></span></span><br><span class="line"><span class="params"><span class="class">    dataSchema: <span class="type">StructType</span>,</span></span></span><br><span class="line"><span class="params"><span class="class">    bucketSpec: <span class="type">Option</span>[<span class="type">BucketSpec</span>],</span></span></span><br><span class="line"><span class="params"><span class="class">    fileFormat: <span class="type">FileFormat</span>,</span></span></span><br><span class="line"><span class="params"><span class="class">    options: <span class="type">Map</span>[<span class="type">String</span>, <span class="type">String</span>]</span>)(<span class="params">val sparkSession: <span class="type">SparkSession</span></span>)</span></span><br><span class="line">  <span class="keyword">extends</span> <span class="type">BaseRelation</span> <span class="keyword">with</span> <span class="type">FileRelation</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
 
@@ -65,7 +301,247 @@
   this.reader = new ParquetFileReader(
     configuration, footer.getFileMetaData(), file, blocks, requestedSchema.getColumns())
 </code></pre>
-<h5 id="nextKeyValue"><a href="#nextKeyValue" class="headerlink" title="nextKeyValue"></a>nextKeyValue</h5><h5 id="getCurrentValue"><a href="#getCurrentValue" class="headerlink" title="getCurrentValue"></a>getCurrentValue</h5><h5 id="checkEndOfRowGroup"><a href="#checkEndOfRowGroup" class="headerlink" title="checkEndOfRowGroup"></a>checkEndOfRowGroup</h5></div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+<h5 id="nextKeyValue"><a href="#nextKeyValue" class="headerlink" title="nextKeyValue"></a>nextKeyValue</h5><h5 id="getCurrentValue"><a href="#getCurrentValue" class="headerlink" title="getCurrentValue"></a>getCurrentValue</h5><h5 id="checkEndOfRowGroup"><a href="#checkEndOfRowGroup" class="headerlink" title="checkEndOfRowGroup"></a>checkEndOfRowGroup</h5>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/BigData/" rel="tag"><i class="fa fa-tag"></i> BigData</a>
+              <a href="/tags/Parquet/" rel="tag"><i class="fa fa-tag"></i> Parquet</a>
+              <a href="/tags/Spark/" rel="tag"><i class="fa fa-tag"></i> Spark</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/10/30/Learning-Parquet/" rel="prev" title="Learning Parquet">
+      <i class="fa fa-chevron-left"></i> Learning Parquet
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/11/02/Hadoop-MR-%E5%92%8C-Spark-%E5%AF%B9%E6%AF%94/" rel="next" title="Hadoop MR 和 Spark 对比">
+      Hadoop MR 和 Spark 对比 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%BB%E5%8F%96%E6%B5%81%E7%A8%8B"><span class="nav-number">1.</span> <span class="nav-text">读取流程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%85%A5%E5%8F%A3%E7%82%B9"><span class="nav-number">1.1.</span> <span class="nav-text">入口点</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Strategy-%E9%83%A8%E5%88%86"><span class="nav-number">1.2.</span> <span class="nav-text">Strategy 部分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Exec-%E9%83%A8%E5%88%86"><span class="nav-number">1.3.</span> <span class="nav-text">Exec 部分</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#FileSourceScanExec"><span class="nav-number">1.4.</span> <span class="nav-text">FileSourceScanExec</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#TBD"><span class="nav-number">2.</span> <span class="nav-text">TBD</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#FileScanRDD"><span class="nav-number">2.1.</span> <span class="nav-text">FileScanRDD</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="陶加涛"
+      src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://muzi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: {page: {
+            url: "https://aaaaaaron.github.io/2018/11/01/Spark-Read-Deep-Dive/",
+            identifier: "2018/11/01/Spark-Read-Deep-Dive/",
+            title: "Spark Paruqet Read Deep Dive"
+          }
+        }
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://muzi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

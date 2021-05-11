@@ -1,4 +1,236 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;前言&quot;&gt;&lt;a href=&quot;#前言&quot; class=&quot;headerlink&quot; title=&quot;前言&quot;&gt;&lt;/a&gt;前言&lt;/h1&gt;&lt;p&gt;在平时的 Spark 处理中常常会有把一个如 &lt;code&gt;2012-12-12&lt;/code&gt; 这样的 date 类型转换成一个 long 的 Unix time 然后进行计算的需求.下面是一段示例代码:"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Spark DateType/Timestamp cast 小结 | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/BigData/" rel="tag">BigData</a><a class="post-tag-none-link" href="/tags/Spark/" rel="tag">Spark</a></div><div class="post-time">2019-07-19</div></div></div><div class="container post-header"><h1>Spark DateType/Timestamp cast 小结</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%89%8D%E8%A8%80"><span class="toc-number">1.</span> <span class="toc-text">前言</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E9%97%AE%E9%A2%98-amp-%E8%A7%A3%E5%86%B3"><span class="toc-number">2.</span> <span class="toc-text">问题 &amp; 解决</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Deep-dive"><span class="toc-number">3.</span> <span class="toc-text">Deep dive</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Test-Example"><span class="toc-number">3.1.</span> <span class="toc-text">Test Example</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%AF%B9%E4%BA%8E%E6%97%B6%E5%8C%BA%E7%90%86%E8%A7%A3"><span class="toc-number">3.1.0.1.</span> <span class="toc-text">对于时区理解</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E7%95%AA%E5%A4%96-ImplicitCastInputTypes"><span class="toc-number">4.</span> <span class="toc-text">番外 : ImplicitCastInputTypes</span></a></li></ol></details></div><div class="container post-content"><h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在平时的 Spark 处理中常常会有把一个如 <code>2012-12-12</code> 这样的 date 类型转换成一个 long 的 Unix time 然后进行计算的需求.下面是一段示例代码:</p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="前言在平时的 Spark 处理中常常会有把一个如 2012-12-12 这样的 date 类型转换成一个 long 的 Unix time 然后进行计算的需求.下面是一段示例代码: 123456789101112val schema &#x3D; StructType(  Array(    StructField(&quot;id&quot;, IntegerType, nullable &#x3D; true),">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Spark DateType&#x2F;Timestamp cast 小结">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="前言在平时的 Spark 处理中常常会有把一个如 2012-12-12 这样的 date 类型转换成一个 long 的 Unix time 然后进行计算的需求.下面是一段示例代码: 123456789101112val schema &#x3D; StructType(  Array(    StructField(&quot;id&quot;, IntegerType, nullable &#x3D; true),">
+<meta property="og:locale">
+<meta property="article:published_time" content="2019-07-19T08:47:39.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:18:47.754Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="BigData">
+<meta property="article:tag" content="Spark">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2019/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Spark DateType/Timestamp cast 小结 | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about.html" rel="section"><i class="fa fa-fw fa-user-circle-o"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2019/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Spark DateType/Timestamp cast 小结
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-07-19 16:47:39" itemprop="dateCreated datePublished" datetime="2019-07-19T16:47:39+08:00">2019-07-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-05-08 11:18:47" itemprop="dateModified" datetime="2021-05-08T11:18:47+08:00">2021-05-08</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2019/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/07/19/Spark-DateType-Timestamp-cast-小结/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>在平时的 Spark 处理中常常会有把一个如 <code>2012-12-12</code> 这样的 date 类型转换成一个 long 的 Unix time 然后进行计算的需求.下面是一段示例代码:</p>
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">val</span> schema = <span class="type">StructType</span>(</span><br><span class="line">  <span class="type">Array</span>(</span><br><span class="line">    <span class="type">StructField</span>(<span class="string">&quot;id&quot;</span>, <span class="type">IntegerType</span>, nullable = <span class="literal">true</span>),</span><br><span class="line">    <span class="type">StructField</span>(<span class="string">&quot;birth&quot;</span>, <span class="type">DateType</span>, nullable = <span class="literal">true</span>),</span><br><span class="line">    <span class="type">StructField</span>(<span class="string">&quot;time&quot;</span>, <span class="type">TimestampType</span>, nullable = <span class="literal">true</span>)</span><br><span class="line">  ))</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> data = <span class="type">Seq</span>(</span><br><span class="line">  <span class="type">Row</span>(<span class="number">1</span>, <span class="type">Date</span>.valueOf(<span class="string">&quot;2012-12-12&quot;</span>), <span class="type">Timestamp</span>.valueOf(<span class="string">&quot;2016-09-30 03:03:00&quot;</span>)),</span><br><span class="line">  <span class="type">Row</span>(<span class="number">2</span>, <span class="type">Date</span>.valueOf(<span class="string">&quot;2016-12-14&quot;</span>), <span class="type">Timestamp</span>.valueOf(<span class="string">&quot;2016-12-14 03:03:00&quot;</span>)))</span><br><span class="line"></span><br><span class="line"><span class="keyword">val</span> df = spark.createDataFrame(spark.sparkContext.parallelize(data),schema)</span><br></pre></td></tr></table></figure>
 
 <h1 id="问题-amp-解决"><a href="#问题-amp-解决" class="headerlink" title="问题 &amp; 解决"></a>问题 &amp; 解决</h1><p>首先很直观的是直接把DateType cast 成 LongType, 如下:</p>
@@ -51,7 +283,246 @@
 <figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">case</span> e: <span class="type">ImplicitCastInputTypes</span> <span class="keyword">if</span> e.inputTypes.nonEmpty =&gt;</span><br><span class="line"><span class="keyword">val</span> children: <span class="type">Seq</span>[<span class="type">Expression</span>] = e.children.zip(e.inputTypes).map &#123; <span class="keyword">case</span> (in, expected) =&gt;</span><br><span class="line">  <span class="comment">// If we cannot do the implicit cast, just use the original input.</span></span><br><span class="line">  implicitCast(in, expected).getOrElse(in)</span><br><span class="line">&#125;</span><br><span class="line">e.withNewChildren(children)</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">implicitCast</span></span>(e: <span class="type">Expression</span>, expectedType: <span class="type">AbstractDataType</span>): <span class="type">Option</span>[<span class="type">Expression</span>] = &#123;</span><br><span class="line">  implicitCast(e.dataType, expectedType).map &#123; dt =&gt;</span><br><span class="line">    <span class="keyword">if</span> (dt == e.dataType) e <span class="keyword">else</span> <span class="type">Cast</span>(e, dt)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
 <p><strong>org.apache.spark.sql.catalyst.expressions.Cast#castToDate #DateConverter</strong></p>
-<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[<span class="keyword">this</span>] <span class="function"><span class="keyword">def</span> <span class="title">castToDate</span></span>(from: <span class="type">DataType</span>): <span class="type">Any</span> =&gt; <span class="type">Any</span> = from <span class="keyword">match</span> &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">StringType</span> =&gt;</span><br><span class="line">    buildCast[<span class="type">UTF8String</span>](_, s =&gt; <span class="type">DateTimeUtils</span>.stringToDate(s).orNull)</span><br><span class="line">  <span class="keyword">case</span> <span class="type">TimestampType</span> =&gt;</span><br><span class="line">    <span class="comment">// throw valid precision more than seconds, according to Hive.</span></span><br><span class="line">    <span class="comment">// Timestamp.nanos is in 0 to 999,999,999, no more than a second.</span></span><br><span class="line">    buildCast[<span class="type">Long</span>](_, t =&gt; <span class="type">DateTimeUtils</span>.millisToDays(t / <span class="number">1000</span>L, timeZone))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure></div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+<figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span>[<span class="keyword">this</span>] <span class="function"><span class="keyword">def</span> <span class="title">castToDate</span></span>(from: <span class="type">DataType</span>): <span class="type">Any</span> =&gt; <span class="type">Any</span> = from <span class="keyword">match</span> &#123;</span><br><span class="line">  <span class="keyword">case</span> <span class="type">StringType</span> =&gt;</span><br><span class="line">    buildCast[<span class="type">UTF8String</span>](_, s =&gt; <span class="type">DateTimeUtils</span>.stringToDate(s).orNull)</span><br><span class="line">  <span class="keyword">case</span> <span class="type">TimestampType</span> =&gt;</span><br><span class="line">    <span class="comment">// throw valid precision more than seconds, according to Hive.</span></span><br><span class="line">    <span class="comment">// Timestamp.nanos is in 0 to 999,999,999, no more than a second.</span></span><br><span class="line">    buildCast[<span class="type">Long</span>](_, t =&gt; <span class="type">DateTimeUtils</span>.millisToDays(t / <span class="number">1000</span>L, timeZone))</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/BigData/" rel="tag"><i class="fa fa-tag"></i> BigData</a>
+              <a href="/tags/Spark/" rel="tag"><i class="fa fa-tag"></i> Spark</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/03/29/Spark-SQL-Join-Deep-Dive/" rel="prev" title="Spark SQL Join Deep Dive">
+      <i class="fa fa-chevron-left"></i> Spark SQL Join Deep Dive
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/" rel="next" title="Callback 与 Coroutine 协程概念说明">
+      Callback 与 Coroutine 协程概念说明 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%89%8D%E8%A8%80"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E9%97%AE%E9%A2%98-amp-%E8%A7%A3%E5%86%B3"><span class="nav-number">2.</span> <span class="nav-text">问题 &amp; 解决</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Deep-dive"><span class="nav-number">3.</span> <span class="nav-text">Deep dive</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Test-Example"><span class="nav-number">3.1.</span> <span class="nav-text">Test Example</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E7%95%AA%E5%A4%96-ImplicitCastInputTypes"><span class="nav-number">4.</span> <span class="nav-text">番外 : ImplicitCastInputTypes</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="陶加涛"
+      src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://muzi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: {page: {
+            url: "https://aaaaaaron.github.io/2019/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/",
+            identifier: "2019/07/19/Spark-DateType-Timestamp-cast-小结/",
+            title: "Spark DateType/Timestamp cast 小结"
+          }
+        }
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://muzi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

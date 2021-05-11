@@ -1,4 +1,254 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content="&lt;a href=&quot;http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf&quot;&gt;http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf&lt;/a&gt;"><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Parquet 乱弹 | Jiatao Tao's blog</title><meta name="robots" content="noindex"><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/Parquet/" rel="tag">Parquet</a></div><div class="post-time">2019-05-09</div></div></div><div class="container post-header"><h1>Parquet 乱弹</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-3"><a class="toc-link" href="#page"><span class="toc-number">1.</span> <span class="toc-text">page</span></a></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E8%AF%BB"><span class="toc-number"></span> <span class="toc-text">读</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E5%8E%9F%E7%94%9F-parquet"><span class="toc-number"></span> <span class="toc-text">原生 parquet</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#spark"><span class="toc-number"></span> <span class="toc-text">spark</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#code"><span class="toc-number"></span> <span class="toc-text">code</span></a></details></div><div class="container post-content"><p><a target="_blank" rel="noopener" href="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf">http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf</a></p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="http:&#x2F;&#x2F;lvheyang.com&#x2F;wp-content&#x2F;uploads&#x2F;2016&#x2F;02&#x2F;%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf     recommended to set the parquet block s">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Parquet 乱弹">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="http:&#x2F;&#x2F;lvheyang.com&#x2F;wp-content&#x2F;uploads&#x2F;2016&#x2F;02&#x2F;%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf     recommended to set the parquet block s">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509164025.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509165611.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509170805.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509182510.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104542.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104910.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105205.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105231.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105342.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528105441.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103634.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103701.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528110659.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528110909.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528111155.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103907.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103951.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104202.png">
+<meta property="article:published_time" content="2019-05-09T08:30:34.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:13:53.923Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="Parquet">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509164025.png">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Parquet 乱弹 | Jiatao Tao's blog</title><meta name="robots" content="noindex">
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about.html" rel="section"><i class="fa fa-fw fa-user-circle-o"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Parquet 乱弹
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-05-09 16:30:34" itemprop="dateCreated datePublished" datetime="2019-05-09T16:30:34+08:00">2019-05-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-05-08 11:13:53" itemprop="dateModified" datetime="2021-05-08T11:13:53+08:00">2021-05-08</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/05/09/Parquet-乱弹/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><a target="_blank" rel="noopener" href="http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf">http://lvheyang.com/wp-content/uploads/2016/02/%E5%88%97%E5%BC%8F%E5%AD%98%E5%82%A8%E4%B8%8EParquet%E6%96%87%E4%BB%B6%E6%A0%BC%E5%BC%8F%E5%88%86%E4%BA%AB.pdf</a></p>
 <p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509164025.png"></p>
 <p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509165611.png"></p>
 <p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190509170805.png"></p>
@@ -43,7 +293,235 @@
 <p><strong>spark 读的调用栈</strong><br><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103907.png"></p>
 <p><strong>Vectorized read</strong><br><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528103951.png"></p>
 <p><img src="/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/20190528104202.png"></p>
-<h2 id="code"><a href="#code" class="headerlink" title="code"></a>code</h2><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Reads `total` values from this columnReader into column.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">void readBatch(int total, <span class="type">WritableColumnVector</span> column) <span class="keyword">throws</span> <span class="type">IOException</span> &#123;</span><br><span class="line">  int rowId = <span class="number">0</span>;</span><br><span class="line">  <span class="type">WritableColumnVector</span> dictionaryIds = <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">if</span> (dictionary != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="comment">// SPARK-16334: We only maintain a single dictionary per row batch, so that it can be used to</span></span><br><span class="line">    <span class="comment">// decode all previous dictionary encoded pages if we ever encounter a non-dictionary encoded</span></span><br><span class="line">    <span class="comment">// page.</span></span><br><span class="line">    dictionaryIds = column.reserveDictionaryIds(total);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">while</span> (total &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// Compute the number of values we want to read in this page.</span></span><br><span class="line">    int leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    <span class="keyword">if</span> (leftInPage == <span class="number">0</span>) &#123;</span><br><span class="line">      readPage();</span><br><span class="line">      leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    &#125;</span><br><span class="line">    int num = <span class="type">Math</span>.min(total, leftInPage);</span><br><span class="line">    <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span> typeName =</span><br><span class="line">      descriptor.getPrimitiveType().getPrimitiveTypeName();</span><br><span class="line">    <span class="keyword">if</span> (isCurrentPageDictionaryEncoded) &#123;</span><br><span class="line">      <span class="comment">// Read and decode dictionary ids.</span></span><br><span class="line">      defColumn.readIntegers(</span><br><span class="line">          num, dictionaryIds, column, rowId, maxDefLevel, (<span class="type">VectorizedValuesReader</span>) dataColumn);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// TIMESTAMP_MILLIS encoded as INT64 can&#x27;t be lazily decoded as we need to post process</span></span><br><span class="line">      <span class="comment">// the values to add microseconds precision.</span></span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() || (rowId == <span class="number">0</span> &amp;&amp;</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT32</span> ||</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT64</span> &amp;&amp;</span><br><span class="line">            originalType != <span class="type">OriginalType</span>.<span class="type">TIMESTAMP_MILLIS</span>) ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">FLOAT</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">DOUBLE</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">BINARY</span>))) &#123;</span><br><span class="line">        <span class="comment">// Column vector supports lazy decoding of dictionary values so just set the dictionary.</span></span><br><span class="line">        <span class="comment">// We can&#x27;t do this if rowId != 0 AND the column doesn&#x27;t have a dictionary (i.e. some</span></span><br><span class="line">        <span class="comment">// non-dictionary encoded values have already been added).</span></span><br><span class="line">        column.setDictionary(<span class="keyword">new</span> <span class="type">ParquetDictionary</span>(dictionary));</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        decodeDictionaryIds(rowId, num, column, dictionaryIds);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() &amp;&amp; rowId != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// This batch already has dictionary encoded values but this new page is not. The batch</span></span><br><span class="line">        <span class="comment">// does not support a mix of dictionary and not so we will decode the dictionary.</span></span><br><span class="line">        decodeDictionaryIds(<span class="number">0</span>, rowId, column, column.getDictionaryIds());</span><br><span class="line">      &#125;</span><br><span class="line">      column.setDictionary(<span class="literal">null</span>);</span><br><span class="line">      switch (typeName) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BOOLEAN</span>:</span><br><span class="line">          readBooleanBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT32</span>:</span><br><span class="line">          readIntBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT64</span>:</span><br><span class="line">          readLongBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT96</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FLOAT</span>:</span><br><span class="line">          readFloatBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">DOUBLE</span>:</span><br><span class="line">          readDoubleBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BINARY</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FIXED_LEN_BYTE_ARRAY</span>:</span><br><span class="line">          readFixedLenByteArrayBatch(</span><br><span class="line">            rowId, num, column, descriptor.getPrimitiveType().getTypeLength());</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IOException</span>(<span class="string">&quot;Unsupported type: &quot;</span> + typeName);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    valuesRead += num;</span><br><span class="line">    rowId += num;</span><br><span class="line">    total -= num;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><!-- flag of hidden posts --></div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+<h2 id="code"><a href="#code" class="headerlink" title="code"></a>code</h2><figure class="highlight scala"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Reads `total` values from this columnReader into column.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line">void readBatch(int total, <span class="type">WritableColumnVector</span> column) <span class="keyword">throws</span> <span class="type">IOException</span> &#123;</span><br><span class="line">  int rowId = <span class="number">0</span>;</span><br><span class="line">  <span class="type">WritableColumnVector</span> dictionaryIds = <span class="literal">null</span>;</span><br><span class="line">  <span class="keyword">if</span> (dictionary != <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="comment">// SPARK-16334: We only maintain a single dictionary per row batch, so that it can be used to</span></span><br><span class="line">    <span class="comment">// decode all previous dictionary encoded pages if we ever encounter a non-dictionary encoded</span></span><br><span class="line">    <span class="comment">// page.</span></span><br><span class="line">    dictionaryIds = column.reserveDictionaryIds(total);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">while</span> (total &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    <span class="comment">// Compute the number of values we want to read in this page.</span></span><br><span class="line">    int leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    <span class="keyword">if</span> (leftInPage == <span class="number">0</span>) &#123;</span><br><span class="line">      readPage();</span><br><span class="line">      leftInPage = (int) (endOfPageValueCount - valuesRead);</span><br><span class="line">    &#125;</span><br><span class="line">    int num = <span class="type">Math</span>.min(total, leftInPage);</span><br><span class="line">    <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span> typeName =</span><br><span class="line">      descriptor.getPrimitiveType().getPrimitiveTypeName();</span><br><span class="line">    <span class="keyword">if</span> (isCurrentPageDictionaryEncoded) &#123;</span><br><span class="line">      <span class="comment">// Read and decode dictionary ids.</span></span><br><span class="line">      defColumn.readIntegers(</span><br><span class="line">          num, dictionaryIds, column, rowId, maxDefLevel, (<span class="type">VectorizedValuesReader</span>) dataColumn);</span><br><span class="line"></span><br><span class="line">      <span class="comment">// TIMESTAMP_MILLIS encoded as INT64 can&#x27;t be lazily decoded as we need to post process</span></span><br><span class="line">      <span class="comment">// the values to add microseconds precision.</span></span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() || (rowId == <span class="number">0</span> &amp;&amp;</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT32</span> ||</span><br><span class="line">          (typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">INT64</span> &amp;&amp;</span><br><span class="line">            originalType != <span class="type">OriginalType</span>.<span class="type">TIMESTAMP_MILLIS</span>) ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">FLOAT</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">DOUBLE</span> ||</span><br><span class="line">          typeName == <span class="type">PrimitiveType</span>.<span class="type">PrimitiveTypeName</span>.<span class="type">BINARY</span>))) &#123;</span><br><span class="line">        <span class="comment">// Column vector supports lazy decoding of dictionary values so just set the dictionary.</span></span><br><span class="line">        <span class="comment">// We can&#x27;t do this if rowId != 0 AND the column doesn&#x27;t have a dictionary (i.e. some</span></span><br><span class="line">        <span class="comment">// non-dictionary encoded values have already been added).</span></span><br><span class="line">        column.setDictionary(<span class="keyword">new</span> <span class="type">ParquetDictionary</span>(dictionary));</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        decodeDictionaryIds(rowId, num, column, dictionaryIds);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="keyword">if</span> (column.hasDictionary() &amp;&amp; rowId != <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="comment">// This batch already has dictionary encoded values but this new page is not. The batch</span></span><br><span class="line">        <span class="comment">// does not support a mix of dictionary and not so we will decode the dictionary.</span></span><br><span class="line">        decodeDictionaryIds(<span class="number">0</span>, rowId, column, column.getDictionaryIds());</span><br><span class="line">      &#125;</span><br><span class="line">      column.setDictionary(<span class="literal">null</span>);</span><br><span class="line">      switch (typeName) &#123;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BOOLEAN</span>:</span><br><span class="line">          readBooleanBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT32</span>:</span><br><span class="line">          readIntBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT64</span>:</span><br><span class="line">          readLongBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">INT96</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FLOAT</span>:</span><br><span class="line">          readFloatBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">DOUBLE</span>:</span><br><span class="line">          readDoubleBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">BINARY</span>:</span><br><span class="line">          readBinaryBatch(rowId, num, column);</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> <span class="type">FIXED_LEN_BYTE_ARRAY</span>:</span><br><span class="line">          readFixedLenByteArrayBatch(</span><br><span class="line">            rowId, num, column, descriptor.getPrimitiveType().getTypeLength());</span><br><span class="line">          <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">          <span class="keyword">throw</span> <span class="keyword">new</span> <span class="type">IOException</span>(<span class="string">&quot;Unsupported type: &quot;</span> + typeName);</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    valuesRead += num;</span><br><span class="line">    rowId += num;</span><br><span class="line">    total -= num;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure><!-- flag of hidden posts -->
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Parquet/" rel="tag"><i class="fa fa-tag"></i> Parquet</a>
+          </div>
+
+        
+
+
+        
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#page"><span class="nav-number">1.</span> <span class="nav-text">page</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%AF%BB"><span class="nav-number"></span> <span class="nav-text">读</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%8E%9F%E7%94%9F-parquet"><span class="nav-number"></span> <span class="nav-text">原生 parquet</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#spark"><span class="nav-number"></span> <span class="nav-text">spark</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#code"><span class="nav-number"></span> <span class="nav-text">code</span></a></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="陶加涛"
+      src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://muzi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: {page: {
+            url: "https://aaaaaaron.github.io/2019/05/09/Parquet-%E4%B9%B1%E5%BC%B9/",
+            identifier: "2019/05/09/Parquet-乱弹/",
+            title: "Parquet 乱弹"
+          }
+        }
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://muzi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

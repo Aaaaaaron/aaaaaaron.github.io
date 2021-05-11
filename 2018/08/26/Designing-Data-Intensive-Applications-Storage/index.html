@@ -1,4 +1,245 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;Index-基础&quot;&gt;&lt;a href=&quot;#Index-基础&quot; class=&quot;headerlink&quot; title=&quot;Index 基础&quot;&gt;&lt;/a&gt;Index 基础&lt;/h1&gt;&lt;p&gt;log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的."><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Designing Data-Intensive Applications(Storage) | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/BigData/" rel="tag">BigData</a><a class="post-tag-none-link" href="/tags/DDIA/" rel="tag">DDIA</a></div><div class="post-time">2018-08-26</div></div></div><div class="container post-header"><h1>Designing Data-Intensive Applications(Storage)</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#Index-%E5%9F%BA%E7%A1%80"><span class="toc-number">1.</span> <span class="toc-text">Index 基础</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#Hash-Index"><span class="toc-number">1.1.</span> <span class="toc-text">Hash Index</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E5%B1%80%E9%99%90"><span class="toc-number">1.1.1.</span> <span class="toc-text">局限</span></a></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#SSLTables-and-LSM-Trees"><span class="toc-number">1.2.</span> <span class="toc-text">SSLTables and LSM-Trees</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E5%8A%BF"><span class="toc-number">1.2.1.</span> <span class="toc-text">优势</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E7%BB%B4%E6%8A%A4%E5%92%8C%E6%9E%84%E5%BB%BA-SSTables"><span class="toc-number">1.2.2.</span> <span class="toc-text">维护和构建 SSTables</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%B7%A5%E4%BD%9C%E6%B5%81"><span class="toc-number">1.2.2.1.</span> <span class="toc-text">工作流</span></a><ol class="toc-child"><li class="toc-item toc-level-5"><a class="toc-link" href="#%E6%80%A7%E8%83%BD%E4%BC%98%E5%8C%96"><span class="toc-number">1.2.2.1.1.</span> <span class="toc-text">性能优化</span></a></li><li class="toc-item toc-level-5"><a class="toc-link" href="#%E9%97%AE%E9%A2%98-amp-%E8%A7%A3%E5%86%B3"><span class="toc-number">1.2.2.1.2.</span> <span class="toc-text">问题&amp;解决</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-2"><a class="toc-link" href="#B-Trees"><span class="toc-number">1.3.</span> <span class="toc-text">B-Trees</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E9%97%AE%E9%A2%98"><span class="toc-number">1.3.1.</span> <span class="toc-text">问题</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#%E4%BC%98%E5%8C%96"><span class="toc-number">1.3.2.</span> <span class="toc-text">优化</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#LSM-Tree-VS-B-Tree"><span class="toc-number">1.3.3.</span> <span class="toc-text">LSM Tree VS B Tree</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#LSM"><span class="toc-number">1.3.3.1.</span> <span class="toc-text">LSM</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#B-Tree"><span class="toc-number">1.3.3.2.</span> <span class="toc-text">B Tree</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%88%97%E5%AD%98%E5%82%A8"><span class="toc-number">2.</span> <span class="toc-text">列存储</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#vectorized-process"><span class="toc-number">2.1.</span> <span class="toc-text">vectorized process</span></a></li></ol></li></ol></details></div><div class="container post-content"><h1 id="Index-基础"><a href="#Index-基础" class="headerlink" title="Index 基础"></a>Index 基础</h1><p>log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的.</p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Index 基础log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的. log 文件是 append only, 而且一旦生成就不可变, 所以对并发和崩溃恢复很友好. 如果用 update 方式来修改值的话, 崩溃时会有很多不可预期的行为. 核心, 就是要减少扫的数据量. full scan (O(n)) 肯定最慢, 扫的时间和数据量成正比. index 的">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Designing Data-Intensive Applications(Storage)">
+<meta property="og:url" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="Index 基础log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的. log 文件是 append only, 而且一旦生成就不可变, 所以对并发和崩溃恢复很友好. 如果用 update 方式来修改值的话, 崩溃时会有很多不可预期的行为. 核心, 就是要减少扫的数据量. full scan (O(n)) 肯定最慢, 扫的时间和数据量成正比. index 的">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/893370.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/39145451.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/13193271.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/65990847.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/28391204.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/89272936.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/30223544.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/37827590.jpg">
+<meta property="article:published_time" content="2018-08-26T11:30:40.000Z">
+<meta property="article:modified_time" content="2021-05-08T03:09:45.558Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="BigData">
+<meta property="article:tag" content="DDIA">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/893370.jpg">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Designing Data-Intensive Applications(Storage) | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about.html" rel="section"><i class="fa fa-fw fa-user-circle-o"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Designing Data-Intensive Applications(Storage)
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2018-08-26 19:30:40" itemprop="dateCreated datePublished" datetime="2018-08-26T19:30:40+08:00">2018-08-26</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-05-08 11:09:45" itemprop="dateModified" datetime="2021-05-08T11:09:45+08:00">2021-05-08</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2018/08/26/Designing-Data-Intensive-Applications-Storage/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2018/08/26/Designing-Data-Intensive-Applications-Storage/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Index-基础"><a href="#Index-基础" class="headerlink" title="Index 基础"></a>Index 基础</h1><p>log:泛指 append only 的记录序列.不一定要人可读, 可以是 binary 的.</p>
 <p>log 文件是 append only, 而且一旦生成就不可变, 所以对并发和崩溃恢复很友好. 如果用 update 方式来修改值的话, 崩溃时会有很多不可预期的行为.</p>
 <p>核心, 就是要减少扫的数据量. full scan (O(n)) 肯定最慢, 扫的时间和数据量成正比.</p>
 <p>index 的也就是存出一些额外的信息, 这样的话帮助你定位到你的数据. 管理额外的信息是有开销的:存储(写入) 管理(更新), 所以 db 不会索引所有值.</p>
@@ -76,7 +317,246 @@
 </ol>
 <h1 id="列存储"><a href="#列存储" class="headerlink" title="列存储"></a>列存储</h1><p>如果一列的值, count 很大, 但是基数不大, 可以使用 bit map. 可以很高效的压缩.<br><img src="/2018/08/26/Designing-Data-Intensive-Applications-Storage/37827590.jpg"></p>
 <h2 id="vectorized-process"><a href="#vectorized-process" class="headerlink" title="vectorized process"></a>vectorized process</h2><p>除了减少需要从磁盘加载的数据量以外, 面向列的存储布局也可以有效利用 CPU 周期. 例如 query engine 可以把一块(chunk) 的  compressed column data(为了单位信息密度更大) 放到 CPU 的 L1 cache. 前面说的按位与/或可以直接 apply 到这些 chunk 上.</p>
-</div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/BigData/" rel="tag"><i class="fa fa-tag"></i> BigData</a>
+              <a href="/tags/DDIA/" rel="tag"><i class="fa fa-tag"></i> DDIA</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2018/08/22/Parquet-encoding-definitions-official/" rel="prev" title="Parquet encoding definitions(official)">
+      <i class="fa fa-chevron-left"></i> Parquet encoding definitions(official)
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2018/10/06/Druid-Storage-%E5%8E%9F%E7%90%86/" rel="next" title="Druid Storage 原理">
+      Druid Storage 原理 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Index-%E5%9F%BA%E7%A1%80"><span class="nav-number">1.</span> <span class="nav-text">Index 基础</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Hash-Index"><span class="nav-number">1.1.</span> <span class="nav-text">Hash Index</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%B1%80%E9%99%90"><span class="nav-number">1.1.1.</span> <span class="nav-text">局限</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SSLTables-and-LSM-Trees"><span class="nav-number">1.2.</span> <span class="nav-text">SSLTables and LSM-Trees</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%8A%BF"><span class="nav-number">1.2.1.</span> <span class="nav-text">优势</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%BB%B4%E6%8A%A4%E5%92%8C%E6%9E%84%E5%BB%BA-SSTables"><span class="nav-number">1.2.2.</span> <span class="nav-text">维护和构建 SSTables</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#B-Trees"><span class="nav-number">1.3.</span> <span class="nav-text">B-Trees</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%97%AE%E9%A2%98"><span class="nav-number">1.3.1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E4%BC%98%E5%8C%96"><span class="nav-number">1.3.2.</span> <span class="nav-text">优化</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#LSM-Tree-VS-B-Tree"><span class="nav-number">1.3.3.</span> <span class="nav-text">LSM Tree VS B Tree</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%88%97%E5%AD%98%E5%82%A8"><span class="nav-number">2.</span> <span class="nav-text">列存储</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#vectorized-process"><span class="nav-number">2.1.</span> <span class="nav-text">vectorized process</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="陶加涛"
+      src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://muzi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: {page: {
+            url: "https://aaaaaaron.github.io/2018/08/26/Designing-Data-Intensive-Applications-Storage/",
+            identifier: "2018/08/26/Designing-Data-Intensive-Applications-Storage/",
+            title: "Designing Data-Intensive Applications(Storage)"
+          }
+        }
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://muzi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>

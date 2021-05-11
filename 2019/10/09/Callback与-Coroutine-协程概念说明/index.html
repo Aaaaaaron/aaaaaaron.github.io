@@ -1,4 +1,240 @@
-<!DOCTYPE html><html><head><meta http-equiv="content-type" content="text/html; charset=utf-8"><meta content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=0" name="viewport"><meta content="yes" name="apple-mobile-web-app-capable"><meta content="black-translucent" name="apple-mobile-web-app-status-bar-style"><meta content="telephone=no" name="format-detection"><meta name="description" content=" id=&quot;小谈阻塞非阻塞&quot;&gt;&lt;a href=&quot;#小谈阻塞非阻塞&quot; class=&quot;headerlink&quot; title=&quot;小谈阻塞非阻塞&quot;&gt;&lt;/a&gt;小谈阻塞非阻塞&lt;/h1&gt;&lt;p&gt;阻塞非阻塞概念都是对于线程, 进程这种粒度来说的, 因为只有他们才是内核有感知的, 协程是你内核无感知, 是你用户自己实现的."><link rel="stylesheet" type="text/css" href="/css/normalize.css"><link rel="stylesheet" type="text/css" href="/css/highlight.css"><link rel="stylesheet" type="text/css" href="/css/noise.css"><title>Callback 与 Coroutine 协程概念说明 | Jiatao Tao's blog</title><link rel="Shortcut Icon" type="image/x-icon" href="/favicon.ico"><meta name="generator" content="Hexo 5.4.0"></head><body><article class="wrapper"><div class="post-main"><div class="nav"><nav class="container"><a class="sidebar-nav-item active" href="/">Home</a><a class="sidebar-nav-item" href="/archives">Archives</a><a class="sidebar-nav-item" href="/about">About</a></nav><div class="container post-meta"><div class="post-tags"><a class="post-tag-none-link" href="/tags/System/" rel="tag">System</a><a class="post-tag-none-link" href="/tags/%E9%AB%98%E6%80%A7%E8%83%BD/" rel="tag">高性能</a></div><div class="post-time">2019-10-09</div></div></div><div class="container post-header"><h1>Callback 与 Coroutine 协程概念说明</h1></div><div class="container post-toc"><details class="toc"><summary class="toc-accordion">Table of Contents</summary><ol class="toc"><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%B0%8F%E8%B0%88%E9%98%BB%E5%A1%9E%E9%9D%9E%E9%98%BB%E5%A1%9E"><span class="toc-number">1.</span> <span class="toc-text">小谈阻塞非阻塞</span></a><ol class="toc-child"><li class="toc-item toc-level-3"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E5%8D%8F%E7%A8%8B"><span class="toc-number">1.0.1.</span> <span class="toc-text">进程、线程、协程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#1-%E8%BF%9B%E7%A8%8B"><span class="toc-number">1.0.2.</span> <span class="toc-text">1. 进程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E4%BA%8B%E4%BB%B6%E6%A8%A1%E5%9E%8B"><span class="toc-number">1.0.2.1.</span> <span class="toc-text">事件模型</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-1-%E5%88%9B%E5%BB%BA%E8%BF%9B%E7%A8%8B%E7%9A%84%E8%BF%87%E7%A8%8B"><span class="toc-number">1.0.2.2.</span> <span class="toc-text">1.1 创建进程的过程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#1-2-%E8%BF%9B%E7%A8%8B%E5%88%87%E6%8D%A2%E6%AD%A5%E9%AA%A4-PCB-TLB-%EF%BC%9A"><span class="toc-number">1.0.2.3.</span> <span class="toc-text">1.2 进程切换步骤(PCB&#x2F;TLB)：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E4%B8%8A%E4%B8%8B%E6%96%87%EF%BC%9A"><span class="toc-number">1.0.2.4.</span> <span class="toc-text">进程上下文：</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E9%98%BB%E5%A1%9E%E8%BF%87%E7%A8%8B"><span class="toc-number">1.0.2.5.</span> <span class="toc-text">进程阻塞过程</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E5%94%A4%E9%86%92%E8%BF%87%E7%A8%8B"><span class="toc-number">1.0.2.6.</span> <span class="toc-text">进程唤醒过程</span></a></li></ol></li><li class="toc-item toc-level-3"><a class="toc-link" href="#2-%E7%BA%BF%E7%A8%8B"><span class="toc-number">1.0.3.</span> <span class="toc-text">2. 线程</span></a></li><li class="toc-item toc-level-3"><a class="toc-link" href="#3-%E5%8D%8F%E7%A8%8B"><span class="toc-number">1.0.4.</span> <span class="toc-text">3. 协程</span></a><ol class="toc-child"><li class="toc-item toc-level-4"><a class="toc-link" href="#%E5%8D%8F%E7%A8%8B%E5%A5%BD%E5%A4%84"><span class="toc-number">1.0.4.1.</span> <span class="toc-text">协程好处</span></a></li><li class="toc-item toc-level-4"><a class="toc-link" href="#%E7%BC%BA%E7%82%B9"><span class="toc-number">1.0.4.2.</span> <span class="toc-text">缺点</span></a></li></ol></li></ol></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%85%B6%E4%BB%96%E8%AF%B4%E6%98%8E"><span class="toc-number">2.</span> <span class="toc-text">其他说明</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E5%8D%8F%E7%A8%8B%E7%9A%84%E5%85%B3%E7%B3%BB%E5%92%8C%E5%8C%BA%E5%88%AB%EF%BC%9A"><span class="toc-number">2.1.</span> <span class="toc-text">进程、线程、协程的关系和区别：</span></a></li></ol></li><li class="toc-item toc-level-1"><a class="toc-link" href="#Continuation"><span class="toc-number">3.</span> <span class="toc-text">Continuation</span></a></li><li class="toc-item toc-level-1"><a class="toc-link" href="#%E5%8D%8F%E7%A8%8Bwiki"><span class="toc-number">4.</span> <span class="toc-text">协程wiki</span></a><ol class="toc-child"><li class="toc-item toc-level-2"><a class="toc-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E5%8D%8F%E7%A8%8B"><span class="toc-number">4.1.</span> <span class="toc-text">生产者协程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85%E5%8D%8F%E7%A8%8B"><span class="toc-number">4.2.</span> <span class="toc-text">消费者协程</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E8%AF%A6%E7%BB%86%E6%AF%94%E8%BE%83"><span class="toc-number">4.3.</span> <span class="toc-text">详细比较</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8Esubroutine-%E5%AD%90%E4%BE%8B%E7%A8%8B-%E5%87%BD%E6%95%B0-%E6%AF%94%E8%BE%83"><span class="toc-number">4.4.</span> <span class="toc-text">与subroutine(子例程 函数?)比较</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8Egenerators%E7%9B%B8%E6%AF%94"><span class="toc-number">4.5.</span> <span class="toc-text">与generators相比</span></a></li><li class="toc-item toc-level-2"><a class="toc-link" href="#%E4%B8%8E%E7%9B%B8%E4%BA%92%E9%80%92%E5%BD%92%E7%9B%B8%E6%AF%94"><span class="toc-number">4.6.</span> <span class="toc-text">与相互递归相比</span></a></li></ol></li></ol></details></div><div class="container post-content"><h1 id="小谈阻塞非阻塞"><a href="#小谈阻塞非阻塞" class="headerlink" title="小谈阻塞非阻塞"></a>小谈阻塞非阻塞</h1><p>阻塞非阻塞概念都是对于线程, 进程这种粒度来说的, 因为只有他们才是内核有感知的, 协程是你内核无感知, 是你用户自己实现的.</p>
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Lato:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="小谈阻塞非阻塞阻塞非阻塞概念都是对于线程, 进程这种粒度来说的, 因为只有他们才是内核有感知的, 协程是你内核无感知, 是你用户自己实现的. 例如在 Golang 中, resp, err :&#x3D; client.Do(req) 看着是阻塞的写法(有网络 IO), 但是 Go 的 Http 包是异步的, 这边在协程粒度是阻塞住了, 但是线程该干嘛就干嘛去了, 对于系统来说, 就是非阻塞. 应用程序觉得">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Callback 与 Coroutine 协程概念说明">
+<meta property="og:url" content="https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="小谈阻塞非阻塞阻塞非阻塞概念都是对于线程, 进程这种粒度来说的, 因为只有他们才是内核有感知的, 协程是你内核无感知, 是你用户自己实现的. 例如在 Golang 中, resp, err :&#x3D; client.Do(req) 看着是阻塞的写法(有网络 IO), 但是 Go 的 Http 包是异步的, 这边在协程粒度是阻塞住了, 但是线程该干嘛就干嘛去了, 对于系统来说, 就是非阻塞. 应用程序觉得">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/20191009205805-20210508114757190.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/20191009205836-20210508114803795.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/20191011223017-20210508114805873.png">
+<meta property="article:published_time" content="2019-10-09T12:54:46.000Z">
+<meta property="article:modified_time" content="2021-05-10T06:54:30.221Z">
+<meta property="article:author" content="陶加涛">
+<meta property="article:tag" content="高性能">
+<meta property="article:tag" content="System">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/20191009205805-20210508114757190.png">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Callback 与 Coroutine 协程概念说明 | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about.html" rel="section"><i class="fa fa-fw fa-user-circle-o"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+      <meta itemprop="name" content="陶加涛">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Callback 与 Coroutine 协程概念说明
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2019-10-09 20:54:46" itemprop="dateCreated datePublished" datetime="2019-10-09T20:54:46+08:00">2019-10-09</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2021-05-10 14:54:30" itemprop="dateModified" datetime="2021-05-10T14:54:30+08:00">2021-05-10</time>
+              </span>
+
+          
+  
+  <span class="post-meta-item">
+    
+      <span class="post-meta-item-icon">
+        <i class="fa fa-comment-o"></i>
+      </span>
+      <span class="post-meta-item-text">Disqus: </span>
+    
+    <a title="disqus" href="/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/#comments" itemprop="discussionUrl">
+      <span class="post-comments-count disqus-comment-count" data-disqus-identifier="2019/10/09/Callback与-Coroutine-协程概念说明/" itemprop="commentCount"></span>
+    </a>
+  </span>
+  
+  
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="小谈阻塞非阻塞"><a href="#小谈阻塞非阻塞" class="headerlink" title="小谈阻塞非阻塞"></a>小谈阻塞非阻塞</h1><p>阻塞非阻塞概念都是对于线程, 进程这种粒度来说的, 因为只有他们才是内核有感知的, 协程是你内核无感知, 是你用户自己实现的.</p>
 <p>例如在 Golang 中, <code>resp, err := client.Do(req)</code> 看着是阻塞的写法(有网络 IO), 但是 Go 的 Http 包是异步的, 这边在协程粒度是阻塞住了, 但是线程该干嘛就干嘛去了, 对于系统来说, 就是非阻塞. 应用程序觉得我遇到阻塞, 比如 I/O什么的, 我就 yield 出去, 把控制权交出去.</p>
 <p><strong>分清楚内核层和应用层是关键</strong></p>
 <p><strong>阻塞还是非阻塞</strong> 应用程序的调用是否立即返回. 被挂起无法执行其他操作的则是阻塞型的, 可以被立即「抽离」去完成其他「任务」的则是非阻塞型的.<br><img src="/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/20191009205805-20210508114757190.png"></p>
@@ -44,7 +280,9 @@
 <p>一旦创建完线程, 你就无法决定他什么时候获得时间片, 什么时候让出时间片了, 你把它交给了内核. 因为程序的使用涉及大量的计算机资源配置, 把这活随意的交给用户程序, 非常容易让整个系统分分钟被搞跪, 资源分配也很难做到相对的公平. 所以核心的操作需要陷入内核(kernel), 切换到操作系统, 让老大帮你来做. </p>
 <p>线程上下文一般只包含CPU上下文及其他的线程管理信息. 线程创建的开销主要取决于为线程堆栈的建立而分配内存的开销, 这些开销并不大. 线程上下文切换发生在两个线程需要同步的时候, 比如进入共享数据段. 切换只CPU寄存器值需要存储, 并随后用将要切换到的线程的原先存储的值重新加载到CPU寄存器中去. </p>
 <p>有的时候碰着I/O访问, 阻塞了后面所有的计算. 空着也是空着, 老大就直接把CPU切换到其他进程, 让人家先用着. 当然除了I\O阻塞, 还有时钟阻塞等等.但是一切换进程得反复进入内核, 置换掉一大堆状态. 进程数一高, 大部分系统资源就被进程切换给吃掉了. 后来搞出线程的概念, 这个地方阻塞了, 但我还有其他地方的逻辑流可以计算, 这些逻辑流是共享一个地址空间的, 不用特别麻烦的切换页表、刷新TLB, 只要把寄存器刷新一遍就行, 能比切换进程开销少点. </p>
-<h3 id="3-协程"><a href="#3-协程" class="headerlink" title="3. 协程"></a>3. 协程</h3><p>一个Coroutine如果处于block状态, 可以交出执行权, 让其他的coroutine继续执行(<strong>这个是由其实现调度的,对用户透明的</strong>). </p>
+<h3 id="3-协程"><a href="#3-协程" class="headerlink" title="3. 协程"></a>3. 协程</h3><p>当出现IO阻塞的时候，由协程的调度器进行调度，通过将数据流立刻yield掉（主动让出），并且记录当前栈上的数据，阻塞完后立刻再通过线程恢复栈，并把阻塞的结果放到这个线程上去跑，这样看上去好像跟写同步代码没有任何差别，这整个流程可以称为coroutine，而跑在由<code>coroutine</code>负责调度的线程称为<code>Fiber</code>。比如Golang里的 go关键字其实就是负责开启一个<code>Fiber</code>，让<code>func</code>逻辑跑在上面。</p>
+<p>由于协程的暂停完全由程序控制，发生在用户态上；而线程的阻塞状态是由操作系统内核来进行切换，发生在内核态上。<br>因此，协程的开销远远小于线程的开销，也就没有了ContextSwitch上的开销。</p>
+<p>一个Coroutine如果处于block状态, 可以交出执行权, 让其他的coroutine继续执行(<strong>这个是由其实现调度的,对用户透明的</strong>). </p>
 <p><strong>Coroutines使得开发者可以采用阻塞式的开发风格,却能够实现非阻塞I/O的效果隐式事件调度</strong></p>
 <p>函数其实是协程的特例, 从Knuth老爷子的基本算法卷上看“子程序其实是协程的特例”. 子程序是什么？子程序（英语：Subroutine, procedure, function, routine, method, subprogram）, 就是函数嘛！所以协程也没什么了不起的, 就是种更一般意义的程序组件, 那你内存空间够大, 创建多少个函数还不是随你么？</p>
 <p>协程可以通过yield来调用其它协程. 通过yield方式转移执行权的协程之间不是调用者与被调用者的关系, 而是彼此对称、平等的. 协程的起始处是第一个入口点, 在协程里, 返回点之后是接下来的入口点. 子例程的生命期遵循后进先出（最后一个被调用的子例程最先返回）；相反, 协程的生命期完全由他们的使用的需要决定. (continuation)</p>
@@ -53,16 +291,13 @@
 <p>协程和线程的区别是：协程避免了无意义的调度, 由此可以提高性能, 但也因此, 程序员必须自己承担调度的责任, 同时, 协程也失去了标准线程使用多CPU的能力</p>
 <p>协程编写者可以有一是可控的切换时机, 二是很小的切换代价. 从操作系统有没有调度权上看, 协程就是因为不需要进行内核态的切换, 所以会使用它</p>
 <h4 id="协程好处"><a href="#协程好处" class="headerlink" title="协程好处"></a><strong>协程好处</strong></h4><ul>
-<li><p>无需线程上下文切换的开销</p>
-</li>
-<li><p>无需原子操作锁定及同步的开销</p>
-</li>
-<li><p>状态机：在一个子例程里实现状态机, 这里状态由该过程当前的出口／入口点确定；这可以产生可读性更高的代码. </p>
-</li>
-<li><p>角色模型：并行的角色模型, 例如计算机游戏. 每个角色有自己的过程（这又在逻辑上分离了代码）, 但他们自愿地向顺序执行各角色过程的中央调度器交出控制（这是合作式多任务的一种形式）. </p>
-</li>
-<li><p>产生器：它有助于输入／输出和对数据结构的通用遍历</p>
-</li>
+<li>无需线程上下文切换的开销</li>
+<li>线程的默认Stack大小是1M，而协程更轻量，接近1K。</li>
+<li>由于在同一个线程上，因此可以避免竞争关系而使用锁, 无需原子操作锁定及同步的开销</li>
+<li>状态机：在一个子例程里实现状态机, 这里状态由该过程当前的出口／入口点确定；这可以产生可读性更高的代码. </li>
+<li>角色模型：并行的角色模型, 例如计算机游戏. 每个角色有自己的过程（这又在逻辑上分离了代码）, 但他们自愿地向顺序执行各角色过程的中央调度器交出控制（这是合作式多任务的一种形式）. </li>
+<li>产生器：它有助于输入／输出和对数据结构的通用遍历</li>
+<li>适用于被阻塞的，且需要大量并发的场景。但不适用于大量计算的多线程，遇到此种情况，更好实用线程去解决。</li>
 </ul>
 <h4 id="缺点"><a href="#缺点" class="headerlink" title="缺点"></a><strong>缺点</strong></h4><ul>
 <li>不能同时将 CPU 的多个核.不过现在使用协程的语言都用到了多调度器的架构, 单进程下的协程也能用多核了</li>
@@ -100,6 +335,46 @@
 </li>
 </ol>
 <p>总结一下就是IO密集型一般使用多线程或者多进程, CPU密集型一般使用多进程, 强调非阻塞异步并发的一般都是使用协程, 当然有时候也是需要多进程线程池结合的, 或者是其他组合方式. Nginx 用一个进程可以跑满整个机器的 cpu(都是非阻塞的操作, 没有比这更快的了, Nginx 最近也引入了线程池, 对付会阻塞的任务), </p>
+<table>
+<thead>
+<tr>
+<th>比较项</th>
+<th align="center">线程</th>
+<th align="center">协程</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>占用资源</td>
+<td align="center">初始单位为1MB,固定不可变</td>
+<td align="center">初始一般为 2KB，可随需要而增大</td>
+</tr>
+<tr>
+<td>调度所属</td>
+<td align="center">由 OS 的内核完成</td>
+<td align="center">由用户完成</td>
+</tr>
+<tr>
+<td>切换开销</td>
+<td align="center">涉及模式切换(从用户态切换到内核态)、16个寄存器、PC、SP…等寄存器的刷新等</td>
+<td align="center">只有三个寄存器的值修改 - PC / SP / DX.</td>
+</tr>
+<tr>
+<td>性能问题</td>
+<td align="center">资源占用太高，频繁创建销毁会带来严重的性能问题</td>
+<td align="center">资源占用小,不会带来严重的性能问题</td>
+</tr>
+<tr>
+<td>数据同步</td>
+<td align="center">需要用锁等机制确保数据的一直性和可见性</td>
+<td align="center">不需要多线程的锁机制，因为只有一个线程，也不存在同时写变量冲突，在协程中控制共享资源不加锁，只需要判断状态就好了，所以执行效率比多线程高很多。</td>
+</tr>
+</tbody></table>
+<h2 id="进程与线程的区别"><a href="#进程与线程的区别" class="headerlink" title="进程与线程的区别"></a>进程与线程的区别</h2><ol>
+<li>线程是程序执行的最小单位，而进程是操作系统分配资源的最小单位；</li>
+<li>一个进程由一个或多个线程组成，线程是一个进程中代码的不同执行路线；</li>
+<li>进程之间相互独立，但同一进程下的各个线程之间共享程序的内存空间(包括代码段、数据集、堆等)及一些进程级的资源(如打开文件和信号)，某进程内的线程在其它进程不可见；</li>
+<li>调度和切换：线程上下文切换比进程上下文切换要快得多。</li>
+</ol>
 <hr>
 <p>分割线</p>
 <hr>
@@ -126,7 +401,246 @@
 <p>递归必须使用共享变量或者参数传入状态,每一个递归的调用都需要一个新的栈帧.而在coroutine之间的passing control可以使用现存的contexts,可以简单的被实现为一个jump</p>
 <p>coroutines yield rather than return, and then resume execution rather than restarting from the beginning, they are able to hold state, both variables (as in a closure) and execution point, and yields are not limited to being in tail position;</p>
 <p>(很久以前的博客了, 不是原创, 参考了很多资料, 加着自己的理解)</p>
-</div></div><div class="post-main post-comment"></div></article><link rel="stylesheet" type="text/css" href="/css/font.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/font-awesome/4.5.0/css/font-awesome.min.css"><link rel="stylesheet" type="text/css" href="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.css"><script src="//cdn.bootcss.com/jquery/2.0.3/jquery.min.js"></script><script src="//cdn.bootcss.com/fancybox/2.1.5/jquery.fancybox.pack.js"></script><script>$(document).ready(function() {
-  $(".fancybox").fancybox();
-});
-</script></body></html>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/%E9%AB%98%E6%80%A7%E8%83%BD/" rel="tag"><i class="fa fa-tag"></i> 高性能</a>
+              <a href="/tags/System/" rel="tag"><i class="fa fa-tag"></i> System</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2019/07/19/Spark-DateType-Timestamp-cast-%E5%B0%8F%E7%BB%93/" rel="prev" title="Spark DateType/Timestamp cast 小结">
+      <i class="fa fa-chevron-left"></i> Spark DateType/Timestamp cast 小结
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2019/10/16/Spark-MapOutputTracker-Deep-Dive/" rel="next" title="Spark MapOutputTracker Deep Dive">
+      Spark MapOutputTracker Deep Dive <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+    
+  <div class="comments">
+    <div id="disqus_thread">
+      <noscript>Please enable JavaScript to view the comments powered by Disqus.</noscript>
+    </div>
+  </div>
+  
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B0%8F%E8%B0%88%E9%98%BB%E5%A1%9E%E9%9D%9E%E9%98%BB%E5%A1%9E"><span class="nav-number">1.</span> <span class="nav-text">小谈阻塞非阻塞</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E5%8D%8F%E7%A8%8B"><span class="nav-number">1.0.1.</span> <span class="nav-text">进程、线程、协程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-%E8%BF%9B%E7%A8%8B"><span class="nav-number">1.0.2.</span> <span class="nav-text">1. 进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E7%BA%BF%E7%A8%8B"><span class="nav-number">1.0.3.</span> <span class="nav-text">2. 线程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E5%8D%8F%E7%A8%8B"><span class="nav-number">1.0.4.</span> <span class="nav-text">3. 协程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B6%E4%BB%96%E8%AF%B4%E6%98%8E"><span class="nav-number">2.</span> <span class="nav-text">其他说明</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E3%80%81%E7%BA%BF%E7%A8%8B%E3%80%81%E5%8D%8F%E7%A8%8B%E7%9A%84%E5%85%B3%E7%B3%BB%E5%92%8C%E5%8C%BA%E5%88%AB%EF%BC%9A"><span class="nav-number">2.1.</span> <span class="nav-text">进程、线程、协程的关系和区别：</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%BF%9B%E7%A8%8B%E4%B8%8E%E7%BA%BF%E7%A8%8B%E7%9A%84%E5%8C%BA%E5%88%AB"><span class="nav-number">2.2.</span> <span class="nav-text">进程与线程的区别</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Continuation"><span class="nav-number">3.</span> <span class="nav-text">Continuation</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8D%8F%E7%A8%8Bwiki"><span class="nav-number">4.</span> <span class="nav-text">协程wiki</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%94%9F%E4%BA%A7%E8%80%85%E5%8D%8F%E7%A8%8B"><span class="nav-number">4.1.</span> <span class="nav-text">生产者协程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%B6%88%E8%B4%B9%E8%80%85%E5%8D%8F%E7%A8%8B"><span class="nav-number">4.2.</span> <span class="nav-text">消费者协程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E8%AF%A6%E7%BB%86%E6%AF%94%E8%BE%83"><span class="nav-number">4.3.</span> <span class="nav-text">详细比较</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8Esubroutine-%E5%AD%90%E4%BE%8B%E7%A8%8B-%E5%87%BD%E6%95%B0-%E6%AF%94%E8%BE%83"><span class="nav-number">4.4.</span> <span class="nav-text">与subroutine(子例程 函数?)比较</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8Egenerators%E7%9B%B8%E6%AF%94"><span class="nav-number">4.5.</span> <span class="nav-text">与generators相比</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8E%E7%9B%B8%E4%BA%92%E9%80%92%E5%BD%92%E7%9B%B8%E6%AF%94"><span class="nav-number">4.6.</span> <span class="nav-text">与相互递归相比</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="陶加涛"
+      src="https://gitee.com/Meldoy/image/raw/master/life/head.jpg">
+  <p class="site-author-name" itemprop="name">陶加涛</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">29</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">20</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2021</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">陶加涛</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+<script>
+  function loadCount() {
+    var d = document, s = d.createElement('script');
+    s.src = 'https://muzi.disqus.com/count.js';
+    s.id = 'dsq-count-scr';
+    (d.head || d.body).appendChild(s);
+  }
+  // defer loading until the whole page loading is completed
+  window.addEventListener('load', loadCount, false);
+</script>
+<script>
+  NexT.utils.loadComments(document.querySelector('#disqus_thread'), () => {
+    if (window.DISQUS) {
+      DISQUS.reset({
+        reload: true,
+        config: {page: {
+            url: "https://aaaaaaron.github.io/2019/10/09/Callback%E4%B8%8E-Coroutine-%E5%8D%8F%E7%A8%8B%E6%A6%82%E5%BF%B5%E8%AF%B4%E6%98%8E/",
+            identifier: "2019/10/09/Callback与-Coroutine-协程概念说明/",
+            title: "Callback 与 Coroutine 协程概念说明"
+          }
+        }
+      });
+    } else {
+      var d = document, s = d.createElement('script');
+      s.src = 'https://muzi.disqus.com/embed.js';
+      s.setAttribute('data-timestamp', '' + +new Date());
+      (d.head || d.body).appendChild(s);
+    }
+  });
+</script>
+
+</body>
+</html>
