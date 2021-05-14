@@ -1,5 +1,4 @@
 // Custom styles.
-// Custom styles.
 html,
 body,
 span,
@@ -10,42 +9,18 @@ h3,
 h4,
 h5,
 h6 {
-    // 全局字体颜色
   color: #2e405b;
 }
 
 body {
-  background: $global-background-color;
+  // background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACFJREFUeNpiZGBg4GegAsBlCD8TqSYNQg2Mo6FEBAAIMACdPABtrSW/IQAAAABJRU5ErkJggg==");
   background-repeat: repeat;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   text-shadow: 1px 1px 1px rgba(0, 0, 0, 0.04);
   min-height: 100vh;
   margin: 0;
-//   margin: 0 auto;
-//   width: 70%;
 }
-
-// 网站标题名处
-.site-brand-container {
-    background: $global-background-color;
-}
-
-
-// 移动端导航栏
-.site-nav-right .toggle .toggle-line, .site-nav-toggle .toggle .toggle-line {
-    background: #000;
-}
-// 移动端搜索
-.site-nav-right .toggle, .site-nav-toggle .toggle {
-    color: #180000;
-}
-
-// tabs 控制评论块
-.tabs-comment{
-  background: $global-background-color;
-}
-
 
 .sidebar-inner, .comments, .post-block, .sidebar, .header-inner{
     background: unset;
@@ -60,12 +35,13 @@ body {
 
 .site-meta {
     padding: 20px 0;
-    color: $site-name-font-color;
+    color: #2e405b;
     background: transparent;
 }
 // 站点名背景
 .brand{
-    // background-color: rgba(0, 0, 0, 0);
+    background-color: rgba(0, 0, 0, 0);
+    // background-color: rgba(241, 229, 201, 0.3);
     margin-top: 15px;
     padding: 0px;
 }
@@ -91,7 +67,7 @@ body {
     margin-top: 0px;
     margin-bottom: 0px;
     padding: 5px;
-    // box-shadow: 0px 10px 10px 0px #2e405b;
+    box-shadow: 0px 10px 10px 0px #2e405b;
 }
 // 菜单超链接字体大小
 .menu .menu-item a {
@@ -123,7 +99,6 @@ body {
   background: #49b1f5;
 }
 
-
 // 修改选中字符的颜色
 /* webkit, opera, IE9 */
 ::selection {
@@ -144,7 +119,7 @@ del {
 }
 
 //页脚
-// .footer-inner {color: #ff7600;}
+.footer-inner {color: #ff7600;}
 
 /* 去掉图片边框 */
 .posts-expand .post-body img {
@@ -158,8 +133,8 @@ del {
 // Custom styles
 // 页面最顶部的横线
 .headband {
-    // height: 1.5px;
-    // background-image: linear-gradient(90deg, #F79533 0%, #F37055 15%, #EF4E7B 30%, #A166AB 44%, #5073B8 58%, #1098AD 72%, #07B39B 86%, #6DBA82 100%);
+    height: 1.5px;
+    background-image: linear-gradient(90deg, #F79533 0%, #F37055 15%, #EF4E7B 30%, #A166AB 44%, #5073B8 58%, #1098AD 72%, #07B39B 86%, #6DBA82 100%);
 }
 // 页面顶部行高
 .header {
@@ -168,13 +143,14 @@ del {
 
 // 页面背景色
 .container {
-    background-color: rgba(0, 0, 0, 0);
+    background-color: rgba(238, 232, 213, 0.3);
+    // background-color: rgba(0, 0, 0, 0);
 }
 
 // 表格奇数行
 .highlight table>tbody>tr {
     &:nth-of-type(odd) {
-        background-color:   #E0EEE0;
+        background-color: 	#E0EEE0;
     }
 }
 
@@ -202,7 +178,6 @@ table td, table th {
     }
 }
 
-
 // 代码块 styles.
 code {
     color: #ff7600;
@@ -216,7 +191,7 @@ code {
     padding: 0px;
 }
 .highlight {
-    border-radius: 5px;
+	border-radius: 5px;
 }
 .highlight, code, pre {
     border: 1px solid #d6d6d6;
@@ -230,7 +205,7 @@ blockquote{
     /* border-top-right-radius: 3px;
     border-bottom-right-radius: 3px; */
     margin-bottom: 20px;
-    border-radius: 3px
+	border-radius: 3px
 }
 
 //复制按钮
@@ -256,17 +231,17 @@ blockquote{
     border-bottom: none;
 }
 .post-category a{
-    color: #49b1f5;
+	color: #49b1f5;
 }
 .post-category  a:hover {
     color: #fc6423;
 }
 .post-category a, .post-comments-count a {
-    border-bottom: none;
+	border-bottom: none;
 }
 
 .posts-expand .post.post-type-normal,.post-block{
-    border-radius: 10px !important;
+	border-radius: 10px !important;
 }
 
 // 鼠标移动至文章标题时的效果
@@ -303,7 +278,7 @@ blockquote{
     border-left: 4px solid #f27c8d;
     margin-left: -40px;
     padding-left: 32px;
-    border-bottom: none;
+	border-bottom: none;
 }
 
 /* 标题 */
@@ -389,8 +364,8 @@ blockquote{
     border: none;
 }
 .pagination .prev:hover, .pagination .next:hover, .pagination .page-number:hover {
-    background: #ccc;
-    border-top-color: #fff;
+	background: #ccc;
+	border-top-color: #fff;
 }
 
 // 时间轴左边线条
@@ -401,7 +376,7 @@ blockquote{
 // 时间轴左边线条圆点颜色
 .posts-collapse .post-header::before {
     background-color: #fff;
-    border: 1px solid #bbb8b8;
+	border: 1px solid #bbb8b8;
 }
 // 时间轴文章标题左边圆点颜色
 .posts-collapse .post-header:hover::before {
@@ -416,16 +391,16 @@ blockquote{
 }
 
 .posts-collapse .post-header {
-    border-bottom: none;
+	border-bottom: none;
 }
 .posts-collapse .collection-title::before {
-    opacity: 1;
-    background-color: rgb(255, 255, 255);
+	opacity: 1;
+	background-color: rgb(255, 255, 255);
     box-shadow: 0px 0px 1px 1px #bdbdbd;
 }
 // 标签云页面
 .tag-cloud-tags a {
-    border-bottom: 2px solid;
+	border-bottom: 2px solid;
 }
 
 .site-state-item {
@@ -463,7 +438,7 @@ span#inline-toc {
     height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-    background: #ad9999 // $webkit-color;
+    background: #49b1f5;
 }
 ::-webkit-scrollbar-track {
     background-color: transparent;
