@@ -157,7 +157,7 @@ body {
 body {
   background: #eee;
   color: #555;
-  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'Noto Serif SC', "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 1em;
   line-height: 2;
 }
@@ -173,7 +173,7 @@ h3,
 h4,
 h5,
 h6 {
-  font-family: 'Roboto Mono', 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'Noto Serif SC', "PingFang SC", "Microsoft YaHei", sans-serif;
   font-weight: bold;
   line-height: 1.5;
   margin: 20px 0 15px;
@@ -1018,7 +1018,7 @@ pre .javascript .function {
 }
 .site-title {
   display: inline-block;
-  font-family: 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'Noto Serif SC', "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 1.375em;
   font-weight: normal;
   line-height: 1.5;
@@ -1186,6 +1186,7 @@ pre .javascript .function {
   margin: 0 auto;
   max-width: 120px;
   padding: 2px;
+  border-radius: 50%;
 }
 .site-author-name {
   color: #222;
@@ -1213,7 +1214,7 @@ pre .javascript .function {
 }
 .links-of-author a::before,
 .links-of-author span.exturl::before {
-  background: #2f7836;
+  background: #c92470;
   border-radius: 50%;
   content: ' ';
   display: inline-block;
@@ -1549,7 +1550,7 @@ pre .javascript .function {
   z-index: 1500;
 }
 .post-body {
-  font-family: 'Roboto Mono', 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'Noto Serif SC', "PingFang SC", "Microsoft YaHei", sans-serif;
   overflow-wrap: break-word;
   word-wrap: break-word;
 }
@@ -1853,7 +1854,7 @@ pre .javascript .function {
 }
 .posts-expand .post-meta {
   color: #999;
-  font-family: 'Roboto Mono', 'Lato', "PingFang SC", "Microsoft YaHei", sans-serif;
+  font-family: 'Noto Serif SC', "PingFang SC", "Microsoft YaHei", sans-serif;
   font-size: 0.75em;
   margin: 3px 0 60px 0;
   text-align: center;
@@ -2678,13 +2679,27 @@ h6 {
   color: #2e405b;
 }
 body {
-  background: url("data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAwAAAAMCAYAAABWdVznAAAAGXRFWHRTb2Z0d2FyZQBBZG9iZSBJbWFnZVJlYWR5ccllPAAAACFJREFUeNpiZGBg4GegAsBlCD8TqSYNQg2Mo6FEBAAIMACdPABtrSW/IQAAAABJRU5ErkJggg==");
+  background: #fffaf0;
   background-repeat: repeat;
   background-attachment: fixed;
   -webkit-font-smoothing: antialiased;
   text-shadow: 1px 1px 1px rgba(0,0,0,0.04);
   min-height: 100vh;
   margin: 0;
+}
+.site-brand-container {
+  background: #fffaf0;
+}
+.site-nav-right .toggle .toggle-line,
+.site-nav-toggle .toggle .toggle-line {
+  background: #000;
+}
+.site-nav-right .toggle,
+.site-nav-toggle .toggle {
+  color: #180000;
+}
+.tabs-comment {
+  background: #fffaf0;
 }
 .sidebar-inner,
 .comments,
@@ -2700,11 +2715,10 @@ body {
 }
 .site-meta {
   padding: 20px 0;
-  color: #2e405b;
+  color: #0d3269;
   background: transparent;
 }
 .brand {
-  background-color: rgba(0,0,0,0);
   margin-top: 15px;
   padding: 0px;
 }
@@ -2726,7 +2740,6 @@ body {
   margin-top: 0px;
   margin-bottom: 0px;
   padding: 5px;
-  box-shadow: 0px 10px 10px 0px #2e405b;
 }
 .menu .menu-item a {
   font-size: 14px;
@@ -2766,9 +2779,6 @@ del {
   background: #fbf7f8;
   margin: 2px;
 }
-.footer-inner {
-  color: #ff7600;
-}
 /* 去掉图片边框 */
 .posts-expand .post-body img {
   border: none;
@@ -2776,10 +2786,6 @@ del {
 }
 .post-gallery .post-gallery-img img {
   padding: 3px;
-}
-.headband {
-  height: 1.5px;
-  background-image: linear-gradient(90deg, #f79533 0%, #f37055 15%, #ef4e7b 30%, #a166ab 44%, #5073b8 58%, #1098ad 72%, #07b39b 86%, #6dba82 100%);
 }
 .header {
   line-height: 1.5;
@@ -3034,7 +3040,7 @@ span#inline-toc {
   height: 6px;
 }
 ::-webkit-scrollbar-thumb {
-  background: #49b1f5;
+  background: #ad9999;
 }
 ::-webkit-scrollbar-track {
   background-color: transparent;
