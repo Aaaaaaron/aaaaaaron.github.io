@@ -10,7 +10,6 @@ keywords:
 author: Jiatao Tao
 language: zh-Hans
 timezone:
-# avatar: "https://gitee.com/Meldoy/image/raw/master/life/head.png"
 avatar: "/head.png"
 
 # URL
@@ -92,13 +91,14 @@ noise:
 deploy:
   type: git
   repo:
-    github: git@github.com:Aaaaaaron/Aaaaaaron.github.io.git
+    github: git@github.com:Aaaaaaron/aaaaaaron.github.io.git
+  # branch: gh-pages
   branch: master
 
 sitemap:
     path: sitemap.xml
 
-backup:
-    type: git
-    repository:
-       github: git@github.com:Aaaaaaron/aaaaaaron.github.io.git,hexo
+# backup:
+    # type: git
+    # repository:
+       # github: git@github.com:Aaaaaaron/aaaaaaron.github.io.git,hexo
