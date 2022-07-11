@@ -68,18 +68,10 @@
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/image-20220707181420112.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/61990452-c5afec80-aff5-11e9-8a2a-bad34aa33593-20220706231808517.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/61990454-c9437380-aff5-11e9-8937-0aee5d2c3472-20220706231818347.png">
-<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/922194103fad4d5f935fda6e200ef261.png">
-<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/d5bb4826efb54f2c859282e3f46cedd6.png">
-<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/10ec79b499db493587e93e5e8b82297a-20220707111022724.png">
-<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/556bc2e66ee645e5acc41a4cfed9da74-20220707175915795.png">
-<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/225f04d792f247d19c0525c106b5abfe.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/image-20220708152209337.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/Split%20Lifecycle.jpeg">
-<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/ExchangeClient.png">
-<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/SqlTask.png">
-<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/token.png">
 <meta property="article:published_time" content="2022-07-10T16:15:47.000Z">
-<meta property="article:modified_time" content="2022-07-11T08:40:22.976Z">
+<meta property="article:modified_time" content="2022-07-11T09:49:22.794Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta property="article:tag" content="OLAP">
 <meta property="article:tag" content="SQL">
@@ -222,7 +214,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2022-07-11 00:15:47 / Modified: 16:40:22" itemprop="dateCreated datePublished" datetime="2022-07-11T00:15:47+08:00">2022-07-11</time>
+              <time title="Created: 2022-07-11 00:15:47 / Modified: 17:49:22" itemprop="dateCreated datePublished" datetime="2022-07-11T00:15:47+08:00">2022-07-11</time>
             </span>
 
           
@@ -241,7 +233,7 @@
 <h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><img src="/2022/07/11/Presto-Scheduler/image-20220707105603799.png" alt="image-20220707105603799" style="zoom: 33%;">
 
 <ul>
-<li><p><strong>Stage</strong>: 逻辑概念, 指可以在一个节点上执行的一部分执行计划, 对应一个 PlanFragment, 一般按照 exchange 来划分</p>
+<li><p><strong>Stage</strong>: 逻辑概念, 指可以在一个节点上执行的一部分执行计划, 对应一个 <code>PlanFragment</code>, 一般按照 exchange 来划分</p>
 <img src="/2022/07/11/Presto-Scheduler/stage.png" alt="img" style="zoom: 25%;">
 
 <img src="/2022/07/11/Presto-Scheduler/stages.png" alt="img" style="zoom: 50%;"></li>
@@ -254,10 +246,12 @@
 </li>
 <li><p><strong>Pipeline</strong>: 虚拟概念</p>
 <ul>
-<li>Task 执行 stage(PlanFragment) 的逻辑, 就是执行一组 operator, 执行 operator 的最佳并行度可能是不同的, 比如说做Tablescan的并发可以很大, 但做Final Aggregation(如Sort)的并发度只能是一; </li>
-<li>所以一个 stage 会被切为若干 pipeline, 每个 Pipeline 由一组 Operator 组成, 这些 Operator 被设置同样的并行度. Pipeline 之间会通过 LocalExchangeOperator 来传递数据. </li>
-<li>driver 的数量就是 pipeline 的并行度</li>
-<li><img src="/2022/07/11/Presto-Scheduler/70-20220705214534972.png" alt="Presto Pipeline示例" style="zoom: 25%;"></li>
+<li><p>Task 执行 stage(PlanFragment) 的逻辑, 就是执行一组 operator, 执行 operator 的最佳并行度可能是不同的, 比如说做Tablescan的并发可以很大, 但做Final Aggregation(如Sort)的并发度只能是一; </p>
+</li>
+<li><p>所以一个 stage 会被切为若干 pipeline, 每个 Pipeline 由一组 Operator 组成, 这些 Operator 被设置同样的并行度. Pipeline 之间会通过 LocalExchangeOperator 来传递数据. </p>
+</li>
+<li><p>driver 的数量就是 pipeline 的并行度</p>
+<img src="/2022/07/11/Presto-Scheduler/70-20220705214534972.png" alt="Presto Pipeline示例" style="zoom: 25%;"></li>
 </ul>
 </li>
 <li><p><strong>Driver</strong>: Pipeline其实是一个虚拟的概念, 它的实例就叫Driver; Task 被分解成一个或者多个 Driver, 并行执行多个 Driver 的方式来实现 Task 的并行执行. Driver 是作用于一个 Split 的一系列 Operator 的集合. 一个 Driver 处理一个 Split, 产生输出由 Task 收集并传递给下游的 Stage 中的一个 Task. 一个 Driver 拥有一个输入和输出. </p>
@@ -434,8 +428,13 @@
 </ul>
 <h5 id="ScheduleResult"><a href="#ScheduleResult" class="headerlink" title="ScheduleResult"></a>ScheduleResult</h5><p><code>ScheduleResult schedule();</code>  函数签名的返回</p>
 <p>包含:</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Set&lt;RemoteTask&gt; newTasks;</span><br><span class="line">ListenableFuture&lt;?&gt; blocked;</span><br><span class="line">Optional&lt;BlockedReason&gt; blockedReason;</span><br><span class="line"><span class="keyword">boolean</span> finished;</span><br><span class="line"><span class="keyword">int</span> splitsScheduled;</span><br></pre></td></tr></table></figure>
-
+<ul>
+<li>Set<RemoteTask> newTasks;</RemoteTask></li>
+<li>ListenableFuture&lt;?&gt; blocked;</li>
+<li>Optional<BlockedReason> blockedReason;</BlockedReason></li>
+<li>boolean finished;</li>
+<li>int splitsScheduled;</li>
+</ul>
 <p>有两种阻塞原因:</p>
 <ol>
 <li><code>WAITING_FOR_SOURCE</code>: 拿 splits 阻塞(<code>SplitSource#getNextBatch</code>)</li>
@@ -462,16 +461,16 @@
 </li>
 <li><p>有两种策略</p>
 <ul>
-<li>DynamicSplitPlacementPolicy:(底层数据表是bucketed表), 在生成执行时会使用NodePartitionManager生成split和node的映射关系, 在具体调度时使用映射管理来为split分配node</li>
-<li>BucketedSplitPlacementPolicy:(底层数据表是unbucketed表), 在具体调度执行前为split分配node, 用于FixedSourcePartionedScheduler</li>
+<li><code>DynamicSplitPlacementPolicy</code>:(底层数据表是bucketed表), 在生成执行时会使用NodePartitionManager生成split和node的映射关系, 在具体调度时使用映射管理来为split分配node</li>
+<li><code>BucketedSplitPlacementPolicy </code>:(底层数据表是unbucketed表), 在具体调度执行前为split分配node, 用于FixedSourcePartionedScheduler</li>
 </ul>
 </li>
 </ul>
 <h5 id="节点分配split策略"><a href="#节点分配split策略" class="headerlink" title="节点分配split策略"></a>节点分配split策略</h5><p><strong>SimpleNodeSelector#computeAssignments</strong></p>
 <ul>
 <li>将所有活跃的工作节点作为候选节点;</li>
-<li>如果分片的节点选择策略是HARD_AFFINITY, 即分片只能选择特定节点, 则根据分片要求更新候选节点列表, 如果选择不到特定节点, 会把所有节点都加入黑名单;</li>
-<li>如果分片的节点选择策略不是HARD_AFFINITY, 则根据节点的网络拓扑, 从候选节点中选择和分片偏好节点网络路径最匹配的节点列表来更新候选节点列表;</li>
+<li>如果分片的节点选择策略是<code>HARD_AFFINITY</code>, 即分片只能选择特定节点, 则根据分片要求更新候选节点列表, 如果选择不到特定节点, 会把所有节点都加入黑名单;</li>
+<li>如果分片的节点选择策略不是<code>HARD_AFFINITY</code>, 则根据节点的网络拓扑, 从候选节点中选择和分片偏好节点网络路径最匹配的节点列表来更新候选节点列表;</li>
 <li>将活跃节点随机打散(<code>ResettableRandomizedIterator</code>), 使用<code>chooseLeastBusyNode</code>方法从更新后的候选节点列表中选择最合适的节点来分配分片;</li>
 </ul>
 <h5 id="如何判断节点是否繁忙"><a href="#如何判断节点是否繁忙" class="headerlink" title="如何判断节点是否繁忙"></a>如何判断节点是否繁忙</h5><p><strong>chooseLeastBusyNode</strong></p>
@@ -482,18 +481,16 @@
 </ol>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Optional&lt;InternalNodeInfo&gt; <span class="title">chooseLeastBusyNode</span><span class="params">(SplitWeight splitWeight, List&lt;InternalNode&gt; candidateNodes, ToLongFunction&lt;InternalNode&gt; splitWeightProvider, OptionalInt preferredNodeCount, <span class="keyword">long</span> maxSplitsWeight, NodeAssignmentStats assignmentStats)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">long</span> minWeight = Long.MAX_VALUE;</span><br><span class="line">    InternalNode chosenNode = <span class="keyword">null</span>;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; candidateNodes.size(); i++) &#123;</span><br><span class="line">        InternalNode node = candidateNodes.get(i);</span><br><span class="line">        <span class="keyword">if</span> (node.getNodeStatus() == DEAD) &#123;</span><br><span class="line">            <span class="comment">// Node is down. Do not schedule split. Skip it.</span></span><br><span class="line">            <span class="keyword">if</span> (preferredNodeCount.isPresent() &amp;&amp; i &lt; preferredNodeCount.getAsInt())</span><br><span class="line">                nodeSelectionStats.incrementPreferredNonAliveNodeSkippedCount();</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (assignmentStats.getUnacknowledgedSplitCountForStage(node) &gt;= maxUnacknowledgedSplitsPerTask)</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">long</span> currentWeight = splitWeightProvider.applyAsLong(node);</span><br><span class="line">        <span class="keyword">boolean</span> canAssignToNode = canAssignSplitBasedOnWeight(currentWeight, maxSplitsWeight, splitWeight);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// choose the preferred node first as long as they&#x27;re not busy</span></span><br><span class="line">        <span class="keyword">if</span> (preferredNodeCount.isPresent() &amp;&amp; i &lt; preferredNodeCount.getAsInt() &amp;&amp; canAssignToNode) &#123;</span><br><span class="line">            <span class="keyword">if</span> (i == <span class="number">0</span>) </span><br><span class="line">                nodeSelectionStats.incrementPrimaryPreferredNodeSelectedCount();</span><br><span class="line">            <span class="keyword">else</span> </span><br><span class="line">                nodeSelectionStats.incrementNonPrimaryPreferredNodeSelectedCount();</span><br><span class="line">            <span class="keyword">return</span> Optional.of(<span class="keyword">new</span> InternalNodeInfo(node, <span class="keyword">true</span>));</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// fallback to choosing the least busy nodes</span></span><br><span class="line">        <span class="keyword">if</span> (canAssignToNode &amp;&amp; currentWeight &lt; minWeight) &#123;</span><br><span class="line">            chosenNode = node;</span><br><span class="line">            minWeight = currentWeight;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (chosenNode == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> Optional.empty();</span><br><span class="line">    &#125;</span><br><span class="line">    nodeSelectionStats.incrementNonPreferredNodeSelectedCount();</span><br><span class="line">    <span class="keyword">return</span> Optional.of(<span class="keyword">new</span> InternalNodeInfo(chosenNode, <span class="keyword">false</span>));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-
-
 <h4 id="Write-stage-调度-ScaledWriterScheduler"><a href="#Write-stage-调度-ScaledWriterScheduler" class="headerlink" title="Write stage 调度(ScaledWriterScheduler)"></a>Write stage 调度(ScaledWriterScheduler)</h4><ul>
 <li><p>按需分配, 首次分配一个节点 (随机选择<code>nodeSelector.selectRandomNodes(count, scheduledNodes);</code>)</p>
 </li>
 <li><p>此后轮询检查上游状态, 当同时满足以下条件时, 新分配一个节点(随机选择)</p>
 <ul>
-<li>半数以上的上游Task的 OutputBuffer 写满</li>
+<li>半数以上的上游Task的 <code>OutputBuffer </code>写满</li>
 <li>当前已分配节点平均写数据量已超过阈值 (writer_min_size, 默认 32MB)</li>
 </ul>
 </li>
-<li><p>bucket 表不走这个 scheduler, 走的是 FixedCountScheduler; 只有对写入数据无分区约束的 Fragment 会使用这个 scheduler;</p>
+<li><p>bucket 表不走这个 scheduler, 走的是 <code>FixedCountScheduler</code>; 只有对写入数据无分区约束的 Fragment 会使用这个 scheduler;</p>
 </li>
 <li><p>通过 write_min_size 约束防止小文件过多</p>
 </li>
@@ -521,19 +518,11 @@
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (partitioning == SystemPartitioning.COORDINATOR_ONLY)</span><br><span class="line">  nodes = ImmutableList.of(nodeSelector.selectCurrentNode());</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (partitioning == SystemPartitioning.SINGLE)</span><br><span class="line">  nodes = nodeSelector.selectRandomNodes(<span class="number">1</span>);</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (partitioning == SystemPartitioning.FIXED)</span><br><span class="line">  nodes = nodeSelector.selectRandomNodes(min(getHashPartitionCount(session), getMaxTasksPerStage(session)));</span><br></pre></td></tr></table></figure></li>
 </ul>
 <h4 id="输入包含本地数据源-FixedSourcePartionedScheduler"><a href="#输入包含本地数据源-FixedSourcePartionedScheduler" class="headerlink" title="输入包含本地数据源(FixedSourcePartionedScheduler)"></a>输入包含本地数据源(FixedSourcePartionedScheduler)</h4><ul>
-<li><p>说明: 用于 Bucket Join, splitSource 中至少有一个是source split, 可以包含remote split且source split对应的table是bucket表.</p>
-</li>
-<li><p>逻辑是先类似 FixedCountScheduler 去创建 task, 然后再调用SourcePartitionedScheduler的逻辑(BucketedSplitPlacementPolicy: 根据Split和NodePartitionMap中的bucketToNode信息来为Split来分配Node)</p>
-<ul>
-<li>TBD: NodePartitionMap生成</li>
-</ul>
-</li>
-<li><p>有多个源表, 每个源表对应一个 SourcePartitionedScheduler, 帮忙 schedule splits</p>
-</li>
-<li><p>按照顺序 (右表-&gt;左表) 触发 SourcePartitionedScheduler 的调度</p>
-</li>
-<li><p>场景:</p>
-<ul>
+<li>说明: 用于 Bucket Join, splitSource 中至少有一个是source split, 可以包含remote split且source split对应的table是bucket表.</li>
+<li>逻辑是先类似 <code>FixedCountScheduler </code>去创建 task, 然后再调用<code>SourcePartitionedScheduler</code>的逻辑(<code>BucketedSplitPlacementPolicy</code>: 根据Split和<code>NodePartitionMap</code>中的bucketToNode信息来为Split来分配Node)</li>
+<li>有多个源表, 每个源表对应一个 <code>SourcePartitionedScheduler</code>, 帮忙 schedule splits</li>
+<li>按照顺序 (右表-&gt;左表) 触发 <code>SourcePartitionedScheduler </code>的调度</li>
+<li>场景:<ul>
 <li>Colocated join(i.e. join two bucketed tables).</li>
 <li>Bucketed table join unbucketed table. 这种场景下 remote exchange 会被加到 unbucketed table side, 来适应一样的 bucketing.</li>
 </ul>
@@ -542,8 +531,8 @@
 <h4 id="StageLinkage"><a href="#StageLinkage" class="headerlink" title="StageLinkage"></a>StageLinkage</h4><ul>
 <li>存储了每个Stage的调度策略和调度链</li>
 <li>根据当前stage的结果, 设置父stage的shuffle追踪地址(用来进行stage间的exchange数据) </li>
-<li>OutputBuffer: 缓存当前Task生成的数据, 供下游Task消费. </li>
-<li>在进行Stage调度时会调用StageLinkage的processScheduleResults函数</li>
+<li><code>OutputBuffer</code>: 缓存当前Task生成的数据, 供下游Task消费. </li>
+<li>在进行Stage调度时会调用<code>StageLinkage</code>的<code>processScheduleResults</code>函数</li>
 </ul>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Add an exchange location to the parent stage for each new task</span></span><br><span class="line">parent.addExchangeLocations(currentStageFragmentId, newTasks, noMoreTasks);</span><br><span class="line"></span><br><span class="line"><span class="comment">// Add an output buffer to the child stages for each new task</span></span><br><span class="line">child.addOutputBuffers(newOutputBuffers, noMoreTasks);</span><br></pre></td></tr></table></figure>
 
@@ -568,7 +557,7 @@
 </tr>
 </tbody></table>
 <h4 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h4><ul>
-<li><p>如果目标节点上不存在Task, 则调用 SqlStageExecution#scheduleTask, 如果目标节点存在Task, 则往SqlStageExecution@tasks中的目标Task中添加split</p>
+<li><p>如果目标节点上不存在Task, 则调用 <code>SqlStageExecution#scheduleTask</code>, 如果目标节点存在Task, 则往<code>SqlStageExecution@tasks</code>中的目标Task中添加split</p>
 </li>
 <li><p>从整体上来说, Split分配节点的方式基本为随机选择的策略, 在此基础上尽量保证每个节点处理的Split相对平均</p>
 </li>
@@ -576,11 +565,11 @@
 </li>
 <li><p>Split的计算, Split的下发都有可能阻塞, 所以采用异步调用的方式</p>
 </li>
-<li><p>每次while执行时, 如果只获取到部分Split, 也会进行Split下发和Task的生成发送到woker, 在后续再读取到Split时会根据Split和Node的信息来选择是新建还是更新Task, 一旦处于no_more_split时则说明Stage对应的Split已经完全获取完成</p>
+<li><p>每次while执行时, 如果只获取到部分Split, 也会进行Split下发和Task的生成发送到woker, 在后续再读取到Split时会根据Split和Node的信息来选择是新建还是更新Task, 一旦处于<code>no_more_split</code>时则说明Stage对应的Split已经完全获取完成</p>
 </li>
 <li><p>对于非Source类型的Stage, 不存在获取Split和下发Split的过程, 其读取的Split为下游Stage的产出, 会使用StageLinkage来维护, 调度时只需要根据节点负载信息来调度task即可</p>
 </li>
-<li><p>前面RemoteTask后，通过 REST 请求将task任务下放到对应的worker上去</p>
+<li><p>前面<code>RemoteTask</code>后，通过 REST 请求将task任务下放到对应的worker上去</p>
 <img src="/2022/07/11/Presto-Scheduler/image-20220707181420112.png" alt="image-20220707181420112" style="zoom:33%;"></li>
 </ul>
 <img src="/2022/07/11/Presto-Scheduler/61990452-c5afec80-aff5-11e9-8a2a-bad34aa33593-20220706231808517.png" alt="Example 1" style="zoom:33%;">
@@ -589,11 +578,11 @@
 
 
 
-<p><img src="/2022/07/11/Presto-Scheduler/922194103fad4d5f935fda6e200ef261.png" alt="img"></p>
-<p><img src="/2022/07/11/Presto-Scheduler/d5bb4826efb54f2c859282e3f46cedd6.png" alt="img"></p>
-<h5 id="StageScheduler"><a href="#StageScheduler" class="headerlink" title="StageScheduler"></a>StageScheduler</h5><p><img src="/2022/07/11/Presto-Scheduler/10ec79b499db493587e93e5e8b82297a-20220707111022724.png" alt="img"></p>
-<h5 id="总体流程"><a href="#总体流程" class="headerlink" title="总体流程"></a>总体流程</h5><p><img src="/2022/07/11/Presto-Scheduler/556bc2e66ee645e5acc41a4cfed9da74-20220707175915795.png" alt="img"></p>
-<p><img src="/2022/07/11/Presto-Scheduler/225f04d792f247d19c0525c106b5abfe.png" alt="img"></p>
+<p>![img](Presto 分享.assets/922194103fad4d5f935fda6e200ef261.png)</p>
+<p>![img](Presto 分享.assets/d5bb4826efb54f2c859282e3f46cedd6.png)</p>
+<h5 id="StageScheduler"><a href="#StageScheduler" class="headerlink" title="StageScheduler"></a>StageScheduler</h5><p>![img](Presto 分享.assets/10ec79b499db493587e93e5e8b82297a-20220707111022724.png)</p>
+<h5 id="总体流程"><a href="#总体流程" class="headerlink" title="总体流程"></a>总体流程</h5><p>![img](Presto 分享.assets/556bc2e66ee645e5acc41a4cfed9da74-20220707175915795.png)</p>
+<p>![img](Presto 分享.assets/225f04d792f247d19c0525c106b5abfe.png)</p>
 <h3 id="HTTP-API-介绍"><a href="#HTTP-API-介绍" class="headerlink" title="HTTP API 介绍"></a>HTTP API 介绍</h3><h4 id="Stage服务接口"><a href="#Stage服务接口" class="headerlink" title="Stage服务接口"></a>Stage服务接口</h4><p>处理Stage相关的请求, 只有一个功能, 即取消或者结束一个指定的Stage</p>
 <ul>
 <li><code>/v1/stage/&#123;stageId&#125;</code> – DELETE 提前结束一个Stage</li>
@@ -617,18 +606,22 @@
 </li>
 </ul>
 <h3 id="Driver-调度"><a href="#Driver-调度" class="headerlink" title="Driver 调度"></a>Driver 调度</h3><h4 id="基本概念-1"><a href="#基本概念-1" class="headerlink" title="基本概念"></a>基本概念</h4><ul>
-<li><p>presto 会给执行任务分配一个时间分片, 将时间分片轮流分给任务, 以最小化lantency以及避免饥饿的情况. </p>
-</li>
-<li><p>presto内置了一个多层级的优先队列(<strong>MultilevelSplitQueue</strong>), 通过累计任务运行时间来平衡不同时长之间竞争关系, 通过累计运行时间的方式让队列不断升级, 让同样代价的任务尽可能的只跟同级别的任务进行竞争. </p>
-<ul>
-<li>MultilevelSplitQueue：内置了一个分层的优先队列, 按照level维护了调度的时间和优先级分数等待统计</li>
+<li>presto 会给执行任务分配一个时间分片, 将时间分片轮流分给任务, 以最小化lantency以及避免饥饿的情况. </li>
+<li>多层级的优先队列(<strong>MultilevelSplitQueue</strong>), 通过累计任务运行时间来平衡不同时长之间竞争关系, 通过累计运行时间的方式让队列不断升级, 让同样代价的任务尽可能的只跟同级别的任务进行竞争. <ul>
+<li><code>MultilevelSplitQueue</code>：内置了一个分层的优先队列, 按照level维护了调度的时间和优先级分数等待统计</li>
 <li>每一个level, 都有一个目标的总调度时间, 然后这样的level, 即这个level对应的已经使用的调度时间占总调度时间的比例最小</li>
 </ul>
 </li>
-<li><p>使用一个TaskPriorityTracker来统一搜集类型运行时间和管理优先级调度策略. </p>
-</li>
+<li><code>TaskExecutor</code> : 单个实例内的只有一个, 接受外接的任务调度请求和任务状态管理, 持有工作线程资源以及维护一些必要的统计信息, 内部会维持一个<code>MultilevelSplitQueue</code>, 该队列维持了一个等待调度的split</li>
+<li><code>PrioritizedSplitRunner</code>: 实现类似操作系统的分片调度的能力, 在进行调度的时候每次只会调度这个接口的 processor 一个时间分片, 然后重新寻找一个合适的task用于下一个分片的执行</li>
+<li>使用一个<code>TaskPriorityTracker</code>来统一搜集类型运行时间和管理优先级调度策略. </li>
 </ul>
 <h4 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h4><h5 id="入队调度"><a href="#入队调度" class="headerlink" title="入队调度"></a>入队调度</h5><p><code>TaskExecutor</code>负责Split的轮流执行, 由于Split的数量不可预知且大部分情况下都非常大, 因此我们不可能为每一个Split启动对应的线程, 唯一的方法就是采用操作系统的设计, 创建有限的固定数量的线程, 然后不同的<code>SplitRunner</code>按照时间片使用这些线程</p>
+<ul>
+<li>Worker节点将小任务封装成一个<code>PrioritizedSplitRunner</code>对象，放入pending split 优先级队列中</li>
+<li>Worker节点启动一定数目的线程进行计算(<code>TaskExecutor#runnerThreads</code>)，线程数``task.shard.max-threads= Runtime.getRuntime().availableProcessors() * 2`;</li>
+<li>每个空闲线程从队列中取出PrioritizedSplitRunner对象执行，每隔1秒，判断任务是否执行完成，如果完成，从allSplits队列中删除，如果没有，则放回pendingSplits队列</li>
+</ul>
 <img src="/2022/07/11/Presto-Scheduler/image-20220708152209337.png" alt="image-20220708152209337" style="zoom:50%;">
 
 <ol>
@@ -665,7 +658,7 @@
 <h2 id="Presto-Exchange"><a href="#Presto-Exchange" class="headerlink" title="Presto Exchange"></a>Presto Exchange</h2><p>上面写的比较零碎, 这里总结下</p>
 <p><code>Presto</code>在数据进行<code>shuffle</code>的时候是<code>Pull</code>模式, 在两端负责分发和交换数据的类分别是<code>ExchangClient</code>和<code>OutputBuffer</code>. </p>
 <p><code>Source Stage</code>把数据从<code>Connector</code>中拉取出来, 会先把数据放在<code>OutputBuffer</code>中, 等待上游把数据请求过去, 而上游请求数据的类就是<code>ExchangeClient</code></p>
-<p><img src="/2022/07/11/Presto-Scheduler/ExchangeClient.png" alt="img"></p>
+<p>![img](Presto 分享.assets/ExchangeClient.png)</p>
 <h3 id="主体类"><a href="#主体类" class="headerlink" title="主体类"></a>主体类</h3><h4 id="ExchangOperator"><a href="#ExchangOperator" class="headerlink" title="ExchangOperator"></a>ExchangOperator</h4><ul>
 <li>负责从下游的<code>Stage</code>拉数据</li>
 <li>创建<code>ExchangeOperator</code>的时候, 会创建一个<code>ExchangClient</code>. </li>
@@ -707,7 +700,7 @@
 </ul>
 <h4 id="ExchangeClient流控"><a href="#ExchangeClient流控" class="headerlink" title="ExchangeClient流控"></a>ExchangeClient流控</h4><p>请求端流控</p>
 <p><code>ExchangeClient</code> 有一个<code>long</code>类型的<code>bufferBytes</code>, 用来标记当前的<code>buffer</code>中有多少<code>buffer</code>.<br>在<code>scheduleRequestIfNecessary()</code>方法中, 会把<code>bufferBytes</code>和<code>maxBufferSize</code>进行比较, 如果已经满足了, 那么就不会请求<code>HttpPageBufferClient</code>去请求数据. </p>
-<h4 id="OutputBuffer"><a href="#OutputBuffer" class="headerlink" title="OutputBuffer"></a>OutputBuffer</h4><p><img src="/2022/07/11/Presto-Scheduler/SqlTask.png" alt="img"></p>
+<h4 id="OutputBuffer"><a href="#OutputBuffer" class="headerlink" title="OutputBuffer"></a>OutputBuffer</h4><p>![img](Presto 分享.assets/SqlTask.png)</p>
 <p><strong>LazyOutputBuffer</strong>: 是一个门面模式, 包含了一个类别不同的OutputBuffe</p>
 <p>具体是哪一种, 要根据<code>OutputBuffer</code>的类别来判定.<br>如果是<code>Broadcast</code>类别的, 就会创建<code>BroadcastOutputBuffer</code>, 如果是<code>Partition</code>类别的, 就会创建<code>PartitionedOutputBuffer</code>.<br>然后就会根据<code>OutputBuffers</code>的个数具体创建<code>ClientBuffer</code>. </p>
 <p>然后在<code>TaskOutputOperator</code>或者是<code>PartitionOutputOperator</code>进行<code>finish</code>的时候, 都是把<code>Page</code>放到<code>ClientBuffer</code>中. </p>
@@ -719,7 +712,7 @@
 <li>token </li>
 </ul>
 <p>presto 模拟了<code>Tcp</code>中的<code>Seq</code>和<code>Ack</code>机制, 但是因为只有上游需要把数据传送给下游, 所以是半双工的, 保证了数据的可靠性</p>
-<p><img src="/2022/07/11/Presto-Scheduler/token.png" alt="img"></p>
+<p>![img](Presto 分享.assets/token.png)</p>
 <h5 id="OutputBuffer流控"><a href="#OutputBuffer流控" class="headerlink" title="OutputBuffer流控"></a>OutputBuffer流控</h5><p>每一个<code>BroadcastOutputBuffer</code>或者<code>PartitionedOutputBuffer</code>都会有一个 <code>maxBufferedBytes</code>, 用来监控当前已经的<code>buffer</code>的大小. </p>
 <p>每来一个<code>Page</code>, 把大小加进去, 每出一个<code>Page</code>把大小减去, 如果当前攒着的大小超过了阈值, 那么就返回<code>Blocked</code>, 把整个<code>Driver</code>给<code>Block</code>掉, 不去执行了. </p>
 <p>对于 broadcast 场景: 每个<code>ClientBuffer</code>中其实都有一个<code>Page</code>的引用, 只有当所有的下游<code>Task</code>把对应的<code>ClientBuffer</code>里面的<code>Page</code>取走了才能把大小给减去, presto 采用引用计数的实现, 每<code>add</code>到<code>Buffer</code>中一次, 计数就加一, 每从<code>buffer</code>中移除一次, 计数就减一, 当为0的时候, 就调用回调把<code>size</code>减去. </p>
