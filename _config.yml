@@ -98,7 +98,11 @@ deploy:
 sitemap:
     path: sitemap.xml
 
-# backup:
-    # type: git
-    # repository:
-       # github: git@github.com:Aaaaaaron/aaaaaaron.github.io.git,hexo
+backup:
+    type: git
+    message: update 20220711
+    theme: aloha,crisp,landscape,next,noise,polarbearsimple,
+    repository:
+      github: git@github.com:Aaaaaaron/aaaaaaron.github.io.git,hexo_backup_extension
+
+
