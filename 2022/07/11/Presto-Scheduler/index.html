@@ -48,12 +48,12 @@
   };
 </script>
 
-  <meta name="description" content="作者: 陶加涛&#x2F;高官涛&#x2F;网上各种资料  基本概念   Stage: 逻辑概念, 指可以在一个节点上执行的一部分执行计划, 对应一个 PlanFragment, 一般按照 exchange 来划分    Task: Stage 的实例, Stage只是定义了执行计划怎么划分, 接下来会被调度到各个机器上去执行, 每一个Stage 的实例就称为Task">
+  <meta name="description" content="作者: 陶加涛&#x2F;高官涛&#x2F;网上各种资料  基本概念   Stage: 逻辑概念, 指可以在一个节点上执行的一部分执行计划, 对应一个 PlanFragment, 一般按照 exchange 来划分    Task: Stage 的实例, Stage只是定义了执行计划怎么划分, 接下来会被调度到各个">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Presto Scheduler">
 <meta property="og:url" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="作者: 陶加涛&#x2F;高官涛&#x2F;网上各种资料  基本概念   Stage: 逻辑概念, 指可以在一个节点上执行的一部分执行计划, 对应一个 PlanFragment, 一般按照 exchange 来划分    Task: Stage 的实例, Stage只是定义了执行计划怎么划分, 接下来会被调度到各个机器上去执行, 每一个Stage 的实例就称为Task">
+<meta property="og:description" content="作者: 陶加涛&#x2F;高官涛&#x2F;网上各种资料  基本概念   Stage: 逻辑概念, 指可以在一个节点上执行的一部分执行计划, 对应一个 PlanFragment, 一般按照 exchange 来划分    Task: Stage 的实例, Stage只是定义了执行计划怎么划分, 接下来会被调度到各个">
 <meta property="og:locale">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/image-20220707105603799.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/stage.png">
@@ -79,7 +79,7 @@
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/SqlTask.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/token.png">
 <meta property="article:published_time" content="2022-07-10T16:15:47.000Z">
-<meta property="article:modified_time" content="2022-07-11T08:26:30.688Z">
+<meta property="article:modified_time" content="2022-07-11T08:40:22.976Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta property="article:tag" content="OLAP">
 <meta property="article:tag" content="SQL">
@@ -222,7 +222,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2022-07-11 00:15:47 / Modified: 16:26:30" itemprop="dateCreated datePublished" datetime="2022-07-11T00:15:47+08:00">2022-07-11</time>
+              <time title="Created: 2022-07-11 00:15:47 / Modified: 16:40:22" itemprop="dateCreated datePublished" datetime="2022-07-11T00:15:47+08:00">2022-07-11</time>
             </span>
 
           
@@ -236,7 +236,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <pre><code>                         作者: 陶加涛/高官涛/网上各种资料
+        <pre><code>                                                    作者: 陶加涛/高官涛/网上各种资料
 </code></pre>
 <h2 id="基本概念"><a href="#基本概念" class="headerlink" title="基本概念"></a>基本概念</h2><img src="/2022/07/11/Presto-Scheduler/image-20220707105603799.png" alt="image-20220707105603799" style="zoom: 33%;">
 
@@ -579,6 +579,8 @@
 <li><p>每次while执行时, 如果只获取到部分Split, 也会进行Split下发和Task的生成发送到woker, 在后续再读取到Split时会根据Split和Node的信息来选择是新建还是更新Task, 一旦处于no_more_split时则说明Stage对应的Split已经完全获取完成</p>
 </li>
 <li><p>对于非Source类型的Stage, 不存在获取Split和下发Split的过程, 其读取的Split为下游Stage的产出, 会使用StageLinkage来维护, 调度时只需要根据节点负载信息来调度task即可</p>
+</li>
+<li><p>前面RemoteTask后，通过 REST 请求将task任务下放到对应的worker上去</p>
 <img src="/2022/07/11/Presto-Scheduler/image-20220707181420112.png" alt="image-20220707181420112" style="zoom:33%;"></li>
 </ul>
 <img src="/2022/07/11/Presto-Scheduler/61990452-c5afec80-aff5-11e9-8a2a-bad34aa33593-20220706231808517.png" alt="Example 1" style="zoom:33%;">
@@ -637,11 +639,14 @@
 <img src="/2022/07/11/Presto-Scheduler/Split Lifecycle.jpeg" alt="canRunMore" style="zoom: 33%;">
 
 <ul>
-<li>定时检查, 如果 OutputBuffers 使用率低于 0.5 (下游消费较快, 需要提高生产速度),  并发度+1</li>
+<li>定时检查, 如果 OutputBuffers 使用率低于 0.5 (下游消费较快, 需要提高生产速度),  并发度+1<code>SplitConcurrencyController#TARGET_UTILIZATION</code><ul>
+<li>主要逻辑可以参考 <code>PrioritizedSplitRunner</code></li>
+</ul>
+</li>
 </ul>
 <h4 id="时间片调度"><a href="#时间片调度" class="headerlink" title="时间片调度"></a>时间片调度</h4><ul>
-<li>Worker 线程池: CPU * </li>
-<li>2对于每个线程,  重复以下过程 (模拟时间片轮转):<ul>
+<li>Worker 线程池: CPU * 2</li>
+<li>对于每个线程,  重复以下过程 (模拟时间片轮转):<ul>
 <li>从  MSQ 中取出一个可运行的 Driver</li>
 <li>循环执行 Driver#process 方法直到超过 1s</li>
 <li>如果 process 阻塞,  让出时间片, 通过回调再加入队列</li>
