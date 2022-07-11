@@ -79,7 +79,7 @@
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/SqlTask.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/token.png">
 <meta property="article:published_time" content="2022-07-10T16:15:47.000Z">
-<meta property="article:modified_time" content="2022-07-10T16:58:47.372Z">
+<meta property="article:modified_time" content="2022-07-11T07:58:30.264Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta property="article:tag" content="OLAP">
 <meta property="article:tag" content="SQL">
@@ -222,7 +222,7 @@
               <span class="post-meta-item-text">Posted on</span>
               
 
-              <time title="Created: 2022-07-11 00:15:47 / Modified: 00:58:47" itemprop="dateCreated datePublished" datetime="2022-07-11T00:15:47+08:00">2022-07-11</time>
+              <time title="Created: 2022-07-11 00:15:47 / Modified: 15:58:30" itemprop="dateCreated datePublished" datetime="2022-07-11T00:15:47+08:00">2022-07-11</time>
             </span>
 
           
@@ -330,7 +330,7 @@
 <li>user (by client)</li>
 <li>source (by client)</li>
 <li>clientTags (by client)</li>
-<li>queryType: (by parser):  可以对不同的查询类型queryType, 比如EXPLAIN、INSERT、SELECT和DATA_DEFINITION等类型, 匹配到不同的资源组, 分配不同的资源, 来执行查询</li>
+<li>queryType: (by parser):  可以对不同的查询类型queryType, 比如<code>EXPLAIN</code>、<code>INSERT</code>、<code>SELECT</code>和<code>DATA_DEFINITION</code>等类型, 匹配到不同的资源组, 分配不同的资源, 来执行查询</li>
 <li>resourceEstimates: (by client)<ul>
 <li>executionTime</li>
 <li>cpuTime</li>
@@ -393,7 +393,7 @@
 <li>下面会具体介绍<code>StageScheduler#scheduler()</code> </li>
 </ul>
 </li>
-<li><p>stage 调度器每完成一次调度, 都会产生对应的调度结果 <code>ScheduleResult</code> ,  <code>StageLinkage</code> 会根据<code>ScheduleResult</code> 的结果和状态来跟新<code>sourceTask</code> 的信息. 如果此stage包含<code>remoteSourceNode</code> , 则要根据allTask和sourceTask来为task创建依赖的remoteSplit. 如果存在remoteSplit则会更新RemoteTask(远程update)</p>
+<li><p>stage 调度器每完成一次调度, 都会产生对应的调度结果 <code>ScheduleResult</code> ,  <code>StageLinkage</code> 会根据<code>ScheduleResult</code> 的结果和状态来跟新<code>sourceTask</code> 的信息. 如果此stage包含<code>remoteSourceNode</code> , 则要根据allTask和sourceTask来为task创建依赖的<code>remoteSplit</code> . 如果存在<code>remoteSplit</code>则会更新<code>RemoteTask</code>(远程update)</p>
 </li>
 <li><p>启动<code>RemoteTask</code>的<code>start()</code>方法. 开始轮询获取task的状态, 不停的更新<code>SqlStageExecution</code>所有有关task的变量. 直到所有task完成</p>
 <ul>
@@ -412,44 +412,18 @@
 <li>coordinator会尝试从 connector 获取对应TableScanNode的splits, split包含isRemotelyAccessible属性. 当remotelyAccessible=false时, 该 split 只能被下发至addresses包含的Presto Worker上;而当remotelyAccessible=true时, 该split可能被调度至集群内的任意一个Presto Worker上. 当该stage的split为第一次被调度至Presto Worker上时, coordinator就会往该Presto Worker下发Task. </li>
 </ul>
 </li>
-<li><p>Remote stage: stage的split 都是remote split. 即根据NodePartitionMap中维护的本stage可以执行的node列表, 来调度task(scheduleTask)</p>
+<li><p>Remote stage: stage的 split 都是remote split. 即根据NodePartitionMap中维护的本stage可以执行的node列表, 来调度task(scheduleTask)</p>
 <ul>
-<li><p>coordinator会从Presto Worker中选择min(hashPartitionCount, aliveWokers)个worker, 每个worker下发一个task</p>
+<li><p>Coordinator 会从Presto Worker中选择min(hashPartitionCount, aliveWokers)个worker, 每个worker下发一个task</p>
 </li>
-<li><p>RemoteSplit本质就是一个用来标记数据位置的URL, Driver在执行到SourceOperator算子时, 通过该URL去拉取数据进行运算</p>
-<ul>
-<li><p><code>ExchangeOperator#getOutput</code>  调用 <code>PageBufferClient#sendGetResults</code></p>
-</li>
-<li><p>最后会调用到 <code>RpcShuffleClient</code>, 有两种实现: <code>HttpRpcShuffleClient</code>/<code>ThriftRpcShuffleClient</code></p>
-<ul>
-<li><code>HttpRpcShuffleClient#getResults</code></li>
-<li>上游的TaskResource提供了<code>&#123;taskId&#125;/results/&#123;bufferId&#125;/&#123;token&#125;</code>接口用于提供数据, 以Page单位返回数据, token用于告知上游当前消费偏移量</li>
-</ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> ListenableFuture&lt;PagesResponse&gt; <span class="title">getResults</span><span class="params">(<span class="keyword">long</span> token, DataSize maxResponseSize)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    URI uriBase = asyncPageTransportLocation.orElse(location);</span><br><span class="line">    URI uri = uriBuilderFrom(uriBase).appendPath(String.valueOf(token)).build();</span><br><span class="line">    <span class="keyword">return</span> httpClient.executeAsync(</span><br><span class="line">            prepareGet()</span><br><span class="line">                    .setHeader(PRESTO_MAX_SIZE, maxResponseSize.toString())</span><br><span class="line">                    .setUri(uri).build(),</span><br><span class="line">            <span class="keyword">new</span> PageResponseHandler());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
-
-<ul>
-<li><p><code>PagesResponse</code> 中包含了 <code>serializedPage</code></p>
-</li>
-<li><p>每个SqlTask在创建的时候都会创建一个对应的LazyOutputBuffer对象, 用于存放计算的结果, 等待下游过来拉取数据</p>
-<ul>
-<li>某个Task还未被Presto Worker执行时就收到下游Task数据读取的请求时, LazyOutputBuffer会记录下该请求, 当该Task被执行并生成数据后, 再响应对应的请求:<code>List&lt;PendingRead&gt; pendingReads</code></li>
-</ul>
-</li>
-<li><p>PageBufferClient拉取到数据后会放到PageBuffer双端队列中, ExchangeClient从PageBuffer中读取数据</p>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ExchangeClient is the client on receiver side, used in operators requiring data exchange from other tasks, such as ExchangeOperator and ink MergeOperator.</span><br><span class="line">For each sender that ExchangeClient receives data from, a &#123;<span class="meta">@link</span> PageBufferClient&#125; is used in ExchangeClient to communicate with the sender, i.e.</span><br><span class="line"></span><br><span class="line">                   /   HttpPageBufferClient_1  - - - Remote Source <span class="number">1</span></span><br><span class="line">    ExchangeClient --  HttpPageBufferClient_2  - - - Remote Source <span class="number">2</span></span><br><span class="line">                   \   ...</span><br><span class="line">                    \  HttpPageBufferClient_n  - - - Remote Source n</span><br></pre></td></tr></table></figure>
-
-<p><img src="/2022/07/11/Presto-Scheduler/fbd33c347193ba9f05a089719ec93212-20220710000334427.png" alt="image-20210401150903279"></p>
-</li>
-</ul>
-</li>
-</ul>
-</li>
+<li><p><code>RemoteSplit</code> 本质就是一个用来标记数据位置的URL, Driver在执行到<code>ExchangeOperator</code>算子时, 通过该URL去拉取数据进行运算</p>
+<img src="/2022/07/11/Presto-Scheduler/fbd33c347193ba9f05a089719ec93212-20220710000334427.png" alt="image-20210401150903279" style="zoom: 33%;"></li>
 </ul>
 </li>
 <li><p>Split的计算, Split的下发都有可能阻塞, 所以采用异步调用的方式</p>
 </li>
 </ul>
-<h5 id="调度器"><a href="#调度器" class="headerlink" title="调度器"></a>调度器</h5><p>在SqlQueryScheduler#schedule方法中会为不同的stage创建不同的调度器(SectionExecutionFactory#createStageScheduler)</p>
+<h5 id="调度器"><a href="#调度器" class="headerlink" title="调度器"></a>调度器</h5><p>在<code>SqlQueryScheduler#schedule</code> 方法中会为不同的stage创建不同的调度器(<code>SectionExecutionFactory#createStageScheduler</code>)</p>
 <img src="/2022/07/11/Presto-Scheduler/image-20220706220355120.png" alt="image-20220706220355120" style="zoom: 33%;">
 
 <ul>
@@ -468,18 +442,26 @@
 <li><code>SPLIT_QUEUES_FULL</code>: node 忙碌, 一些 splits还没有分配(位置在<code>NodeSelector#computeAssignments</code>)</li>
 </ol>
 <h4 id="Source-Stage调度-SourcePartitionedScheduler"><a href="#Source-Stage调度-SourcePartitionedScheduler" class="headerlink" title="Source Stage调度(SourcePartitionedScheduler)"></a>Source Stage调度(SourcePartitionedScheduler)</h4><ul>
-<li>Source stage, 读取分布式数据源的调度器实现, 一般为叶子节点</li>
-<li>凡是包含 TableScanNode 的执行计划都需要使用 SourcePartitionedScheduler 来完成 SplitSource 中每个 split 到执行节点的分配(assignSplits过程), 如果表是 unbucketed, 在生成执行计划时会把TableScanNode拆分成一个独立的stage(至多加上FilterNode)</li>
-<li><code>assignSplits</code> 返回 <code>Set&lt;RemoteTask&gt;</code><ul>
-<li><code>assignSplits</code> 会调用 <code>scheduleSplits</code></li>
-<li><code>scheduleSplits</code> 会调用 <code>scheduleTask</code></li>
-<li><code>scheduleTask</code> 会调用 `createRemoteTask``</li>
-<li>remote  调用<code>HttpRemoteTask#start</code></li>
-<li><img src="/2022/07/11/Presto-Scheduler/312753-20211116174351414-831233956-20220708225355357.png" alt="img" style="zoom:50%;"></li>
+<li><p>Source stage, 读取分布式数据源的调度器实现, 一般为叶子节点</p>
+</li>
+<li><p>凡是包含 TableScanNode 的执行计划都需要使用 SourcePartitionedScheduler 来完成 SplitSource 中每个 split 到执行节点的分配(assignSplits过程), 如果表是 unbucketed, 在生成执行计划时会把TableScanNode拆分成一个独立的stage(至多加上FilterNode)</p>
+</li>
+<li><p><code>assignSplits</code> 返回 <code>Set&lt;RemoteTask&gt;</code></p>
+<ul>
+<li><p><code>assignSplits</code> 会调用 <code>scheduleSplits</code></p>
+</li>
+<li><p><code>scheduleSplits</code> 会调用 <code>scheduleTask</code></p>
+</li>
+<li><p><code>scheduleTask</code> 会调用 `createRemoteTask``</p>
+</li>
+<li><p>remote  调用<code>HttpRemoteTask#start</code></p>
+<img src="/2022/07/11/Presto-Scheduler/312753-20211116174351414-831233956-20220708225355357.png" alt="img" style="zoom:50%;"></li>
 </ul>
 </li>
-<li>有一个额外的操作即对数据Split进行调度, 给需要处理的split分配执行节点, 通过<code>splitPlacementPolicy.computeAssignments</code>方法为split分配节点</li>
-<li>有两种策略<ul>
+<li><p>有一个额外的操作即对数据Split进行调度, 给需要处理的split分配执行节点, 通过<code>splitPlacementPolicy.computeAssignments</code>方法为split分配节点</p>
+</li>
+<li><p>有两种策略</p>
+<ul>
 <li>DynamicSplitPlacementPolicy:(底层数据表是bucketed表), 在生成执行时会使用NodePartitionManager生成split和node的映射关系, 在具体调度时使用映射管理来为split分配node</li>
 <li>BucketedSplitPlacementPolicy:(底层数据表是unbucketed表), 在具体调度执行前为split分配node, 用于FixedSourcePartionedScheduler</li>
 </ul>
@@ -536,7 +518,7 @@
 <li><code>Single </code>:随机地从所有存活节点列表中选择一个节点</li>
 <li><code>Fixed</code>: 随机选择参数<code>hash_partition_count</code>和<code>max_tasks_per_stage</code>两者的小值数量的节点 (<code>min(100, workerCount)</code>)</li>
 </ul>
-<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (partitioning == SystemPartitioning.COORDINATOR_ONLY)</span><br><span class="line">    nodes = ImmutableList.of(nodeSelector.selectCurrentNode());</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (partitioning == SystemPartitioning.SINGLE)</span><br><span class="line">    nodes = nodeSelector.selectRandomNodes(<span class="number">1</span>);</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (partitioning == SystemPartitioning.FIXED)</span><br><span class="line">    nodes = nodeSelector.selectRandomNodes(min(getHashPartitionCount(session), getMaxTasksPerStage(session)));</span><br></pre></td></tr></table></figure></li>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (partitioning == SystemPartitioning.COORDINATOR_ONLY)</span><br><span class="line">  nodes = ImmutableList.of(nodeSelector.selectCurrentNode());</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (partitioning == SystemPartitioning.SINGLE)</span><br><span class="line">  nodes = nodeSelector.selectRandomNodes(<span class="number">1</span>);</span><br><span class="line"><span class="keyword">else</span> <span class="keyword">if</span> (partitioning == SystemPartitioning.FIXED)</span><br><span class="line">  nodes = nodeSelector.selectRandomNodes(min(getHashPartitionCount(session), getMaxTasksPerStage(session)));</span><br></pre></td></tr></table></figure></li>
 </ul>
 <h4 id="输入包含本地数据源-FixedSourcePartionedScheduler"><a href="#输入包含本地数据源-FixedSourcePartionedScheduler" class="headerlink" title="输入包含本地数据源(FixedSourcePartionedScheduler)"></a>输入包含本地数据源(FixedSourcePartionedScheduler)</h4><ul>
 <li><p>说明: 用于 Bucket Join, splitSource 中至少有一个是source split, 可以包含remote split且source split对应的table是bucket表.</p>
@@ -675,7 +657,7 @@
 <p>当前这个Driver获取了1s的时间片, 就设置一个delay为一秒的Future, 即这个Future会在1s以后被调度, 把一个yield变量设置为true, 然后各个不同的Operator去自行check这个标记位, 以ScanFilterAndProjectOperator为例：</p>
 <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Page <span class="title">processPageSource</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    DriverYieldSignal yieldSignal = operatorContext.getDriverContext().getYieldSignal();</span><br><span class="line">    <span class="keyword">if</span> (!finishing &amp;&amp; mergingOutput.needsInput() &amp;&amp; !yieldSignal.isSet()) &#123;</span><br><span class="line">        Page page = pageSource.getNextPage();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
 
-<h2 id="Presto-Exchange"><a href="#Presto-Exchange" class="headerlink" title="Presto Exchange"></a>Presto Exchange</h2><p>上面写的比较零碎</p>
+<h2 id="Presto-Exchange"><a href="#Presto-Exchange" class="headerlink" title="Presto Exchange"></a>Presto Exchange</h2><p>上面写的比较零碎, 这里总结下</p>
 <p><code>Presto</code>在数据进行<code>shuffle</code>的时候是<code>Pull</code>模式, 在两端负责分发和交换数据的类分别是<code>ExchangClient</code>和<code>OutputBuffer</code>. </p>
 <p><code>Source Stage</code>把数据从<code>Connector</code>中拉取出来, 会先把数据放在<code>OutputBuffer</code>中, 等待上游把数据请求过去, 而上游请求数据的类就是<code>ExchangeClient</code></p>
 <p><img src="/2022/07/11/Presto-Scheduler/ExchangeClient.png" alt="img"></p>
@@ -691,8 +673,33 @@
 
 <h4 id="PageBufferClient"><a href="#PageBufferClient" class="headerlink" title="PageBufferClient"></a>PageBufferClient</h4><p><strong>scheduleRequest</strong></p>
 <p>调用请求的地方, 每一次请求失败, 会有一个等待时间, 而且随着失败次数的增加, 这个等待的时间会越来越长. 在这个等待的时间内, 不会再去进行请求</p>
-<p><strong>sendGetResults</strong></p>
-<p>真正 send 请求&amp;拿到结果的地方, 见上面</p>
+<ul>
+<li><p><code>ExchangeOperator#getOutput</code>  调用 <code>ExchangeClient#pollPage()</code></p>
+</li>
+<li><p><code>pollPage</code> 会调用到 <code>PageBufferClient#sendGetResults()</code></p>
+</li>
+<li><p><code>sendGetResults</code> 会调用到 <code>RpcShuffleClient</code>, 有两种实现: <code>HttpRpcShuffleClient</code>/<code>ThriftRpcShuffleClient</code></p>
+<ul>
+<li><code>HttpRpcShuffleClient#getResults</code></li>
+<li>上游的TaskResource提供了<code>&#123;taskId&#125;/results/&#123;bufferId&#125;/&#123;token&#125;</code>接口用于提供数据, 以Page单位返回数据, token用于告知上游当前消费偏移量</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> ListenableFuture&lt;PagesResponse&gt; <span class="title">getResults</span><span class="params">(<span class="keyword">long</span> token, DataSize maxResponseSize)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    URI uriBase = asyncPageTransportLocation.orElse(location);</span><br><span class="line">    URI uri = uriBuilderFrom(uriBase).appendPath(String.valueOf(token)).build();</span><br><span class="line">    <span class="keyword">return</span> httpClient.executeAsync(</span><br><span class="line">            prepareGet()</span><br><span class="line">                    .setHeader(PRESTO_MAX_SIZE, maxResponseSize.toString())</span><br><span class="line">                    .setUri(uri).build(),</span><br><span class="line">            <span class="keyword">new</span> PageResponseHandler());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>PagesResponse</code> 中包含了 <code>serializedPage</code></p>
+</li>
+<li><p>每个SqlTask在创建的时候都会创建一个对应的LazyOutputBuffer对象, 用于存放计算的结果, 等待下游过来拉取数据</p>
+<ul>
+<li>某个Task还未被Presto Worker执行时就收到下游Task数据读取的请求时, LazyOutputBuffer会记录下该请求, 当该Task被执行并生成数据后, 再响应对应的请求:<code>List&lt;PendingRead&gt; pendingReads</code></li>
+</ul>
+</li>
+<li><p>PageBufferClient拉取到数据后会放到PageBuffer双端队列中, ExchangeClient从PageBuffer中读取数据</p>
+</li>
+</ul>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ExchangeClient is the client on receiver side, used in operators requiring data exchange from other tasks, such as ExchangeOperator and ink MergeOperator.</span><br><span class="line"></span><br><span class="line">For each sender that ExchangeClient receives data from, a PageBufferClient is used in ExchangeClient to communicate with the sender, i.e.</span><br><span class="line"></span><br><span class="line">                     /   HttpPageBufferClient_1  - - - Remote Source <span class="number">1</span></span><br><span class="line">      ExchangeClient --  HttpPageBufferClient_2  - - - Remote Source <span class="number">2</span></span><br><span class="line">                     \   ...</span><br><span class="line">                      \  HttpPageBufferClient_n  - - - Remote Source n</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
 <h4 id="ExchangeClient流控"><a href="#ExchangeClient流控" class="headerlink" title="ExchangeClient流控"></a>ExchangeClient流控</h4><p>请求端流控</p>
 <p><code>ExchangeClient</code> 有一个<code>long</code>类型的<code>bufferBytes</code>, 用来标记当前的<code>buffer</code>中有多少<code>buffer</code>.<br>在<code>scheduleRequestIfNecessary()</code>方法中, 会把<code>bufferBytes</code>和<code>maxBufferSize</code>进行比较, 如果已经满足了, 那么就不会请求<code>HttpPageBufferClient</code>去请求数据. </p>
 <h4 id="OutputBuffer"><a href="#OutputBuffer" class="headerlink" title="OutputBuffer"></a>OutputBuffer</h4><p><img src="/2022/07/11/Presto-Scheduler/SqlTask.png" alt="img"></p>
