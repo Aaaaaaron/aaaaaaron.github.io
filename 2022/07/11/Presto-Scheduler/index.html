@@ -68,10 +68,18 @@
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/image-20220707181420112.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/61990452-c5afec80-aff5-11e9-8a2a-bad34aa33593-20220706231808517.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/61990454-c9437380-aff5-11e9-8937-0aee5d2c3472-20220706231818347.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/922194103fad4d5f935fda6e200ef261.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/d5bb4826efb54f2c859282e3f46cedd6.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/10ec79b499db493587e93e5e8b82297a-20220707111022724.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/556bc2e66ee645e5acc41a4cfed9da74-20220707175915795.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/225f04d792f247d19c0525c106b5abfe.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/image-20220708152209337.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/Split%20Lifecycle.jpeg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/ExchangeClient.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/SqlTask.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/07/11/Presto-Scheduler/token.png">
 <meta property="article:published_time" content="2022-07-10T16:15:47.000Z">
-<meta property="article:modified_time" content="2022-07-11T09:49:22.794Z">
+<meta property="article:modified_time" content="2022-07-12T13:43:27.395Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta property="article:tag" content="OLAP">
 <meta property="article:tag" content="SQL">
@@ -212,10 +220,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-07-11 00:15:47 / Modified: 17:49:22" itemprop="dateCreated datePublished" datetime="2022-07-11T00:15:47+08:00">2022-07-11</time>
+              <time title="Created: 2022-07-11 00:15:47" itemprop="dateCreated datePublished" datetime="2022-07-11T00:15:47+08:00">2022-07-11</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-07-12 21:43:27" itemprop="dateModified" datetime="2022-07-12T21:43:27+08:00">2022-07-12</time>
+              </span>
 
           
 
@@ -376,7 +390,7 @@
 </li>
 <li><p>为每个stage添加相应的执行策略(all-at-once/phased);</p>
 <ul>
-<li>All-at-once: 就是一次调度所有 stag 以最小化Wall Clock Time, 数据一旦可用就会被处理; 虽然是一次性调度, 但各个 stage 之间是有序的, 从叶子节点开始自底向上的去调度, 适用于延迟敏感的场景</li>
+<li>All-at-once: 就是一次调度所有 stage 以最小化 Wall Clock Time, 数据一旦可用就会被处理; 虽然是一次性调度, 但各个 stage 之间是有序的, 从叶子节点开始自底向上的去调度, 适用于延迟敏感的场景</li>
 <li>Phased: 分阶段调度, 核心就是构建一个 DAG 图, 有依赖关系的子任务在图上加边; 典型操作如hash-join, 需要先build好, 再启动probe端, 在构建哈希表之前, 不会对左侧的流调度任务进行调度. 比较节约内存, 适用于批处理场景</li>
 </ul>
 </li>
@@ -578,11 +592,11 @@
 
 
 
-<p>![img](Presto 分享.assets/922194103fad4d5f935fda6e200ef261.png)</p>
-<p>![img](Presto 分享.assets/d5bb4826efb54f2c859282e3f46cedd6.png)</p>
-<h5 id="StageScheduler"><a href="#StageScheduler" class="headerlink" title="StageScheduler"></a>StageScheduler</h5><p>![img](Presto 分享.assets/10ec79b499db493587e93e5e8b82297a-20220707111022724.png)</p>
-<h5 id="总体流程"><a href="#总体流程" class="headerlink" title="总体流程"></a>总体流程</h5><p>![img](Presto 分享.assets/556bc2e66ee645e5acc41a4cfed9da74-20220707175915795.png)</p>
-<p>![img](Presto 分享.assets/225f04d792f247d19c0525c106b5abfe.png)</p>
+<p><img src="/2022/07/11/Presto-Scheduler/922194103fad4d5f935fda6e200ef261.png" alt="img"></p>
+<p><img src="/2022/07/11/Presto-Scheduler/d5bb4826efb54f2c859282e3f46cedd6.png" alt="img"></p>
+<h5 id="StageScheduler"><a href="#StageScheduler" class="headerlink" title="StageScheduler"></a>StageScheduler</h5><p><img src="/2022/07/11/Presto-Scheduler/10ec79b499db493587e93e5e8b82297a-20220707111022724.png" alt="img"></p>
+<h5 id="总体流程"><a href="#总体流程" class="headerlink" title="总体流程"></a>总体流程</h5><p><img src="/2022/07/11/Presto-Scheduler/556bc2e66ee645e5acc41a4cfed9da74-20220707175915795.png" alt="img"></p>
+<p><img src="/2022/07/11/Presto-Scheduler/225f04d792f247d19c0525c106b5abfe.png" alt="img"></p>
 <h3 id="HTTP-API-介绍"><a href="#HTTP-API-介绍" class="headerlink" title="HTTP API 介绍"></a>HTTP API 介绍</h3><h4 id="Stage服务接口"><a href="#Stage服务接口" class="headerlink" title="Stage服务接口"></a>Stage服务接口</h4><p>处理Stage相关的请求, 只有一个功能, 即取消或者结束一个指定的Stage</p>
 <ul>
 <li><code>/v1/stage/&#123;stageId&#125;</code> – DELETE 提前结束一个Stage</li>
@@ -658,7 +672,7 @@
 <h2 id="Presto-Exchange"><a href="#Presto-Exchange" class="headerlink" title="Presto Exchange"></a>Presto Exchange</h2><p>上面写的比较零碎, 这里总结下</p>
 <p><code>Presto</code>在数据进行<code>shuffle</code>的时候是<code>Pull</code>模式, 在两端负责分发和交换数据的类分别是<code>ExchangClient</code>和<code>OutputBuffer</code>. </p>
 <p><code>Source Stage</code>把数据从<code>Connector</code>中拉取出来, 会先把数据放在<code>OutputBuffer</code>中, 等待上游把数据请求过去, 而上游请求数据的类就是<code>ExchangeClient</code></p>
-<p>![img](Presto 分享.assets/ExchangeClient.png)</p>
+<p><img src="/2022/07/11/Presto-Scheduler/ExchangeClient.png" alt="img"></p>
 <h3 id="主体类"><a href="#主体类" class="headerlink" title="主体类"></a>主体类</h3><h4 id="ExchangOperator"><a href="#ExchangOperator" class="headerlink" title="ExchangOperator"></a>ExchangOperator</h4><ul>
 <li>负责从下游的<code>Stage</code>拉数据</li>
 <li>创建<code>ExchangeOperator</code>的时候, 会创建一个<code>ExchangClient</code>. </li>
@@ -700,7 +714,7 @@
 </ul>
 <h4 id="ExchangeClient流控"><a href="#ExchangeClient流控" class="headerlink" title="ExchangeClient流控"></a>ExchangeClient流控</h4><p>请求端流控</p>
 <p><code>ExchangeClient</code> 有一个<code>long</code>类型的<code>bufferBytes</code>, 用来标记当前的<code>buffer</code>中有多少<code>buffer</code>.<br>在<code>scheduleRequestIfNecessary()</code>方法中, 会把<code>bufferBytes</code>和<code>maxBufferSize</code>进行比较, 如果已经满足了, 那么就不会请求<code>HttpPageBufferClient</code>去请求数据. </p>
-<h4 id="OutputBuffer"><a href="#OutputBuffer" class="headerlink" title="OutputBuffer"></a>OutputBuffer</h4><p>![img](Presto 分享.assets/SqlTask.png)</p>
+<h4 id="OutputBuffer"><a href="#OutputBuffer" class="headerlink" title="OutputBuffer"></a>OutputBuffer</h4><p><img src="/2022/07/11/Presto-Scheduler/SqlTask.png" alt="img"></p>
 <p><strong>LazyOutputBuffer</strong>: 是一个门面模式, 包含了一个类别不同的OutputBuffe</p>
 <p>具体是哪一种, 要根据<code>OutputBuffer</code>的类别来判定.<br>如果是<code>Broadcast</code>类别的, 就会创建<code>BroadcastOutputBuffer</code>, 如果是<code>Partition</code>类别的, 就会创建<code>PartitionedOutputBuffer</code>.<br>然后就会根据<code>OutputBuffers</code>的个数具体创建<code>ClientBuffer</code>. </p>
 <p>然后在<code>TaskOutputOperator</code>或者是<code>PartitionOutputOperator</code>进行<code>finish</code>的时候, 都是把<code>Page</code>放到<code>ClientBuffer</code>中. </p>
@@ -712,7 +726,7 @@
 <li>token </li>
 </ul>
 <p>presto 模拟了<code>Tcp</code>中的<code>Seq</code>和<code>Ack</code>机制, 但是因为只有上游需要把数据传送给下游, 所以是半双工的, 保证了数据的可靠性</p>
-<p>![img](Presto 分享.assets/token.png)</p>
+<p><img src="/2022/07/11/Presto-Scheduler/token.png" alt="img"></p>
 <h5 id="OutputBuffer流控"><a href="#OutputBuffer流控" class="headerlink" title="OutputBuffer流控"></a>OutputBuffer流控</h5><p>每一个<code>BroadcastOutputBuffer</code>或者<code>PartitionedOutputBuffer</code>都会有一个 <code>maxBufferedBytes</code>, 用来监控当前已经的<code>buffer</code>的大小. </p>
 <p>每来一个<code>Page</code>, 把大小加进去, 每出一个<code>Page</code>把大小减去, 如果当前攒着的大小超过了阈值, 那么就返回<code>Blocked</code>, 把整个<code>Driver</code>给<code>Block</code>掉, 不去执行了. </p>
 <p>对于 broadcast 场景: 每个<code>ClientBuffer</code>中其实都有一个<code>Page</code>的引用, 只有当所有的下游<code>Task</code>把对应的<code>ClientBuffer</code>里面的<code>Page</code>取走了才能把大小给减去, presto 采用引用计数的实现, 每<code>add</code>到<code>Buffer</code>中一次, 计数就加一, 每从<code>buffer</code>中移除一次, 计数就减一, 当为0的时候, 就调用回调把<code>size</code>减去. </p>
