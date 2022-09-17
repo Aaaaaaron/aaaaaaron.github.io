@@ -1,0 +1,8 @@
+language: node_js
+node_js:
+  - "6"
+  - "5.11"
+branches:
+  only:
+    - master
+    - /^r[0-9]{1,}\.[0-9]{1,}\.[0-9]{1,}$/

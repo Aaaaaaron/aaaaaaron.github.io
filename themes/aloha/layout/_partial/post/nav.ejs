@@ -1,0 +1,44 @@
+<div id="pagination" class="nav-web ui text container pagination">
+
+    <div class="ui stackable two column divided grid container">
+        <div class="row">
+            <div class="column nav-left">
+                <% if(post.prev) { %>
+
+                <a href="<%= url_for(page.prev.path) %>" class="ui tiny button">
+
+                    <i class="angle left icon"></i>
+                    <% if (post.prev.title){ %>
+                    <%= post.prev.title %>
+                    <% } else { %>
+                    (<%= __('noTitle')%>)
+                    <% } %>
+
+                </a>
+
+                <% } else { %>
+
+                <a class="ui tiny button disabled"><i class="angle left icon"></i><%= __('prePage') %></a>
+
+                <% } %>
+            </div>
+            <div class="column nav-right">
+                <% if(post.next) { %>
+
+                <a href="<%= url_for(page.next.path) %>" class="ui tiny button">
+                    <% if (post.next.title){ %>
+                    <%= post.next.title %>
+                    <% } else { %>
+                    (<%= __('noTitle')%>)
+                    <% } %>
+                    <i class="angle right icon"></i></a>
+                <% } else { %>
+
+                <a class="ui tiny button disabled"><%= __('nextPage') %><i class="angle right icon"></i></a>
+
+                <% } %>
+            </div>
+        </div>
+    </div>
+
+</div>

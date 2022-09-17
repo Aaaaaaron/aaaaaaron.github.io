@@ -1,0 +1,28 @@
+<header id="blog-header">
+    <div class="ui pointing menu">
+        <div class="header item"><%= config.title %></div>
+        <% Object.keys(theme.menu).forEach(function(key) { %>
+        <% if (url_for(theme.menu[key].value) == '/' + path.replace('/index.html', '') || (url_for(theme.menu[key].value) == '/.' && is_home())) { %>
+        <a href="<%= theme.menu[key].value %>" class="active item"><%= __(theme.menu[key].name) %></a>
+        <% } else { %>
+        <a href="<%= theme.menu[key].value %>" class="item"><%= __(theme.menu[key].name) %></a>
+        <% } %>
+        <% }); %>
+
+        <div class="right menu">
+
+            <% if(config.algolia.applicationID) {%>
+
+                <div class="ui search item">
+                    <div class="ui transparent icon input">
+                        <input id="search-input" type="text" placeholder="<%= __('searchPlaceholder')%>">
+                        <i class="search link icon"></i>
+                    </div>
+                </div>
+
+            <% } %>
+
+            <!--<a class="ui item" href="/atom.xml">RSS</a>-->
+        </div>
+    </div>
+</header>

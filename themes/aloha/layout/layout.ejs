@@ -1,0 +1,79 @@
+<%
+var pageTitle = page.title || config.subtitle || '';
+if (is_archive()) pageTitle = __('archives');
+if (is_tag()) pageTitle = __('tag') + ': ' + page.tag;
+if (is_category()) pageTitle = __('category') + ': ' + page.category;
+if (is_month()) pageTitle += ': ' + page.month + '/' + page.year;
+if (is_year()) pageTitle += ': ' + page.year;
+if (pageTitle == '') {
+    pageTitle = config.title;
+} else {
+    pageTitle += ' | ' + config.title;
+}
+%>
+
+<!DOCTYPE html>
+<html lang="<%= config.language %>">
+<head prefix="og: http://ogp.me/ns#">
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1, minimum-scale=1, maximum-scale=1">
+    <meta name="description" content="<%= config.description %>">
+    <title><%= pageTitle %></title>
+
+    <!-- Open Graph -->
+    <%- open_graph({twitter_id: theme.twitter, google_plus: theme.google_plus, fb_admins: theme.fb_admins, fb_app_id: theme.fb_app_id}) %>
+
+    <%-partial('_partial/structured-data-markup')%>
+    <%-partial('_partial/js-params')%>
+
+    <% if (config.rss){ %>
+        <link rel="alternate" href="<%- config.rss %>" title="<%= config.title %>" type="application/atom+xml">
+    <% } %>
+
+    <% css('css/aloha') %>
+    <% if (config.highlight.enable){ %>
+        <link href="https://fonts.googleapis.com/css?family=Source+Code+Pro" rel="stylesheet" type="text/css">
+    <% } %>
+    <% var cdn = theme.cdn;%>
+    <% if (theme.stylesheets !== undefined && theme.stylesheets.length > 0) { %>
+        <!-- stylesheets list from config.yml -->
+        <% theme.stylesheets.forEach(function(url) { %>
+        <link rel="stylesheet" href="<%= resourceURL(cdn, config.root, url) %>">
+        <% }); %>
+    <% } %>
+
+</head>
+<body id="body" style="margin-bottom: 0;" class="pushable">
+
+    <div class="ui top fixed menu">
+        <a class="item" id="menu-icon"><i class="sidebar icon"></i></a>
+    </div>
+
+    <%- partial('_partial/menu')%>
+
+    <div class="pusher body-content">
+        <div id="content" class="ui main container">
+            <!--<div class="ui one column grid">-->
+                <!--<div class="column">-->
+                    <!--<div class="ui main container">-->
+                        <%- body %>
+                    <!--</div>-->
+                <!--</div>-->
+            <!--</div>-->
+        </div>
+        <%- partial('_partial/footer')%>
+    </div>
+
+<% if(config.algolia && config.algolia.applicationID) {%>
+    <%- partial('_partial/search-modal')%>
+<%}%>
+
+<% if (theme.scripts !== undefined && theme.scripts.length > 0) { %>
+<!-- scripts list from theme config.yml -->
+<% theme.scripts.forEach(function(url) { %>
+<script src="<%= resourceURL(cdn, config.root, url) %>"></script>
+<% }); %>
+<% } %>
+
+</body>
+</html>
