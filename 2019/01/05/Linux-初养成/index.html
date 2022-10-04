@@ -48,16 +48,16 @@
   };
 </script>
 
-  <meta name="description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
+  <meta name="description" content="Shell-snipaste !$ : 代表上条命令的最后一个参数.  ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub root@host: 快速与root@host建立免密连接  lsof -i :7070 | awk &#39;NR&#x3D;&#x3D;2 &amp;#123;print $2&amp;#125;&#39; | xargs kill -9 : 杀死占用端口为7070的进程  for i in">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Linux 初养成">
 <meta property="og:url" content="https://aaaaaaron.github.io/2019/01/05/Linux-%E5%88%9D%E5%85%BB%E6%88%90/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="shell 基础知识1234567891011121314151617181920212223242526272829303132333435363738394041424344454647484950515253$@  传递给脚本或函数的所有参数if [ -f  file ]    如果文件存在if [ -d ...   ]    如果目录存在if [ -s file  ]    如果文件存在且">
+<meta property="og:description" content="Shell-snipaste !$ : 代表上条命令的最后一个参数.  ssh-copy-id -i ~&#x2F;.ssh&#x2F;id_rsa.pub root@host: 快速与root@host建立免密连接  lsof -i :7070 | awk &#39;NR&#x3D;&#x3D;2 &amp;#123;print $2&amp;#125;&#39; | xargs kill -9 : 杀死占用端口为7070的进程  for i in">
 <meta property="og:locale">
 <meta property="og:image" content="https://aaaaaaron.github.io/2019/01/05/Linux-%E5%88%9D%E5%85%BB%E6%88%90/9994c078-2f8a-40e8-9659-165afcde065d(1).png">
 <meta property="article:published_time" content="2019-01-05T02:32:31.000Z">
-<meta property="article:modified_time" content="2021-05-08T09:51:14.440Z">
+<meta property="article:modified_time" content="2022-10-04T14:08:15.496Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta property="article:tag" content="Linux">
 <meta property="article:tag" content="Tool">
@@ -204,7 +204,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2021-05-08 17:51:14" itemprop="dateModified" datetime="2021-05-08T17:51:14+08:00">2021-05-08</time>
+                <time title="Modified: 2022-10-04 22:08:15" itemprop="dateModified" datetime="2022-10-04T22:08:15+08:00">2022-10-04</time>
               </span>
 
           
@@ -218,27 +218,7 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="shell-基础知识"><a href="#shell-基础知识" class="headerlink" title="shell 基础知识"></a>shell 基础知识</h1><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$@</span>  传递给脚本或函数的所有参数</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -f  file ]    如果文件存在</span><br><span class="line"><span class="keyword">if</span> [ -d ...   ]    如果目录存在</span><br><span class="line"><span class="keyword">if</span> [ -s file  ]    如果文件存在且非空 </span><br><span class="line"><span class="keyword">if</span> [ -r file  ]    如果文件存在且可读</span><br><span class="line"><span class="keyword">if</span> [ -w file  ]    如果文件存在且可写</span><br><span class="line"><span class="keyword">if</span> [ -x file  ]    如果文件存在且可执行   </span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>  [ -n <span class="variable">$string</span>  ]             如果string 非空(非0），返回0(<span class="literal">true</span>)  </span><br><span class="line"><span class="keyword">if</span>  [ -z <span class="variable">$string</span>  ]             如果string 为空</span><br><span class="line"><span class="keyword">if</span>  [ <span class="variable">$sting</span> ]                  如果string 非空，返回0 (和-n类似)    </span><br><span class="line"></span><br><span class="line">``</span><br><span class="line"></span><br><span class="line">|meta字符| meta字符作用|</span><br><span class="line">|--------|-------------|</span><br><span class="line">|= |设定变量|</span><br><span class="line">|$ | 作变量或运算替换(请不要与`shell prompt`混淆)|命令</span><br><span class="line">|&gt;| 输出重定向(重定向stdout)|</span><br><span class="line">|&lt;|输入重定向(重定向stdin)|</span><br><span class="line">|\||命令管道|</span><br><span class="line">|&amp;|重定向file descriptor或将命令至于后台(<span class="built_in">bg</span>)运行|</span><br><span class="line">|()|将其内部的命令置于nested subshell执行，或用于运算或变量替换|</span><br><span class="line">|&#123;&#125;|将其内的命令置于non-named <span class="keyword">function</span>中执行，或用在变量替换的界定范围|</span><br><span class="line">|;|在前一个命令执行结束时，而忽略其返回值，继续执行下一个命令|</span><br><span class="line">|&amp;&amp;|在前一个命令执行结束时，若返回值为<span class="literal">true</span>，继续执行下一个命令|</span><br><span class="line">|\|\||在前一个命令执行结束时，若返回值为<span class="literal">false</span>，继续执行下一个命令|</span><br><span class="line">|!|执行histroy列表中的命令|</span><br><span class="line">|... | ...|</span><br><span class="line"></span><br><span class="line"><span class="comment">## snipaste</span></span><br><span class="line"></span><br><span class="line">​```sh</span><br><span class="line">DIR=<span class="string">&quot;<span class="subst">$( cd <span class="string">&quot;<span class="subst">$(dirname <span class="string">&quot;<span class="variable">$0</span>&quot;</span>)</span>&quot;</span> ; pwd -P )</span>&quot;</span></span><br><span class="line"></span><br><span class="line"><span class="variable">$0</span> 类似于python中的sys.argv[0]等。 <span class="variable">$0</span>指的是Shell本身的文件名。类似的有如果运行脚本的时候带参数，那么<span class="variable">$1</span> 就是第一个参数，依此类推。 </span><br><span class="line">dirname 用于取指定路径所在的目录 ，如 dirname /home/ikidou 结果为 /home。 </span><br><span class="line"></span><br><span class="line">$ 返回该命令的结果 </span><br><span class="line"></span><br><span class="line"><span class="built_in">pwd</span> -P 如果目录是链接时，格式：<span class="built_in">pwd</span> -P 显示出实际路径，而非使用连接（link）路径。</span><br><span class="line"></span><br><span class="line"><span class="comment">############################################################################</span></span><br><span class="line"></span><br><span class="line">dir=$(<span class="built_in">cd</span> -P -- <span class="string">&quot;<span class="subst">$(dirname -- <span class="string">&quot;<span class="variable">$0</span>&quot;</span>)</span>&quot;</span> &amp;&amp; <span class="built_in">pwd</span> -P)</span><br><span class="line">会 <span class="built_in">cd</span> 到脚本所在的目录</span><br><span class="line"></span><br><span class="line">Note: A double dash (--) is used <span class="keyword">in</span> commands to signify the end of <span class="built_in">command</span> options, so files containing dashes or other special characters won<span class="string">&#x27;t break the command.</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">Always use `-P` flag with `cd` command, alias cd=&#x27;</span><span class="built_in">cd</span> -P<span class="string">&#x27;</span></span><br><span class="line"><span class="string"></span></span><br><span class="line"><span class="string">若将一个文件夹自己的快捷方式放到文件夹里,这样写脚本的时候就有可能会出现无限循环,当前路径名就会变得无限长,但是加上了-P命令后就可以避免无限循环的情况.</span></span><br></pre></td></tr></table></figure>
-
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">A</span><br><span class="line">&gt; ./myscript</span><br><span class="line"></span><br><span class="line">B</span><br><span class="line">&gt; source myscript</span><br><span class="line"></span><br><span class="line">Short answer: sourcing will run the commands in the current shell process. executing will run the commands in a new shell process. </span><br></pre></td></tr></table></figure>
-
-<h2 id="variable"><a href="#variable" class="headerlink" title="variable"></a>variable</h2><p>若从技术的细节来看，shell会依据IFS(Internal Field Seperator) 将command line所输入的文字拆解为”字段”(word/field)。 然后再针对特殊字符(meta)先作处理，最后重组整行command line。</p>
-<p>变量替换(substitution) shell 之所以强大，其中的一个因素是它可以在命令行中对变量作 替换(substitution)处理。 在命令行中使用者可以使用$符号加上变量名称(除了用=定义变量名称之外)， 将变量值给替换出来，然后再重新组建命令行。</p>
-<p>比方:</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ A=ls</span><br><span class="line">$ B=la</span><br><span class="line">$ C=/tmp</span><br><span class="line">$ $A -$B $C</span><br></pre></td></tr></table></figure>
-
-<p>会得到:<code>ls -la /tmp</code></p>
-<p>echo命令只单纯将其argument送至”标准输出”(stdout, 通常是我们的屏幕)</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ echo $A -$B $C</span><br><span class="line">&gt;&gt; ls -la /tmp</span><br><span class="line"></span><br><span class="line">$ echo $&#123;C&#125;</span><br><span class="line">&gt;&gt; /tmp</span><br></pre></td></tr></table></figure>
-
-<h3 id="export"><a href="#export" class="headerlink" title="export"></a>export</h3><p>严格来说，我们在当前shell中所定义的变量，均属于 “本地变量”(local variable), 只有经过export命令的 “输出”处理，才能成为”环境变量”(environment variable)：</p>
-<h2 id="与-差在哪？"><a href="#与-差在哪？" class="headerlink" title="()与{}差在哪？"></a>()与{}差在哪？</h2><p>要从一些命令执行的先后次序中得到结果， 如算术运算的2*(3+4)那样, 这时候，我们就可以引入”命令群组”(command group) 的概念：将许多命令集中处理。</p>
-<ul>
-<li>  <code>()</code> 将<code>command group</code>置于<code>sub-shell</code>(<code>子shell</code>)中去执行，也称 <code>nested sub-shell</code>。</li>
-<li>  <code>&#123;&#125;</code> 则是在同一个<code>shell</code>内完成，也称<code>non-named command group</code>。</li>
-</ul>
-<p>在bash shell中, $()与``(反引号)都是用来做 命令替换(command substitution)的。</p>
-<h1 id="Shell-snipaste"><a href="#Shell-snipaste" class="headerlink" title="Shell-snipaste"></a>Shell-snipaste</h1><ol>
+        <h1 id="Shell-snipaste"><a href="#Shell-snipaste" class="headerlink" title="Shell-snipaste"></a>Shell-snipaste</h1><ol>
 <li><p><code>!$</code> : 代表上条命令的最后一个参数.</p>
 </li>
 <li><p><code>ssh-copy-id -i ~/.ssh/id_rsa.pub root@host</code>: 快速与root@host建立免密连接</p>
@@ -296,22 +276,159 @@
 </li>
 <li><p><code>./spark-shell --master yarn --executor-cores 5 --executor-memory 5g --num-executors 3</code></p>
 </li>
+<li><p>pip 切换 Python 版本</p>
+</li>
+</ol>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">cd /usr/local/<span class="built_in">bin</span></span><br><span class="line">然后ls一下可能会发现好多pip文件，比如pip、pip2、pip2<span class="number">.7</span>、pip3、pip3<span class="number">.5</span>等等。使用一下命令：</span><br><span class="line"></span><br><span class="line">file pip</span><br><span class="line">输出：pip: Python script, ASCII text executable。发现pip其实是个Python脚本。于是我们用vim打开它：</span><br><span class="line"></span><br><span class="line"><span class="comment">#!/usr/bin/python3.6</span></span><br><span class="line"></span><br><span class="line"><span class="comment"># -*- coding: utf-8 -*-</span></span><br><span class="line"><span class="keyword">import</span> re</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line"></span><br><span class="line"><span class="keyword">from</span> pip._internal <span class="keyword">import</span> main</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> __name__ == <span class="string">&#x27;__main__&#x27;</span>:</span><br><span class="line">    sys.argv[<span class="number">0</span>] = re.sub(<span class="string">r&#x27;(-script\.pyw?|\.exe)?$&#x27;</span>, <span class="string">&#x27;&#x27;</span>, sys.argv[<span class="number">0</span>])</span><br><span class="line">    sys.exit(main())</span><br><span class="line">看第一行，第一行指定了这个脚本对应的python版本，如果想把pip对应的python版本改为<span class="number">2.7</span>的，只需修改python3<span class="number">.6</span>为python2<span class="number">.7</span>即可</span><br></pre></td></tr></table></figure>
+
+
+
+<hr>
+<ol>
+<li><p><code>w !sudo tee %</code>: 就相当于从vim外部修改了当前编辑的文件(root修改只读文件)</p>
+</li>
+<li><p>grep 怎么样不出现 <code>grep --color=auto</code>, 加个[]: <code>ps -aux | grep &quot;[c]lickhouse server&quot; | awk &#39;&#123;print $2&#125;&#39; | xargs kill</code></p>
+</li>
+<li><p><code>socat TCP-LISTEN:2280,fork,reuseaddr TCP:ip:port</code> 端口转发, sudo sshuttle -v -r taojiatao@ip 0.0.0.0/0</p>
+</li>
+<li><p>不包含 to_json 的文件列表, <code>ls |grep stack| xargs grep -L &quot;to_json&quot; | wc -l</code></p>
+</li>
+<li><p>$ grep -Rn -i “current” *.sql | cut -d “:” -f 1 | sort | uniq | wc -l</p>
+</li>
+<li><p>Linux 两个文件求交集、并集、差集: </p>
+<ol>
+<li>交集: sort a.txt b.txt | uniq -d</li>
+<li>并集: sort a.txt b.txt | uniq</li>
+<li>差集: a.txt-b.txt: sort a.txt b.txt b.txt | uniq -u</li>
+</ol>
+</li>
+<li><p>git reset HEAD^</p>
+</li>
+<li><p>git 只保留 master: $ git branch | grep -v “(^*|master)” | xargs git branch -D</p>
+</li>
+<li><p>在本机在远程执行命令: ssh tiger@xxx /opt/tiger/ss_bin/doas /opt/tiger/presto-bench/boot/run_local.sh restart</p>
+</li>
+<li><p>hdfs 打印二层目录: $ hadoop fs -ls /user/taojiatao/tpcds-text/tpcds-data-50g/ |awk -F” “ ‘{print $8}’ | xargs hadoop fs -ls | awk -F” “ ‘{print $8}’</p>
+</li>
+<li><p>Scala test: mvn test -pl :spark-it -Dtest=moo -Dsuites=’io.kyligence.kap.ut.TestScalaTest @query’ -DfailIfNoTests=false</p>
+</li>
+<li><p>perf record -F 99 -p pid –call-graph dwarf  – sleep 25</p>
+</li>
 </ol>
 <h2 id="Java"><a href="#Java" class="headerlink" title="Java"></a>Java</h2><ol>
 <li>jstat -gc [pid] : 查看gc情况</li>
 <li>jmap -histo [pid] : 按照对象内存大小排序, 注意会导致full gc</li>
 <li>jstack -l pid : 用于查看线程是否存在死锁</li>
 </ol>
-<h1 id="装机必备"><a href="#装机必备" class="headerlink" title="装机必备"></a>装机必备</h1><h3 id="git"><a href="#git" class="headerlink" title="git"></a>git</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">yum install git-core</span><br></pre></td></tr></table></figure>
+<h2 id="shell-基础知识"><a href="#shell-基础知识" class="headerlink" title="shell 基础知识"></a>shell 基础知识</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="variable">$@</span>  传递给脚本或函数的所有参数</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> [ -f  file ]    如果文件存在</span><br><span class="line"><span class="keyword">if</span> [ -d ...   ]    如果目录存在</span><br><span class="line"><span class="keyword">if</span> [ -s file  ]    如果文件存在且非空 </span><br><span class="line"><span class="keyword">if</span> [ -r file  ]    如果文件存在且可读</span><br><span class="line"><span class="keyword">if</span> [ -w file  ]    如果文件存在且可写</span><br><span class="line"><span class="keyword">if</span> [ -x file  ]    如果文件存在且可执行   </span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>  [ -n <span class="variable">$string</span>  ]             如果string 非空(非0），返回0(<span class="literal">true</span>)  </span><br><span class="line"><span class="keyword">if</span>  [ -z <span class="variable">$string</span>  ]             如果string 为空</span><br><span class="line"><span class="keyword">if</span>  [ <span class="variable">$sting</span> ]                  如果string 非空，返回0 (和-n类似)    </span><br><span class="line"></span><br></pre></td></tr></table></figure>
 
-<h3 id="zsh"><a href="#zsh" class="headerlink" title="zsh"></a>zsh</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">yum install zsh</span><br><span class="line">git clone https://github.com/robbyrussell/oh-my-zsh.git ~/.oh-my-zsh (sh -c &quot;$(wget https://raw.githubusercontent.com/robbyrussell/oh-my-zsh/master/tools/install.sh -O -)&quot;</span><br><span class="line">)</span><br><span class="line">git clone git://github.com/zsh-users/zsh-autosuggestions $ZSH_CUSTOM/plugins/zsh-autosuggestions</span><br></pre></td></tr></table></figure>
+<table>
+<thead>
+<tr>
+<th>meta字符</th>
+<th>meta字符作用</th>
+</tr>
+</thead>
+<tbody><tr>
+<td>=</td>
+<td>设定变量</td>
+</tr>
+<tr>
+<td>$</td>
+<td>作变量或运算替换(请不要与<code>shell prompt</code>混淆)</td>
+</tr>
+<tr>
+<td>&gt;</td>
+<td>输出重定向(重定向stdout)</td>
+</tr>
+<tr>
+<td>&lt;</td>
+<td>输入重定向(重定向stdin)</td>
+</tr>
+<tr>
+<td>|</td>
+<td>命令管道</td>
+</tr>
+<tr>
+<td>&amp;</td>
+<td>重定向file descriptor或将命令至于后台(bg)运行</td>
+</tr>
+<tr>
+<td>()</td>
+<td>将其内部的命令置于nested subshell执行，或用于运算或变量替换</td>
+</tr>
+<tr>
+<td>{}</td>
+<td>将其内的命令置于non-named function中执行，或用在变量替换的界定范围</td>
+</tr>
+<tr>
+<td>;</td>
+<td>在前一个命令执行结束时，而忽略其返回值，继续执行下一个命令</td>
+</tr>
+<tr>
+<td>&amp;&amp;</td>
+<td>在前一个命令执行结束时，若返回值为true，继续执行下一个命令</td>
+</tr>
+<tr>
+<td>||</td>
+<td>在前一个命令执行结束时，若返回值为false，继续执行下一个命令</td>
+</tr>
+<tr>
+<td>!</td>
+<td>执行histroy列表中的命令</td>
+</tr>
+<tr>
+<td>…</td>
+<td>…</td>
+</tr>
+</tbody></table>
+<h2 id="snipaste"><a href="#snipaste" class="headerlink" title="snipaste"></a>snipaste</h2><figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">DIR=<span class="string">&quot;<span class="subst">$( cd <span class="string">&quot;<span class="subst">$(dirname <span class="string">&quot;<span class="variable">$0</span>&quot;</span>)</span>&quot;</span> ; pwd -P )</span>&quot;</span></span><br></pre></td></tr></table></figure>
 
-<h3 id="htop"><a href="#htop" class="headerlink" title="htop"></a>htop</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">wget http://pkgs.repoforge.org/htop/htop-1.0.2-1.el6.rf.x86_64.rpm</span><br><span class="line">yum install -y epel-release</span><br><span class="line">yum install -y htop</span><br></pre></td></tr></table></figure>
+<p>$0 类似于python中的sys.argv[0]等。 $0指的是Shell本身的文件名。类似的有如果运行脚本的时候带参数，那么$1 就是第一个参数，依此类推。<br>dirname 用于取指定路径所在的目录 ，如 dirname /home/ikidou 结果为 /home。 </p>
+<p>$ 返回该命令的结果 </p>
+<p>pwd -P 如果目录是链接时，格式：pwd -P 显示出实际路径，而非使用连接（link）路径。</p>
+<p>############################################################################</p>
+<p><code>dir=$(cd -P -- &quot;$(dirname -- &quot;$0&quot;)&quot; &amp;&amp; pwd -P)</code>  会 cd 到脚本所在的目录</p>
+<p>Note: A double dash (–) is used in commands to signify the end of command options, so files containing dashes or other special characters won’t break the command.</p>
+<p>Always use <code>-P</code> flag with <code>cd</code> command, alias cd=’cd -P’</p>
+<p>若将一个文件夹自己的快捷方式放到文件夹里,这样写脚本的时候就有可能会出现无限循环,当前路径名就会变得无限长,但是加上了-P命令后就可以避免无限循环的情况.</p>
+<p>A</p>
+<blockquote>
+<p>./myscript</p>
+</blockquote>
+<p>B</p>
+<blockquote>
+<p>source myscript</p>
+</blockquote>
+<p>Short answer: sourcing will run the commands in the current shell process. executing will run the commands in a new shell process. </p>
+<h2 id="variable"><a href="#variable" class="headerlink" title="variable"></a>variable</h2><p>若从技术的细节来看，shell会依据IFS(Internal Field Seperator) 将command line所输入的文字拆解为”字段”(word/field)。 然后再针对特殊字符(meta)先作处理，最后重组整行command line。</p>
+<p>变量替换(substitution) shell 之所以强大，其中的一个因素是它可以在命令行中对变量作 替换(substitution)处理。 在命令行中使用者可以使用$符号加上变量名称(除了用=定义变量名称之外)， 将变量值给替换出来，然后再重新组建命令行。</p>
+<p>比方:</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">$ A=ls</span><br><span class="line">$ B=la</span><br><span class="line">$ C=/tmp</span><br><span class="line">$ $A -$B $C</span><br></pre></td></tr></table></figure>
 
-<h3 id="设置文件打开数目和用户最大进程数"><a href="#设置文件打开数目和用户最大进程数" class="headerlink" title="设置文件打开数目和用户最大进程数"></a>设置文件打开数目和用户最大进程数</h3><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">查看文件打开数目</span><br><span class="line">ulimit -a</span><br><span class="line">查看用户最大进程数</span><br><span class="line">ulimit -u</span><br><span class="line">设置用户最大进程数</span><br><span class="line">vim /etc/security/limits.conf</span><br><span class="line"></span><br><span class="line">结尾添加以下内容</span><br><span class="line">*       soft    nofile          32768</span><br><span class="line">*       hard    nofile          1048576</span><br><span class="line">*       soft    nproc           65536</span><br><span class="line">*       hard    nproc           unlimited</span><br><span class="line">*       soft    memlock         unlimited</span><br><span class="line">*       hard    memlock         unlimited</span><br></pre></td></tr></table></figure>
+<p>会得到:<code>ls -la /tmp</code></p>
+<p>echo命令只单纯将其argument送至”标准输出”(stdout, 通常是我们的屏幕)</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">$ echo $A -$B $C</span><br><span class="line">&gt;&gt; ls -la /tmp</span><br><span class="line"></span><br><span class="line">$ echo $&#123;C&#125;</span><br><span class="line">&gt;&gt; /tmp</span><br></pre></td></tr></table></figure>
 
-<h3 id="percol"><a href="#percol" class="headerlink" title="percol"></a>percol</h3><p>brew install percol</p>
-<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">function exists &#123; which $1 &amp;&gt; /dev/null &#125;</span><br><span class="line"></span><br><span class="line">if exists percol; then</span><br><span class="line">    function percol_select_history() &#123;</span><br><span class="line">        local tac</span><br><span class="line">        exists gtac &amp;&amp; tac=&quot;gtac&quot; || &#123; exists tac &amp;&amp; tac=&quot;tac&quot; || &#123; tac=&quot;tail -r&quot; &#125; &#125;</span><br><span class="line">        BUFFER=$(fc -l -n 1 | eval $tac | percol --query &quot;$LBUFFER&quot;)</span><br><span class="line">        CURSOR=$#BUFFER         # move cursor</span><br><span class="line">        zle -R -c               # refresh</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    zle -N percol_select_history</span><br><span class="line">    bindkey &#x27;^R&#x27; percol_select_history</span><br><span class="line">fi</span><br></pre></td></tr></table></figure>
+<h3 id="export"><a href="#export" class="headerlink" title="export"></a>export</h3><p>严格来说，我们在当前shell中所定义的变量，均属于 “本地变量”(local variable), 只有经过export命令的 “输出”处理，才能成为”环境变量”(environment variable)：</p>
+<h2 id="与-差在哪？"><a href="#与-差在哪？" class="headerlink" title="()与{}差在哪？"></a>()与{}差在哪？</h2><p>要从一些命令执行的先后次序中得到结果， 如算术运算的2*(3+4)那样, 这时候，我们就可以引入”命令群组”(command group) 的概念：将许多命令集中处理。</p>
+<ul>
+<li>  <code>()</code> 将<code>command group</code>置于<code>sub-shell</code>(<code>子shell</code>)中去执行，也称 <code>nested sub-shell</code>。</li>
+<li>  <code>&#123;&#125;</code> 则是在同一个<code>shell</code>内完成，也称<code>non-named command group</code>。</li>
+</ul>
+<p>在bash shell中, $()与``(反引号)都是用来做 命令替换(command substitution)的。</p>
+<h2 id="Liunx-目录"><a href="#Liunx-目录" class="headerlink" title="Liunx 目录"></a>Liunx 目录</h2><ul>
+<li>通常从源码包编译安装的软件默认会放在/usr/local下</li>
+<li><code>/etc/ld.so.conf</code> 这个文件记录了编译时使用的动态链接库的路径, 默认情况下，编译器只会使用**/lib<strong>和</strong>/usr/lib**这两个目录下的库文件 </li>
+<li>/etc, /bin, /sbin, /lib ：系统启动就需要用到的程序，这些目录不能挂载额外的分区，必须在根文件系统的分区上</li>
+<li>/usr/bin,/usr/sbin,/usr/lib：操作系统核心功能，可以单独分区</li>
+<li>/usr/local/bin,/usr/local/sbin,/usr/local/lib,/usr/local/etc,/usr/local/man：这个用于安装第三方程序，分别对应了二进制文件、库文件、配置文件、帮助文档的目录, 通常来说我们安装程序就安装在 /usr/local目录下</li>
+<li>在传统的unix系统中，/usr通常只包含系统发行时自带的程序，而/usr/local则是本地系统管理员用来自由添加程序的目录</li>
+<li><em>从用户权限的角度看</em>， /sbin目录下的命令通常只有管理员才可以运行，/bin下的命令管理员和一般的用户都可以使用。</li>
+<li><em>从可运行时间角度看</em>， /sbin,/bin能够在挂载其他文件系统前就可以使用, /bin,/sbin目录是在系统启动后挂载到根文件系统中的，所以/sbin,/bin目录必须和根文件系统在同一分区。</li>
+<li>/opt这个目录是一些大型软件的安装目录，或者是一些服务程序的安装目录</li>
+</ul>
+
     </div>
 
     
@@ -397,7 +514,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#shell-%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-number">1.</span> <span class="nav-text">shell 基础知识</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#variable"><span class="nav-number">1.1.</span> <span class="nav-text">variable</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#export"><span class="nav-number">1.1.1.</span> <span class="nav-text">export</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8E-%E5%B7%AE%E5%9C%A8%E5%93%AA%EF%BC%9F"><span class="nav-number">1.2.</span> <span class="nav-text">()与{}差在哪？</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Shell-snipaste"><span class="nav-number">2.</span> <span class="nav-text">Shell-snipaste</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Java"><span class="nav-number">2.1.</span> <span class="nav-text">Java</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E8%A3%85%E6%9C%BA%E5%BF%85%E5%A4%87"><span class="nav-number">3.</span> <span class="nav-text">装机必备</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#git"><span class="nav-number">3.0.1.</span> <span class="nav-text">git</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#zsh"><span class="nav-number">3.0.2.</span> <span class="nav-text">zsh</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#htop"><span class="nav-number">3.0.3.</span> <span class="nav-text">htop</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%AE%BE%E7%BD%AE%E6%96%87%E4%BB%B6%E6%89%93%E5%BC%80%E6%95%B0%E7%9B%AE%E5%92%8C%E7%94%A8%E6%88%B7%E6%9C%80%E5%A4%A7%E8%BF%9B%E7%A8%8B%E6%95%B0"><span class="nav-number">3.0.4.</span> <span class="nav-text">设置文件打开数目和用户最大进程数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#percol"><span class="nav-number">3.0.5.</span> <span class="nav-text">percol</span></a></li></ol></li></ol></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Shell-snipaste"><span class="nav-number">1.</span> <span class="nav-text">Shell-snipaste</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Java"><span class="nav-number">1.1.</span> <span class="nav-text">Java</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#shell-%E5%9F%BA%E7%A1%80%E7%9F%A5%E8%AF%86"><span class="nav-number">1.2.</span> <span class="nav-text">shell 基础知识</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#snipaste"><span class="nav-number">1.3.</span> <span class="nav-text">snipaste</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#variable"><span class="nav-number">1.4.</span> <span class="nav-text">variable</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#export"><span class="nav-number">1.4.1.</span> <span class="nav-text">export</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%B8%8E-%E5%B7%AE%E5%9C%A8%E5%93%AA%EF%BC%9F"><span class="nav-number">1.5.</span> <span class="nav-text">()与{}差在哪？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Liunx-%E7%9B%AE%E5%BD%95"><span class="nav-number">1.6.</span> <span class="nav-text">Liunx 目录</span></a></li></ol></li></ol></div>
       </div>
       <!--/noindex-->
 
