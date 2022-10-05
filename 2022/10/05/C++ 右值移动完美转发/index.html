@@ -58,7 +58,7 @@
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/05/C++%20%E5%8F%B3%E5%80%BC%E7%A7%BB%E5%8A%A8%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/18b692072537d4ce179d3857a8a0133c.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/05/C++%20%E5%8F%B3%E5%80%BC%E7%A7%BB%E5%8A%A8%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/036cc6865a9623a48918b504e408945a-20221004235155403.png">
 <meta property="article:published_time" content="2022-10-05T15:44:11.000Z">
-<meta property="article:modified_time" content="2022-10-05T15:52:42.984Z">
+<meta property="article:modified_time" content="2022-10-05T16:01:28.904Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta property="article:tag" content="cpp">
 <meta name="twitter:card" content="summary">
@@ -196,10 +196,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-10-05 23:44:11 / Modified: 23:52:42" itemprop="dateCreated datePublished" datetime="2022-10-05T23:44:11+08:00">2022-10-05</time>
+              <time title="Created: 2022-10-05 23:44:11" itemprop="dateCreated datePublished" datetime="2022-10-05T23:44:11+08:00">2022-10-05</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-10-06 00:01:28" itemprop="dateModified" datetime="2022-10-06T00:01:28+08:00">2022-10-06</time>
+              </span>
 
           
 
@@ -254,7 +260,8 @@
 
 
 
-<h2 id="移动语义-std-move-amp-完美转发"><a href="#移动语义-std-move-amp-完美转发" class="headerlink" title="移动语义(std::move) &amp; 完美转发"></a>移动语义(std::move) &amp; 完美转发</h2><p>复习下上面的精髓: <strong>把值变成引用, 不管是左值还是右值, 都避免了拷贝. 左值引用/右值引用避免拷贝的核心在”引用” , 而不是在左右值上</strong></p>
+<h2 id="移动语义-std-move-amp-完美转发"><a href="#移动语义-std-move-amp-完美转发" class="headerlink" title="移动语义(std::move) &amp; 完美转发"></a>移动语义(std::move) &amp; 完美转发</h2><p><strong>切记: 不要 move 一个常量(踩过坑)</strong>, move常量作为参数调用的还是拷贝构造</p>
+<p>复习下上面的精髓: <strong>把值变成引用, 不管是左值还是右值, 都避免了拷贝. 左值引用/右值引用避免拷贝的核心在”引用” , 而不是在左右值上</strong></p>
 <p>右值&amp;移动语义最大的作用就是把以前的右值大对象, 变成了可以取引用的值, 这样传引用比传值更快, 就是这么简单, 上面说到C++ 里的对象缺省都是值语义, 好处是用到局部性, 坏处是大对象在栈上复制很占性能, <strong>所以移动语义使得在 C++ 里返回大对象（如容器）的函数和运算符成为现实</strong>, 而 Java 对象默认在堆上, 就是指针语义, 不存在这个问题, 不用 move</p>
 <p><code>std::move()</code>: 就是一个 static_cast, 把一个左值引用强制转换成一个右值引用，而并不改变其内容</p>
 <figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">shard_ptr&lt;shape&gt; ptr1&#123;<span class="keyword">new</span> <span class="built_in">A</span>()&#125;;</span><br><span class="line">shard_ptr&lt;shape&gt; ptr2 = std::<span class="built_in">move</span>(ptr1);</span><br></pre></td></tr></table></figure>
