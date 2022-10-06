@@ -58,7 +58,7 @@
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/05/C++%20%E5%8F%B3%E5%80%BC%E7%A7%BB%E5%8A%A8%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/18b692072537d4ce179d3857a8a0133c.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/05/C++%20%E5%8F%B3%E5%80%BC%E7%A7%BB%E5%8A%A8%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/036cc6865a9623a48918b504e408945a-20221004235155403.png">
 <meta property="article:published_time" content="2022-10-05T15:44:11.000Z">
-<meta property="article:modified_time" content="2022-10-05T16:01:28.904Z">
+<meta property="article:modified_time" content="2022-10-06T12:56:46.759Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta property="article:tag" content="cpp">
 <meta name="twitter:card" content="summary">
@@ -204,7 +204,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-10-06 00:01:28" itemprop="dateModified" datetime="2022-10-06T00:01:28+08:00">2022-10-06</time>
+                <time title="Modified: 2022-10-06 20:56:46" itemprop="dateModified" datetime="2022-10-06T20:56:46+08:00">2022-10-06</time>
               </span>
 
           
@@ -332,7 +332,25 @@
 <h2 id="常见误解总结"><a href="#常见误解总结" class="headerlink" title="常见误解总结"></a>常见误解总结</h2><h4 id="误解-返回前移动局部变量"><a href="#误解-返回前移动局部变量" class="headerlink" title="误解: 返回前移动局部变量"></a>误解: 返回前移动局部变量</h4><p><code>std::move()</code> 移动局部变量`，会导致后续代码不能使用该变量</p>
 <h4 id="误解-被移动的值不能再使用"><a href="#误解-被移动的值不能再使用" class="headerlink" title="误解: 被移动的值不能再使用"></a>误解: 被移动的值不能再使用</h4><p>被移动的对象进入一个 <strong>合法但未指定状态</strong> *(valid but unspecified state)*，调用该对象的方法（包括析构函数）不会出现异常，甚至在重新赋值后可以继续使用：</p>
 <p>另外，基本类型（例如 <code>int/double</code>）的移动语义 和拷贝相同：</p>
-<h4 id="F-48-Don’t-return-std-move-local"><a href="#F-48-Don’t-return-std-move-local" class="headerlink" title="F.48: Don’t return std::move(local)"></a>F.48: Don’t return std::move(local)</h4><h5 id><a href="#" class="headerlink" title></a></h5><h2 id="引用-1"><a href="#引用-1" class="headerlink" title="引用:"></a>引用:</h2><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/169268">https://time.geekbang.org/column/article/169268</a></p>
+<h4 id="F-48-Don’t-return-std-move-local"><a href="#F-48-Don’t-return-std-move-local" class="headerlink" title="F.48: Don’t return std::move(local)"></a>F.48: Don’t return std::move(local)</h4><p>有了copy elision, 现在基本上不用在 return 上用 std::move</p>
+<h5 id="F-18-For-“will-move-from”-parameters-pass-by-X-amp-amp-and-std-move-the-parameter"><a href="#F-18-For-“will-move-from”-parameters-pass-by-X-amp-amp-and-std-move-the-parameter" class="headerlink" title="F.18: For “will-move-from” parameters, pass by X&amp;&amp; and std::move() the parameter"></a>F.18: For “will-move-from” parameters, pass by X&amp;&amp; and std::move() the parameter</h5><p>误解：不移动右值引用参数, 因为不论 <strong>左值引用</strong> 还是 <strong>右值引用</strong> 的变量（或参数）在初始化后，<strong>都是左值</strong></p>
+<ul>
+<li><strong>命名的右值引用</strong> <em>(named rvalue reference)</em> <strong>变量</strong> 是 <strong>左值</strong>，但变量类型 却是 <strong>右值引用</strong></li>
+<li>在作用域内，<strong>左值变量</strong> 可以通过 <strong>变量名</strong> <em>(variable name)</em> <strong>被取地址、被赋值</strong></li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">std::unique_ptr&lt;<span class="keyword">int</span>&gt; <span class="title">bar</span><span class="params">(std::unique_ptr&lt;<span class="keyword">int</span>&gt;&amp;&amp; val)</span> </span>&#123;</span><br><span class="line">  <span class="comment">//...</span></span><br><span class="line">  <span class="keyword">return</span> val;    <span class="comment">// not compile</span></span><br><span class="line">                 <span class="comment">// -&gt; return std::move/forward(val);</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以，返回右值引用变量时，需要使用 <code>std::move()/std::forward() </code>显式的 § 5.4 移动转发 或 § 5.3 完美转发，将变量 “还原” 为右值（右值引用类型）</p>
+<h4 id="正确写移动构造函数"><a href="#正确写移动构造函数" class="headerlink" title="正确写移动构造函数"></a>正确写移动构造函数</h4><p>例如，标准库容器 <code>std::vector</code> 在扩容时，会通过 <a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/container/vector/reserve#Exceptions"><code>std::vector::reserve()</code></a> 重新分配空间，并转移已有元素。如果扩容失败，<code>std::vector</code> 满足 <a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/language/exceptions#Exception_safety"><strong>强异常保证</strong> <em>(strong exception guarantee)</em></a>，可以回滚到失败前的状态。</p>
+<p>为此，<code>std::vector</code> 使用 <a target="_blank" rel="noopener" href="https://en.cppreference.com/w/cpp/utility/move_if_noexcept"><code>std::move_if_noexcept()</code></a> 进行元素的转移操作：</p>
+<ul>
+<li>优先 使用 <code>noexcept</code> 移动构造函数（高效；不抛出异常）</li>
+<li>其次 使用 拷贝构造函数（低效；如果异常，可以回滚）</li>
+<li>再次 使用 非 <code>noexcept</code> 移动构造函数（高效；如果异常，<strong>无法回滚</strong>）</li>
+<li>最后 如果 不可拷贝、不可移动，<strong>编译失败</strong></li>
+</ul>
+<p>如果 没有定义移动构造函数 或 自定义的移动构造函数没有 <code>noexcept</code>，会导致 <code>std::vector</code> 扩容时执行无用的拷贝，<strong>不易发现</strong>。</p>
+<h2 id="引用-1"><a href="#引用-1" class="headerlink" title="引用:"></a>引用:</h2><p><a target="_blank" rel="noopener" href="https://time.geekbang.org/column/article/169268">https://time.geekbang.org/column/article/169268</a></p>
 <p><a target="_blank" rel="noopener" href="https://blog.avdancedu.com/a39d51f9/">https://blog.avdancedu.com/a39d51f9/</a></p>
 <p><a target="_blank" rel="noopener" href="https://blog.avdancedu.com/360c1c76/">https://blog.avdancedu.com/360c1c76/</a></p>
 <p><a target="_blank" rel="noopener" href="https://bot-man-jl.github.io/articles/?post=2018/Cpp-Rvalue-Reference">https://bot-man-jl.github.io/articles/?post=2018/Cpp-Rvalue-Reference</a></p>
