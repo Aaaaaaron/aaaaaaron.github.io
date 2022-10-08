@@ -58,7 +58,7 @@
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/09/17/Mac-initalization/image-20221008145858555.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/09/17/Mac-initalization/image-20221008150107285.png">
 <meta property="article:published_time" content="2022-09-17T10:18:16.000Z">
-<meta property="article:modified_time" content="2022-10-08T07:01:10.221Z">
+<meta property="article:modified_time" content="2022-10-08T07:19:27.720Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://aaaaaaron.github.io/2022/09/17/Mac-initalization/image-20221008145858555.png">
@@ -203,7 +203,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-10-08 15:01:10" itemprop="dateModified" datetime="2022-10-08T15:01:10+08:00">2022-10-08</time>
+                <time title="Modified: 2022-10-08 15:19:27" itemprop="dateModified" datetime="2022-10-08T15:19:27+08:00">2022-10-08</time>
               </span>
 
           
@@ -306,6 +306,9 @@
 </ol>
 <figure class="highlight sh"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">cd</span> ~/Library/LaunchAgents</span><br><span class="line">launchctl load -w com.user.kinit.plist</span><br><span class="line">卸载脚本：launchctl unload com.user.kinit.plist</span><br></pre></td></tr></table></figure>
 
+<h3 id="配置-gdb-init"><a href="#配置-gdb-init" class="headerlink" title="配置 gdb init"></a>配置 gdb init</h3><p><code>vim ~/.gdbinit</code></p>
+<figure class="highlight py"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">python</span><br><span class="line"><span class="keyword">import</span> sys</span><br><span class="line">sys.path.insert(<span class="number">0</span>, <span class="string">&#x27;~/gcc-10/share/gcc-10.2.0/python&#x27;</span>)</span><br><span class="line"><span class="comment"># sys.path.insert(0, &#x27;~/gcc-9/share/gcc-9.3.0/python&#x27;)</span></span><br><span class="line"><span class="keyword">from</span> libstdcxx.v6.printers <span class="keyword">import</span> register_libstdcxx_printers</span><br><span class="line">register_libstdcxx_printers (<span class="literal">None</span>)</span><br><span class="line"></span><br><span class="line">sys.path.insert(<span class="number">0</span>, <span class="string">&#x27;~/clang/gdb&#x27;</span>)</span><br><span class="line"><span class="keyword">from</span> libcxx.printers <span class="keyword">import</span> register_libcxx_printer_loader</span><br><span class="line">register_libcxx_printer_loader()</span><br><span class="line">end</span><br></pre></td></tr></table></figure>
+
 
     </div>
 
@@ -387,7 +390,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E9%87%8D%E8%A6%81%E7%9A%84%E5%87%A0%E4%B8%AA%E8%BD%AF%E4%BB%B6%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text">最重要的几个软件配置:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Command-Line-Tools-for-Xcode"><span class="nav-number">2.</span> <span class="nav-text">安装Command Line Tools for Xcode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7-Homebrew"><span class="nav-number">3.</span> <span class="nav-text">安装包管理工具 Homebrew</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85homebrew-cask-%E5%B7%B2%E5%BA%9F%E5%BC%83-%E7%8E%B0%E5%9C%A8%E7%9B%B4%E6%8E%A5%E8%A3%85%E5%B0%B1%E8%A1%8C"><span class="nav-number">4.</span> <span class="nav-text">安装homebrew cask(已废弃, 现在直接装就行)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%B7%B2%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6"><span class="nav-number">5.</span> <span class="nav-text">查看已安装软件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E7%9A%84%E4%B8%80%E4%BA%9B%E8%BD%AF%E4%BB%B6"><span class="nav-number">6.</span> <span class="nav-text">重要的一些软件:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%84%9A%E6%9C%AC"><span class="nav-number">7.</span> <span class="nav-text">脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1"><span class="nav-number">8.</span> <span class="nav-text">配置定时任务</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E9%87%8D%E8%A6%81%E7%9A%84%E5%87%A0%E4%B8%AA%E8%BD%AF%E4%BB%B6%E9%85%8D%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text">最重要的几个软件配置:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Command-Line-Tools-for-Xcode"><span class="nav-number">2.</span> <span class="nav-text">安装Command Line Tools for Xcode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7-Homebrew"><span class="nav-number">3.</span> <span class="nav-text">安装包管理工具 Homebrew</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85homebrew-cask-%E5%B7%B2%E5%BA%9F%E5%BC%83-%E7%8E%B0%E5%9C%A8%E7%9B%B4%E6%8E%A5%E8%A3%85%E5%B0%B1%E8%A1%8C"><span class="nav-number">4.</span> <span class="nav-text">安装homebrew cask(已废弃, 现在直接装就行)</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%B7%B2%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6"><span class="nav-number">5.</span> <span class="nav-text">查看已安装软件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E7%9A%84%E4%B8%80%E4%BA%9B%E8%BD%AF%E4%BB%B6"><span class="nav-number">6.</span> <span class="nav-text">重要的一些软件:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%84%9A%E6%9C%AC"><span class="nav-number">7.</span> <span class="nav-text">脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1"><span class="nav-number">8.</span> <span class="nav-text">配置定时任务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-gdb-init"><span class="nav-number">9.</span> <span class="nav-text">配置 gdb init</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
