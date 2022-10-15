@@ -1,0 +1,582 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Noto Serif SC:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="概览所用代码为 2022.10.15 ClickHouse master 分支: 9ccbadc359d05fad8a1f3d80d6677b55b3006c2c 概念Block：数据块，ClickHouse进行数据读、写的基本单元，每一个Block实例，不仅包含数据域，还包含了每个列的meta信息。 Chunk：数据块，保存实际数据的单元，Block中的数据域的指向的就是这个类型的实例。 Row">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Clickhouse pipeline&#x2F;processor 源码解析 101">
+<meta property="og:url" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="概览所用代码为 2022.10.15 ClickHouse master 分支: 9ccbadc359d05fad8a1f3d80d6677b55b3006c2c 概念Block：数据块，ClickHouse进行数据读、写的基本单元，每一个Block实例，不仅包含数据域，还包含了每个列的meta信息。 Chunk：数据块，保存实际数据的单元，Block中的数据域的指向的就是这个类型的实例。 Row">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTQ0NDU0OTk=,size_16,color_FFFFFF,t_70-20221015185919620.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221015190825669.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221015195335512.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221015195701706.png">
+<meta property="article:published_time" content="2022-10-15T10:37:35.000Z">
+<meta property="article:modified_time" content="2022-10-15T15:22:15.575Z">
+<meta property="article:author" content="Jiatao Tao">
+<meta property="article:tag" content="clickhouse">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTQ0NDU0OTk=,size_16,color_FFFFFF,t_70-20221015185919620.png">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Clickhouse pipeline/processor 源码解析 101 | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.png">
+      <meta itemprop="name" content="Jiatao Tao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Clickhouse pipeline/processor 源码解析 101
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2022-10-15 18:37:35 / Modified: 23:22:15" itemprop="dateCreated datePublished" datetime="2022-10-15T18:37:35+08:00">2022-10-15</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="概览"><a href="#概览" class="headerlink" title="概览"></a>概览</h1><p>所用代码为 2022.10.15 ClickHouse master 分支: 9ccbadc359d05fad8a1f3d80d6677b55b3006c2c</p>
+<h2 id="概念"><a href="#概念" class="headerlink" title="概念"></a>概念</h2><p>Block：数据块，ClickHouse进行数据读、写的基本单元，每一个Block实例，不仅包含数据域，还包含了每个列的meta信息。</p>
+<p>Chunk：数据块，保存实际数据的单元，Block中的数据域的指向的就是这个类型的实例。</p>
+<p>Row：一行记录，包含多个列索引，Chunk可以认为是由多个Row组成的。</p>
+<p>Column：一列数据，包含一个列上的Block Size数量的行。</p>
+<p>一个Block对象，可以简单理解为一张表，它的每一列都有相同的长度，每一行长度也等.</p>
+<h2 id="基本流程"><a href="#基本流程" class="headerlink" title="基本流程"></a>基本流程</h2><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br></pre></td><td class="code"><pre><span class="line"># 以TCP连接为例 select id from query_cache;</span><br><span class="line">TCPHandler::runImpl</span><br><span class="line">    BlockIO executeQuery // 解析query</span><br><span class="line">        executeQueryImpl</span><br><span class="line">            ast = parseQuery // 解析生成ast</span><br><span class="line">                ...</span><br><span class="line">            interpreter = InterpreterFactory::get // 根据ast实例化interpreter</span><br><span class="line">            interpreter-&gt;execute() // InterpreterSelectWithUnionQuery::execute</span><br><span class="line">                buildQueryPlan // 构建query paln 如 InterpreterSelectQuery::buildQueryPlan</span><br><span class="line">                    InterpreterSelectQuery::executeImpl</span><br><span class="line">                        executeFetchColumns</span><br><span class="line">                            storage-&gt;read // StorageMergeTree::read --&gt; MergeTreeDataSelectExecutor::read</span><br><span class="line">                                StorageMergeTree::read</span><br><span class="line">                                    MergeTreeDataSelectExecutor::read</span><br><span class="line">                                        MergeTreeDataSelectExecutor::readFromParts // 根据一定条件选择需要读取的part，这里我们过滤掉如何选择的流程，直接去看怎么构建query plan</span><br><span class="line">                                            spreadMarkRangesAmongStreams // 构建queryplan</span><br><span class="line">                                                MergeTreeThreadSelectBlockInputProcessor</span><br><span class="line">                                                unitePipes // 多个pipe绑定为一个pipe</span><br><span class="line">                                                createPlanFromPipe // step = std::make_unique&lt;ReadFromStorageStep&gt;; plan-&gt;addStep(step); processor为MergeTreeThreadSelectBlockInputProcessor</span><br><span class="line">                            query_plan.addStep // 增加step SettingQuotaAndLimits</span><br><span class="line">                        executeExpression // 增加step ExpressionStep</span><br><span class="line">                        executeProjection // 增加step ExpressionStep</span><br><span class="line">                buildQueryPipeline // 构建pipeline</span><br><span class="line">                    updatePipeline // ITransformingStep::updatePipeline--&gt;ExpressionStep::transformPipeline--&gt;addSimpleTransform--&gt;collected_processors指向的processors和pipe.processors都增加processor; 即ExpressionTransform</span><br><span class="line">            pipeline.addSimpleTransform // 增加processor LimitsCheckingTransform</span><br><span class="line">    processOrdinaryQueryWithProcessors</span><br><span class="line">        sendData(header); // 先向client发送header</span><br><span class="line">        PullingAsyncPipelineExecutor executor(pipeline); // 构建一个执行器。 make_shared&lt;LazyOutputFormat&gt;</span><br><span class="line">        PullingAsyncPipelineExecutor::pull</span><br><span class="line">            threadFunction</span><br><span class="line">                PipelineExecutor::execute</span><br><span class="line">                    PipelineExecutor::executeImpl</span><br><span class="line">                        initializeExecution</span><br><span class="line">                            prepareProcessor</span><br><span class="line">                                processor-&gt;prepare // 执行pushdata和pulldata操作</span><br><span class="line">                        executeSingleThread</span><br><span class="line">                            executeStepImpl // 根据线程号，弹出任务</span><br><span class="line">                                addJob // 初始化node-&gt;job</span><br><span class="line">                                node-&gt;job()</span><br><span class="line">                                    executeJob</span><br><span class="line">                                        processor-&gt;work() // 各个processor执行</span><br><span class="line">                                            ...</span><br><span class="line">    state.io.onFinish() // log和状态记录</span><br></pre></td></tr></table></figure>
+
+
+
+<p><img src="/2022/10/15/clickhouse-pipeline/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTQ0NDU0OTk=,size_16,color_FFFFFF,t_70-20221015185919620.png" alt="在这里插入图片描述"></p>
+<p><img src="/2022/10/15/clickhouse-pipeline/image-20221015190825669.png" alt="image-20221015190825669"></p>
+<h1 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h1><p>由于之前一直做优化器相关的 SQL 层, 各个引擎都是大同小异, 所以这里对 SQL 层不会特别深入, CH 的 SQL 层目前也不太完善, 没有太多可介绍的</p>
+<h2 id="Interpreter"><a href="#Interpreter" class="headerlink" title="Interpreter"></a>Interpreter</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">interpreter = InterpreterFactory::<span class="built_in">get</span>(ast, context, <span class="built_in">SelectQueryOptions</span>(stage).<span class="built_in">setInternal</span>(internal));</span><br></pre></td></tr></table></figure>
+
+<p>在老版本的 CH 中(ch19), interpreter 直接构造了输入输出流(input stream/ output stream), 通过这些 stream 串起了整个查询</p>
+<p>对于不同的查询类型(DQL/DML/DDL) 等有不同的 interpreter, 我们这里主要关注和 DQL 相关的``InterpreterSelectQuery`</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">BlockIO <span class="title">InterpreterSelectQuery::execute</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    BlockIO res;</span><br><span class="line">    QueryPlan query_plan;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">buildQueryPlan</span>(query_plan);</span><br><span class="line">  </span><br><span class="line">    <span class="keyword">auto</span> builder = query_plan.<span class="built_in">buildQueryPipeline</span>(</span><br><span class="line">        QueryPlanOptimizationSettings::<span class="built_in">fromContext</span>(context), </span><br><span class="line">        BuildQueryPipelineSettings::<span class="built_in">fromContext</span>(context));</span><br><span class="line">  </span><br><span class="line">    res.pipeline = QueryPipelineBuilder::<span class="built_in">getPipeline</span>(std::<span class="built_in">move</span>(*builder));</span><br><span class="line">    <span class="built_in">setQuota</span>(res.pipeline);</span><br><span class="line">    <span class="keyword">return</span> res;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="buildQueryPlan"><a href="#buildQueryPlan" class="headerlink" title="buildQueryPlan"></a>buildQueryPlan</h3><p>构建逻辑执行计划</p>
+<p>QueryPlan 实际上是一棵<code>QueryPlanStep</code>树</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Node</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    QueryPlanStepPtr step;</span><br><span class="line">    std::vector&lt;Node *&gt; children = &#123;&#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="keyword">using</span> Nodes = std::list&lt;Node&gt;;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">QueryPlan</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    Nodes nodes;</span><br><span class="line">    Node * root = <span class="literal">nullptr</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="IQueryPlanStep"><a href="#IQueryPlanStep" class="headerlink" title="IQueryPlanStep"></a>IQueryPlanStep</h4><p>这是一个基类, 每个 sql 算子都会又对应的实现</p>
+<p>直接继承 IQueryPlanStep 的, 一般都继承 ITransformingStep/ISourceStep, 比较复杂的 case 会直接继承 IQueryPlanStep, 例如 JoinStep, 需要自己实现 <code>QueryPipelineBuilderPtr updatePipeline</code> , 比较复杂</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">ISourceStep</span><br><span class="line">CreatingSetsStep</span><br><span class="line">ITransformingStep</span><br><span class="line">IntersectOrExceptStep</span><br><span class="line">JoinStep</span><br><span class="line">UnionStep</span><br></pre></td></tr></table></figure>
+
+<h5 id="举例-UnionStep"><a href="#举例-UnionStep" class="headerlink" title="举例: UnionStep"></a>举例: UnionStep</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">QueryPipelineBuilderPtr <span class="title">UnionStep::updatePipeline</span><span class="params">(QueryPipelineBuilders pipelines, <span class="keyword">const</span> BuildQueryPipelineSettings &amp;)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> pipeline = std::make_unique&lt;QueryPipelineBuilder&gt;();</span><br><span class="line">    <span class="function">QueryPipelineProcessorsCollector <span class="title">collector</span><span class="params">(*pipeline, <span class="keyword">this</span>)</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (pipelines.<span class="built_in">empty</span>())</span><br><span class="line">    &#123;</span><br><span class="line">        pipeline-&gt;<span class="built_in">init</span>(<span class="built_in">Pipe</span>(std::make_shared&lt;NullSource&gt;(output_stream-&gt;header)));</span><br><span class="line">        processors = collector.<span class="built_in">detachProcessors</span>();</span><br><span class="line">        <span class="keyword">return</span> pipeline;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> &amp; cur_pipeline : pipelines)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/// Headers for union must be equal.</span></span><br><span class="line">        <span class="comment">/// But, just in case, convert it to the same header if not.</span></span><br><span class="line">        <span class="keyword">if</span> (!<span class="built_in">isCompatibleHeader</span>(cur_pipeline-&gt;<span class="built_in">getHeader</span>(), <span class="built_in">getOutputStream</span>().header))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">auto</span> converting_dag = ActionsDAG::<span class="built_in">makeConvertingActions</span>(</span><br><span class="line">                cur_pipeline-&gt;<span class="built_in">getHeader</span>().<span class="built_in">getColumnsWithTypeAndName</span>(),</span><br><span class="line">                <span class="built_in">getOutputStream</span>().header.<span class="built_in">getColumnsWithTypeAndName</span>(),</span><br><span class="line">                ActionsDAG::MatchColumnsMode::Name);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">auto</span> converting_actions = std::make_shared&lt;ExpressionActions&gt;(std::<span class="built_in">move</span>(converting_dag));</span><br><span class="line">            cur_pipeline-&gt;<span class="built_in">addSimpleTransform</span>([&amp;](<span class="keyword">const</span> Block &amp; cur_header)</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="keyword">return</span> std::make_shared&lt;ExpressionTransform&gt;(cur_header, converting_actions);</span><br><span class="line">            &#125;);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    *pipeline = QueryPipelineBuilder::<span class="built_in">unitePipelines</span>(std::<span class="built_in">move</span>(pipelines), max_threads);</span><br><span class="line"></span><br><span class="line">    processors = collector.<span class="built_in">detachProcessors</span>();</span><br><span class="line">    <span class="keyword">return</span> pipeline;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="ITransformingStep"><a href="#ITransformingStep" class="headerlink" title="ITransformingStep"></a>ITransformingStep</h4><p>最重要的是 ITransformingStep, 几乎所有算子都继承自 ITransformingStep, 例如 filter/sort/limit 等等</p>
+<p>ITransformingStep 有单个的输入/输出</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">ExpressionStep</span><br><span class="line">AggregatingStep</span><br><span class="line">ArrayJoinStep</span><br><span class="line">CreateSetAndFilterOnTheFlyStep</span><br><span class="line">CreatingSetStep</span><br><span class="line">CubeStep</span><br><span class="line">DistinctStep</span><br><span class="line">ExtremesStep</span><br><span class="line">FillingStep</span><br><span class="line">FilterStep</span><br><span class="line">FilledJoinStep</span><br><span class="line">LimitByStep</span><br><span class="line">LimitStep</span><br><span class="line">Merging AggregatedStep</span><br><span class="line">OffsetStep</span><br><span class="line">RollupStep</span><br><span class="line">SortingStep</span><br><span class="line">TotalsHaving Step</span><br><span class="line">WindowStep</span><br></pre></td></tr></table></figure>
+
+<h5 id="举例-FilterStep"><a href="#举例-FilterStep" class="headerlink" title="举例: FilterStep"></a>举例: FilterStep</h5><p>step 中会定义 <code>transformPipeline</code>, <code>xxxTransFORM</code> 就是物理执行的算子(processer), 这个后面 在 query pipeline 中会介绍到, 等于是从逻辑执行计划到物理执行计划的一个转换</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">FilterStep::transformPipeline</span><span class="params">(QueryPipelineBuilder &amp; pipeline, <span class="keyword">const</span> BuildQueryPipelineSettings &amp; settings)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> expression = std::make_shared&lt;ExpressionActions&gt;(actions_dag, settings.<span class="built_in">getActionsSettings</span>());</span><br><span class="line">    pipeline.<span class="built_in">addSimpleTransform</span>([&amp;](<span class="keyword">const</span> Block &amp; header, QueryPipelineBuilder::StreamType stream_type)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">bool</span> on_totals = stream_type == QueryPipelineBuilder::StreamType::Totals;</span><br><span class="line">        <span class="keyword">return</span> std::make_shared&lt;FilterTransform&gt;(header, expression, filter_column_name, remove_filter_column, on_totals);</span><br><span class="line">    &#125;);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="ISourceStep"><a href="#ISourceStep" class="headerlink" title="ISourceStep"></a>ISourceStep</h4><p>Step which takes empty pipeline and initializes it. Returns single logical DataStream.</p>
+<p>子类需要实现 <code>initializePipeline</code>, 主要就是要构造 <code>Pipe</code></p>
+<img src="/2022/10/15/clickhouse-pipeline/image-20221015195335512.png" alt="image-20221015195335512" style="zoom:50%;">
+
+<h5 id="举例-ReadFromRemote"><a href="#举例-ReadFromRemote" class="headerlink" title="举例: ReadFromRemote"></a>举例: ReadFromRemote</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">ReadFromRemote::initializePipeline</span><span class="params">(QueryPipelineBuilder &amp; pipeline, <span class="keyword">const</span> BuildQueryPipelineSettings &amp;)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    Pipes pipes;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> &amp; shard : shards)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (shard.lazy)</span><br><span class="line">            <span class="built_in">addLazyPipe</span>(pipes, shard);</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="built_in">addPipe</span>(pipes, shard);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> pipe = Pipe::<span class="built_in">unitePipes</span>(std::<span class="built_in">move</span>(pipes));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">const</span> <span class="keyword">auto</span> &amp; processor : pipe.<span class="built_in">getProcessors</span>())</span><br><span class="line">        processor-&gt;<span class="built_in">setStorageLimits</span>(storage_limits);</span><br><span class="line"></span><br><span class="line">    pipeline.<span class="built_in">init</span>(std::<span class="built_in">move</span>(pipe));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="buildQueryPlan-执行流程"><a href="#buildQueryPlan-执行流程" class="headerlink" title="buildQueryPlan 执行流程"></a>buildQueryPlan 执行流程</h4><img src="/2022/10/15/clickhouse-pipeline/image-20221015195701706.png" alt="image-20221015195701706" style="zoom:50%;">
+
+<p>主要执行流程在 <code>void InterpreterSelectQuery::executeImpl(QueryPlan &amp; query_plan, std::optional&lt;Pipe&gt; prepared_pipe)</code>中, 代码很长</p>
+<p>主体流程就是根据 query 来给 QueryPlan 添加 step, 这里不想过多篇幅花在sql 层, 具体大家可以自己看</p>
+<p>例如 InterpreterSelectQuery::executeWhere</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">InterpreterSelectQuery::executeWhere</span><span class="params">(QueryPlan &amp; query_plan, <span class="keyword">const</span> ActionsDAGPtr &amp; expression, <span class="keyword">bool</span> remove_filter)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> where_step = std::make_unique&lt;FilterStep&gt;(</span><br><span class="line">        query_plan.<span class="built_in">getCurrentDataStream</span>(), expression, <span class="built_in">getSelectQuery</span>().<span class="built_in">where</span>()-&gt;<span class="built_in">getColumnName</span>(), remove_filter);</span><br><span class="line"></span><br><span class="line">    where_step-&gt;<span class="built_in">setStepDescription</span>(<span class="string">&quot;WHERE&quot;</span>);</span><br><span class="line">    query_plan.<span class="built_in">addStep</span>(std::<span class="built_in">move</span>(where_step));</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>InterpreterSelectQuery 中的其他 execute 方法, 都会在 <code>InterpreterSelectQuery::executeImpl</code> 调用</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line">executeMergeAggregatedImpl</span><br><span class="line">executeAggregation</span><br><span class="line">executeDistinct</span><br><span class="line">executeExpression</span><br><span class="line">executeExtremes</span><br><span class="line">executeFetchColumns</span><br><span class="line">executeHaving</span><br><span class="line">executeLimit</span><br><span class="line">executeLimitBy</span><br><span class="line">executeMergeAggregated</span><br><span class="line">executeMergeSorted</span><br><span class="line">executeOffset</span><br><span class="line">executeOrder</span><br><span class="line">executeOrderOptimized</span><br><span class="line">executePreLimit</span><br><span class="line">executeProjection</span><br><span class="line">executeRollupOrCube</span><br><span class="line">executeSubqueriesInSetsAndJoins</span><br><span class="line">executeTotalsAndHaving</span><br><span class="line">executeWhere</span><br><span class="line">executeWindow</span><br><span class="line">executeWithFill</span><br></pre></td></tr></table></figure>
+
+<p>最后我们生成了一颗 QueryPlanStep 的树, 完成了 ast 到逻辑执行计划的转换</p>
+<h3 id="buildQueryPipeline"><a href="#buildQueryPipeline" class="headerlink" title="buildQueryPipeline"></a>buildQueryPipeline</h3><p><code>buildQueryPipeline()</code>方法会将逻辑树中的一个个<code>QueryPlanStep</code>结点, 自底向上, 从左向右转换成<code>IProcessor</code>的实例对象, 也就是物理计划树中的结点, 将组织成QueryPipeline的结构</p>
+<h4 id="IProcessor"><a href="#IProcessor" class="headerlink" title="IProcessor"></a>IProcessor</h4><p>基类, 名字一般叫 xxTransform, xxProcessor, 主要关注 ISimpleTransform/ISink/ISource</p>
+<ul>
+<li>有零个或多个输入端口和零个或多个输出端口</li>
+<li>Block 通过 port 传输</li>
+<li>每个 port 都有固定的结构：列的名称和类型以及常量的值</li>
+<li>Processors 需要从 input ports pull data, 做一些处理然后 push data 到 output ports</li>
+<li><strong>Processors同步的处理不要有任何的休眠/io, 只能纯 cpu 的</strong></li>
+<li>上面的操作, Processors 更希望是通过异步的操作<ul>
+<li>可以启动后台任务并且订阅</li>
+</ul>
+</li>
+<li>Processor may modify its ports (create another processors and connect to them) on the fly<ul>
+<li>例如首先执行子查询, 根据子查询的结果, 决定如何执行查询的其余部分并构建相应的管道</li>
+</ul>
+</li>
+<li>source: 没有 input, 1 个 output, <strong>自己生成数据</strong>然后 push 到它的 output port<ul>
+<li>Empty source: Immediately says that data on its output port is finished.</li>
+</ul>
+</li>
+<li>sink: 1个 input, 0 个 output, 消费上游的数据<ul>
+<li>Null sink. Consumes data and does nothing.</li>
+</ul>
+</li>
+<li>Simple transformation: single input/output port<ul>
+<li>最好让每个函数成为一个单独的 processor, 更适合 processor 的分析</li>
+</ul>
+</li>
+<li>Squashing or filtering transformation: 提取数据, 可能会累积数据, 有时会将其推送到 output port<ul>
+<li>e.g. DISTINCT, WHERE, squashing of blocks for INSERT SELECT.</li>
+</ul>
+</li>
+<li>Accumulating transformation: 从输入中提取并累积所有数据，直到耗尽, 然后将数据推送到 output port<ul>
+<li>e.g. ORDER BY, GROUP BY</li>
+</ul>
+</li>
+<li>Limiting transformation. 当数据足够时, input port 不再需要数据</li>
+<li>Resize: 具有任意数量的输入和任意数量的输出<ul>
+<li>从任何准备好的输入中提取数据并将其推送到随机选择的自由输出, 例子: Union</li>
+</ul>
+</li>
+<li>Split: 从一个输入读取数据并将其传递到任意输出</li>
+<li>Concat: 有很多输入，只有一个输出。从第一个输入中提取所有数据，直到用完, 然后来自第二个输入的所有数据等，并将所有数据推送到输出。</li>
+<li>Ordered merge: Has many inputs but only one output. Pulls data from selected input in specific order, merges and pushes it to output</li>
+<li>Fork: 具有一个输入和多个输出。从输入中提取数据并将其复制到所有输出<ul>
+<li>用于处理具有共同数据源的多个查询</li>
+</ul>
+</li>
+<li>Select: 具有一个或多个输入和一个输出</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">IProcessor</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    InputPorts inputs;</span><br><span class="line">    OutputPorts outputs;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="built_in">IProcessor</span>() = <span class="keyword">default</span>;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">IProcessor</span>(InputPorts inputs_, OutputPorts outputs_)</span><br><span class="line">        : <span class="built_in">inputs</span>(std::<span class="built_in">move</span>(inputs_)), <span class="built_in">outputs</span>(std::<span class="built_in">move</span>(outputs_))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> &amp; port : inputs)</span><br><span class="line">            port.processor = <span class="keyword">this</span>;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> &amp; port : outputs)</span><br><span class="line">            port.processor = <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Method &#x27;prepare&#x27; is responsible for all cheap (&quot;instantaneous&quot;: O(1) of data volume, no wait) calculations.</span></span><br><span class="line"><span class="comment">      *</span></span><br><span class="line"><span class="comment">      * It may access input and output ports,</span></span><br><span class="line"><span class="comment">      *  indicate the need for work by another processor by returning NeedData or PortFull,</span></span><br><span class="line"><span class="comment">      *  or indicate the absence of work by returning Finished or Unneeded,</span></span><br><span class="line"><span class="comment">      *  it may pull data from input ports and push data to output ports.</span></span><br><span class="line"><span class="comment">      *</span></span><br><span class="line"><span class="comment">      * The method is not thread-safe and must be called from a single thread in one moment of time,</span></span><br><span class="line"><span class="comment">      *  even for different connected processors.</span></span><br><span class="line"><span class="comment">      *</span></span><br><span class="line"><span class="comment">      * Instead of all long work (CPU calculations or waiting) it should just prepare all required data and return Ready or Async.</span></span><br><span class="line"><span class="comment">      *</span></span><br><span class="line"><span class="comment">      * Thread safety and parallel execution:</span></span><br><span class="line"><span class="comment">      * - no methods (prepare, work, schedule) of single object can be executed in parallel;</span></span><br><span class="line"><span class="comment">      * - method &#x27;work&#x27; can be executed in parallel for different objects, even for connected processors;</span></span><br><span class="line"><span class="comment">      * - method &#x27;prepare&#x27; cannot be executed in parallel even for different objects,</span></span><br><span class="line"><span class="comment">      *   if they are connected (including indirectly) to each other by their ports;</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> Status <span class="title">prepare</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">    <span class="comment">/** You may call this method if &#x27;prepare&#x27; returned Ready.</span></span></span><br><span class="line"><span class="comment"><span class="function">      * This method cannot access any ports. It should use only data that was prepared by &#x27;prepare&#x27; method.</span></span></span><br><span class="line"><span class="comment"><span class="function">      *</span></span></span><br><span class="line"><span class="comment"><span class="function">      * Method work can be executed in parallel for different processors.</span></span></span><br><span class="line"><span class="comment"><span class="function">      */</span></span></span><br><span class="line"><span class="function">    <span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">work</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">    <span class="comment">/** Executor must call this method when &#x27;prepare&#x27; returned Async.</span></span></span><br><span class="line"><span class="comment"><span class="function">      * This method cannot access any ports. It should use only data that was prepared by &#x27;prepare&#x27; method.</span></span></span><br><span class="line"><span class="comment"><span class="function">      *</span></span></span><br><span class="line"><span class="comment"><span class="function">      * This method should instantly return epollable file descriptor which will be readable when asynchronous job is done.</span></span></span><br><span class="line"><span class="comment"><span class="function">      * When descriptor is readable, method `work` is called to continue data processing.</span></span></span><br><span class="line"><span class="comment"><span class="function">      *</span></span></span><br><span class="line"><span class="comment"><span class="function">      * <span class="doctag">NOTE:</span> it would be more logical to let `work()` return ASYNC status instead of prepare. This will get</span></span></span><br><span class="line"><span class="comment"><span class="function">      * prepare() -&gt; work() -&gt; schedule() -&gt; work() -&gt; schedule() -&gt; .. -&gt; work() -&gt; prepare()</span></span></span><br><span class="line"><span class="comment"><span class="function">      * chain instead of</span></span></span><br><span class="line"><span class="comment"><span class="function">      * prepare() -&gt; work() -&gt; prepare() -&gt; schedule() -&gt; work() -&gt; prepare() -&gt; schedule() -&gt; .. -&gt; work() -&gt; prepare()</span></span></span><br><span class="line"><span class="comment"><span class="function">      *</span></span></span><br><span class="line"><span class="comment"><span class="function">      * It is expected that executor epoll using level-triggered notifications.</span></span></span><br><span class="line"><span class="comment"><span class="function">      * Read all available data from descriptor before returning ASYNC.</span></span></span><br><span class="line"><span class="comment"><span class="function">      */</span></span></span><br><span class="line"><span class="function">    <span class="keyword">virtual</span> <span class="keyword">int</span> <span class="title">schedule</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span></span><br><span class="line"><span class="function">    <span class="comment">/** You must call this method if &#x27;prepare&#x27; returned ExpandPipeline.</span></span></span><br><span class="line"><span class="comment"><span class="function">      * This method cannot access any port, but it can create new ports for current processor.</span></span></span><br><span class="line"><span class="comment"><span class="function">      *</span></span></span><br><span class="line"><span class="comment"><span class="function">      * Method should return set of new already connected processors.</span></span></span><br><span class="line"><span class="comment"><span class="function">      * All added processors must be connected only to each other or current processor.</span></span></span><br><span class="line"><span class="comment"><span class="function">      *</span></span></span><br><span class="line"><span class="comment"><span class="function">      * Method can&#x27;t remove or reconnect existing ports, move data from/to port or perform calculations.</span></span></span><br><span class="line"><span class="comment"><span class="function">      * &#x27;prepare&#x27; should be called again after expanding pipeline.</span></span></span><br><span class="line"><span class="comment"><span class="function">      */</span></span></span><br><span class="line"><span class="function">    <span class="keyword">virtual</span> Processors <span class="title">expandPipeline</span><span class="params">()</span></span></span><br><span class="line"><span class="function">      </span></span><br><span class="line"><span class="function">    <span class="keyword">void</span> <span class="title">cancel</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        is_cancelled = <span class="literal">true</span>;</span><br><span class="line">        <span class="built_in">onCancel</span>();</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">protected</span>:</span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">onCancel</span><span class="params">()</span> </span>&#123;&#125;</span><br><span class="line">  </span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    IQueryPlanStep * query_plan_step = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="Processor-有如下状态"><a href="#Processor-有如下状态" class="headerlink" title="Processor 有如下状态"></a>Processor 有如下状态</h5><ul>
+<li>NeedData: Processor 需要 input 提供数据, 需要运行另一个 processor 来生成所需的 input, 然后调用 prepare 方法</li>
+<li>PortFull: Processor 由于端口满或者不需要主数据(inNeeded()) 从而不能处理数据, 你需要把数据从 output 端口 transfer 到另一个 processor 的 input 端口然后调用 prepare 方法</li>
+<li>Finished: 所有工作完成 (all data is processed or all output are closed)</li>
+<li>Unneeded: No one needs data on output ports.</li>
+<li>Ready: 你可以调用 “work” 方法, processor 会同步的处理数据</li>
+<li>Async: 你可以调用 “schedule” 方法, processor 会返回一个 descriptor, 你需要 poll(轮询) 这个 descriptor 并且调用 work 方法</li>
+<li>ExpandPipeline: Processor 想添加其他 Processor 到这个 pipeline 中, 新的 processors 必须通过 expandPipeline() 调用获得</li>
+</ul>
+<h5 id="重要方法"><a href="#重要方法" class="headerlink" title="重要方法"></a>重要方法</h5><p>重点: prepare, work, schedule 单个对象上都不能并行执行, 但是 work 在不同 processor 上可以并行执行</p>
+<ol>
+<li><code>Status prepare()</code>: <ol>
+<li>负责所有 cheap 的计算(O1, 无等待)</li>
+<li>可能访问input/output ports, 通过返回 NeedData 或 PortFull 表示需要另一个Processor工作, 或通过返回 Finished 或 Unneeded 来表示不需要工作</li>
+<li>它可以从输入端口提取数据并将数据推送到输出端口</li>
+<li>该方法不是线程安全的, 即使对于不同的实例, 也不能并行执行, 如果他们通过端口互相 connect (including indirectly)</li>
+<li>它应该只准备所有需要的数据并返回 Ready 或 Async, 而不是长时间的工作(cpu计算或者 io 等待)</li>
+</ol>
+</li>
+<li><code>void work()</code><ol>
+<li>prepare 返回 ready 需要调用</li>
+<li>可以在不同 processor 间并行执行 </li>
+</ol>
+</li>
+<li><code>int schedule()</code><ol>
+<li>prepare 返回 Async 需要调用</li>
+<li>方法不能访问任何 ports, 他只能使用 prepare() 准备的数据</li>
+<li>此方法应立即返回 epollable 文件描述符, 该描述符在异步作业完成时可读, 描述符可读时, 调用方法<code>work</code>继续数据处理</li>
+<li>让 <code>work()</code> 返回 ASYNC 状态而不是 prepare 会更合乎逻辑:  prepare() -&gt; work() -&gt; schedule() -&gt; work() -&gt; schedule() -&gt; .. -&gt; work() -&gt; prepare() 而不是 prepare() -&gt; work() -&gt; prepare() -&gt; schedule() -&gt; work() -&gt; prepare() -&gt; schedule() -&gt; .. -&gt; work() -&gt; prepare()</li>
+<li>executor epoll 使用 level-triggered notifications.</li>
+</ol>
+</li>
+<li><code> Processors expandPipeline()</code><ol>
+<li><code>prepare</code> 返回 ExpandPipeline，则需要调用此方法, 方法无法访问任何端口，但可以为当前处理器创建新端口</li>
+<li>方法应返回一组新的已连接处理器</li>
+<li>所有添加的处理器必须仅相互连接或者连接到当前处理器</li>
+<li>方法不能删除或重新连接现有端口、将数据移出/移入端口或执行计算</li>
+<li> <code>prepare</code> should be called again after expanding pipeline</li>
+</ol>
+</li>
+<li><code>void onCancel()</code></li>
+</ol>
+<p>具体可以看看 <code>ISimpleTransform</code> 的实现 </p>
+<h5 id="子类"><a href="#子类" class="headerlink" title="子类"></a>子类</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line">IAccumulatingTransform</span><br><span class="line">ConcatProcessor</span><br><span class="line">DelayedPortsProcessor</span><br><span class="line">ForkProcessor</span><br><span class="line">IOutputFormat</span><br><span class="line">IInflatingTransform</span><br><span class="line">ISimpleTransform</span><br><span class="line">ISink</span><br><span class="line">ISource</span><br><span class="line">LimitTransform</span><br><span class="line">IMergingTransformBase</span><br><span class="line">OffsetTransform</span><br><span class="line">PingPongProcessor</span><br><span class="line">ResizeProcessor</span><br><span class="line">StrictResizeProcessor</span><br><span class="line">DelayedSource</span><br><span class="line">AggregatinginOrderTransform</span><br><span class="line">ConvertingAggregatedToChunksTransform</span><br><span class="line">AggregatingTransform</span><br><span class="line">CopyTransform</span><br><span class="line">ExceptionKeepingTransform</span><br><span class="line">IntersectOrExceptTransform</span><br><span class="line">JoiningTransform</span><br><span class="line">FillingRightJoinSideTransform</span><br><span class="line">GroupingAggregatedTransform</span><br><span class="line">SortingAggregatedTransform</span><br><span class="line">SortingTransform</span><br><span class="line">WindowTransform</span><br><span class="line">CopyingDataToViewsTransform</span><br><span class="line">FinalizingViewsTransform</span><br></pre></td></tr></table></figure>
+
+<h5 id="ISimpleTransform"><a href="#ISimpleTransform" class="headerlink" title="ISimpleTransform"></a>ISimpleTransform</h5><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line">MergingAggregatedBucketTransform</span><br><span class="line">TransformWithAdditionalColumns</span><br><span class="line">SendingChunkHeaderTransform</span><br><span class="line">AddingDefaultsTransform</span><br><span class="line">FinalizeAggregatedTransform</span><br><span class="line">ArrayJoinTransform</span><br><span class="line">CheckSortedTransform</span><br><span class="line">CreatingSetsOnTheFlyTransform</span><br><span class="line">FilterBySetOnTheFlyTransform</span><br><span class="line">DistinctSortedChunkTransform</span><br><span class="line">DistinctSortedTransform</span><br><span class="line">DistinctTransform</span><br><span class="line">ExpressionTransform</span><br><span class="line">ExtremesTransform</span><br><span class="line">FillingTransform</span><br><span class="line">FilterSortedStreamByRange</span><br><span class="line">FilterTransform</span><br><span class="line">LimitByTransform</span><br><span class="line">LimitsCheckingTransform</span><br><span class="line">MaterializingTransform</span><br><span class="line">PartialSortingTransform</span><br><span class="line">ReverseTransform</span><br><span class="line">TotalsHavingTransform</span><br><span class="line">WatermarkTransform</span><br><span class="line">AddingAggregatedChunkInfoTransform</span><br></pre></td></tr></table></figure>
+
+
+
+<h5 id="ISource"><a href="#ISource" class="headerlink" title="ISource"></a>ISource</h5><h5 id="ISink"><a href="#ISink" class="headerlink" title="ISink"></a>ISink</h5><h4 id="基本流程-1"><a href="#基本流程-1" class="headerlink" title="基本流程"></a>基本流程</h4><p>各个 node 分别调用自己的updatePipeline 方法, xxxStep 生成对应的 xxxTransform, 这个方法在上面介绍 step 的时候也介绍过, 例如 FilterStep-&gt;FilterTransform</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">Frame</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    Node * node = &#123;&#125;;</span><br><span class="line">    QueryPipelineBuilders pipelines = &#123;&#125;;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br><span class="line"><span class="function">QueryPipelineBuilderPtr <span class="title">QueryPlan::buildQueryPipeline</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">const</span> QueryPlanOptimizationSettings &amp; optimization_settings,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">const</span> BuildQueryPipelineSettings &amp; build_pipeline_settings)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">checkInitialized</span>();</span><br><span class="line">    <span class="built_in">optimize</span>(optimization_settings);</span><br><span class="line"></span><br><span class="line">    QueryPipelineBuilderPtr last_pipeline;</span><br><span class="line"></span><br><span class="line">    std::stack&lt;Frame&gt; stack;</span><br><span class="line">    stack.<span class="built_in">push</span>(Frame&#123;.node = root&#125;);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (!stack.<span class="built_in">empty</span>())</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">auto</span> &amp; frame = stack.<span class="built_in">top</span>();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (last_pipeline)</span><br><span class="line">        &#123;</span><br><span class="line">            frame.pipelines.<span class="built_in">emplace_back</span>(std::<span class="built_in">move</span>(last_pipeline));</span><br><span class="line">            last_pipeline = <span class="literal">nullptr</span>; <span class="comment">//-V1048</span></span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">size_t</span> next_child = frame.pipelines.<span class="built_in">size</span>();</span><br><span class="line">        <span class="keyword">if</span> (next_child == frame.node-&gt;children.<span class="built_in">size</span>())</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">bool</span> limit_max_threads = frame.pipelines.<span class="built_in">empty</span>();</span><br><span class="line">            last_pipeline = frame.node-&gt;step-&gt;<span class="built_in">updatePipeline</span>(std::<span class="built_in">move</span>(frame.pipelines), build_pipeline_settings);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (limit_max_threads &amp;&amp; max_threads)</span><br><span class="line">                last_pipeline-&gt;<span class="built_in">limitMaxThreads</span>(max_threads);</span><br><span class="line"></span><br><span class="line">            stack.<span class="built_in">pop</span>();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            stack.<span class="built_in">push</span>(Frame&#123;.node = frame.node-&gt;children[next_child]&#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    last_pipeline-&gt;<span class="built_in">setProgressCallback</span>(build_pipeline_settings.progress_callback);</span><br><span class="line">    last_pipeline-&gt;<span class="built_in">setProcessListElement</span>(build_pipeline_settings.process_list_element);</span><br><span class="line">    last_pipeline-&gt;<span class="built_in">addResources</span>(std::<span class="built_in">move</span>(resources));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> last_pipeline;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="参考链接"><a href="#参考链接" class="headerlink" title="参考链接"></a>参考链接</h1><p><a target="_blank" rel="noopener" href="https://bbs.huaweicloud.com/blogs/314808">https://bbs.huaweicloud.com/blogs/314808</a></p>
+<p><a target="_blank" rel="noopener" href="https://blog.csdn.net/u014445499/article/details/115309076">https://blog.csdn.net/u014445499/article/details/115309076</a></p>
+<p><a target="_blank" rel="noopener" href="https://bohutang.me/2020/06/11/clickhouse-and-friends-processor/">https://bohutang.me/2020/06/11/clickhouse-and-friends-processor/</a></p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/clickhouse/" rel="tag"><i class="fa fa-tag"></i> clickhouse</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/06/cpp-thread/" rel="prev" title="CPP 并发编程实战">
+      <i class="fa fa-chevron-left"></i> CPP 并发编程实战
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E6%A6%82%E8%A7%88"><span class="nav-number">1.</span> <span class="nav-text">概览</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%A6%82%E5%BF%B5"><span class="nav-number">1.1.</span> <span class="nav-text">概念</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%9F%BA%E6%9C%AC%E6%B5%81%E7%A8%8B"><span class="nav-number">1.2.</span> <span class="nav-text">基本流程</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%85%B7%E4%BD%93%E6%B5%81%E7%A8%8B"><span class="nav-number">2.</span> <span class="nav-text">具体流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Interpreter"><span class="nav-number">2.1.</span> <span class="nav-text">Interpreter</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#buildQueryPlan"><span class="nav-number">2.1.1.</span> <span class="nav-text">buildQueryPlan</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#buildQueryPipeline"><span class="nav-number">2.1.2.</span> <span class="nav-text">buildQueryPipeline</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E9%93%BE%E6%8E%A5"><span class="nav-number">3.</span> <span class="nav-text">参考链接</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jiatao Tao"
+      src="/images/head.png">
+  <p class="site-author-name" itemprop="name">Jiatao Tao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">34</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">24</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiatao Tao</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
