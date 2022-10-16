@@ -2,6 +2,15 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   
   <url>
+    <loc>https://aaaaaaron.github.io/baidu_verify_code-W1bppEiaZ5.html</loc>
+    
+    <lastmod>2022-10-16</lastmod>
+    
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/</loc>
     
     <lastmod>2022-10-15</lastmod>
@@ -421,13 +430,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/tags/Parquet/</loc>
-    <lastmod>2022-10-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/tags/Java/</loc>
     <lastmod>2022-10-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -435,7 +437,21 @@
   </url>
   
   <url>
+    <loc>https://aaaaaaron.github.io/tags/Elixir/</loc>
+    <lastmod>2022-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
     <loc>https://aaaaaaron.github.io/tags/Kylin/</loc>
+    <lastmod>2022-10-16</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.2</priority>
+  </url>
+  
+  <url>
+    <loc>https://aaaaaaron.github.io/tags/Parquet/</loc>
     <lastmod>2022-10-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
@@ -456,13 +472,6 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/tags/Paper/</loc>
-    <lastmod>2022-10-16</lastmod>
-    <changefreq>weekly</changefreq>
-    <priority>0.2</priority>
-  </url>
-  
-  <url>
     <loc>https://aaaaaaron.github.io/tags/Maven/</loc>
     <lastmod>2022-10-16</lastmod>
     <changefreq>weekly</changefreq>
@@ -470,7 +479,7 @@
   </url>
   
   <url>
-    <loc>https://aaaaaaron.github.io/tags/Elixir/</loc>
+    <loc>https://aaaaaaron.github.io/tags/Paper/</loc>
     <lastmod>2022-10-16</lastmod>
     <changefreq>weekly</changefreq>
     <priority>0.2</priority>
