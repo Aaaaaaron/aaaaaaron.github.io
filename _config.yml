@@ -92,12 +92,15 @@ deploy:
   type: git
   repo:
     github: git@github.com:Aaaaaaron/aaaaaaron.github.io.git
-  # branch: gh-pages
+    coding: git@e.coding.net:aaaron/aaaron/aaaron.git
+    gitee: git@gitee.com:Meldoy/aaaaaaaaaron.git
   branch: master
 
 sitemap:
     path: sitemap.xml
-
+baidusitemap:
+  path: baidusitemap.xml
+  
 backup:
     type: git
     message: update 20220711
