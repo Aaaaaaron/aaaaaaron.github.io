@@ -1,0 +1,474 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="google-site-verification" content="oi9cACXaYdEyQVeGEUG_WUOEeFyJe9ey2Sj7Dcribng">
+  <meta name="baidu-site-verification" content="code-W1bppEiaZ5">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Noto Serif SC:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Clickhouse distributed aggregation memory efficient配置&amp;背景开启 distributed_aggregation_memory_efficient 的优势是和原来的内存比, 最多只会消耗 1&#x2F;256 * the_number_of_threads 的原内存, 但是劣势是执行速度变慢  set distributed_aggregation">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Clickhouse distributed aggregation memory efficient">
+<meta property="og:url" content="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/index.html">
+<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:description" content="Clickhouse distributed aggregation memory efficient配置&amp;背景开启 distributed_aggregation_memory_efficient 的优势是和原来的内存比, 最多只会消耗 1&#x2F;256 * the_number_of_threads 的原内存, 但是劣势是执行速度变慢  set distributed_aggregation">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/image-20221026195408114.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/image-20221026195559320.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/image-20221026201705647.png">
+<meta property="article:published_time" content="2022-10-26T08:37:44.000Z">
+<meta property="article:modified_time" content="2022-10-26T13:59:08.747Z">
+<meta property="article:author" content="Jiatao Tao">
+<meta property="article:tag" content="Clickhouse">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/image-20221026195408114.png">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Clickhouse distributed aggregation memory efficient | Jiatao Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.png">
+      <meta itemprop="name" content="Jiatao Tao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Jiatao Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Clickhouse distributed aggregation memory efficient
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2022-10-26 16:37:44 / Modified: 21:59:08" itemprop="dateCreated datePublished" datetime="2022-10-26T16:37:44+08:00">2022-10-26</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Clickhouse-distributed-aggregation-memory-efficient"><a href="#Clickhouse-distributed-aggregation-memory-efficient" class="headerlink" title="Clickhouse distributed aggregation memory efficient"></a>Clickhouse distributed aggregation memory efficient</h1><h2 id="配置-amp-背景"><a href="#配置-amp-背景" class="headerlink" title="配置&amp;背景"></a>配置&amp;背景</h2><p>开启 distributed_aggregation_memory_efficient 的优势是和原来的内存比, 最多只会消耗 1/256 * the_number_of_threads 的原内存, 但是劣势是执行速度变慢</p>
+<ol>
+<li>set distributed_aggregation_memory_efficient=1;</li>
+<li>set group_by_two_level_threshold=1;</li>
+<li>set group_by_two_level_threshold_bytes=1;</li>
+</ol>
+<p>官网: When merging data flushed to the disk, as well as when merging results from remote servers when the <code>distributed_aggregation_memory_efficient</code> setting is enabled, consumes up to <code>1/256 * the_number_of_threads</code> from the total amount of RAM.</p>
+<p>和原来的内存比, 最多只会消耗 1/256 * the_number_of_threads 的原内存</p>
+<h2 id="源码"><a href="#源码" class="headerlink" title="源码"></a>源码</h2><p>MergingAggregatedMemoryEfficientTransform</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">addMergingAggregatedMemoryEfficientTransform</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    Pipe &amp; pipe,</span></span></span><br><span class="line"><span class="params"><span class="function">    AggregatingTransformParamsPtr params,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">size_t</span> num_merging_processors)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    pipe.<span class="built_in">addTransform</span>(std::make_shared&lt;GroupingAggregatedTransform&gt;(pipe.<span class="built_in">getHeader</span>(), pipe.<span class="built_in">numOutputPorts</span>(), params));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (num_merging_processors &lt;= <span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/// --&gt; GroupingAggregated --&gt; MergingAggregatedBucket --&gt;</span></span><br><span class="line">        pipe.<span class="built_in">addTransform</span>(std::make_shared&lt;MergingAggregatedBucketTransform&gt;(params));</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// --&gt;                                        --&gt; MergingAggregatedBucket --&gt;</span></span><br><span class="line">    <span class="comment">/// --&gt; GroupingAggregated --&gt; ResizeProcessor --&gt; MergingAggregatedBucket --&gt; SortingAggregated --&gt;</span></span><br><span class="line">    <span class="comment">/// --&gt;                                        --&gt; MergingAggregatedBucket --&gt;</span></span><br><span class="line"></span><br><span class="line">    pipe.<span class="built_in">resize</span>(num_merging_processors);</span><br><span class="line"></span><br><span class="line">    pipe.<span class="built_in">addSimpleTransform</span>([params](<span class="keyword">const</span> Block &amp;)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> std::make_shared&lt;MergingAggregatedBucketTransform&gt;(params);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    pipe.<span class="built_in">addTransform</span>(std::make_shared&lt;SortingAggregatedTransform&gt;(num_merging_processors, params));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>加了三个 processor:</p>
+<ol>
+<li>GroupingAggregatedTransform</li>
+<li>MergingAggregatedBucketTransform</li>
+<li>SortingAggregatedTransform</li>
+</ol>
+<p><img src="/2022/10/26/ch-dist-agg-mem-effect/image-20221026195408114.png" alt="image-20221026195408114"></p>
+<h2 id="GroupingAggregatedTransform"><a href="#GroupingAggregatedTransform" class="headerlink" title="GroupingAggregatedTransform"></a>GroupingAggregatedTransform</h2><h3 id="简介"><a href="#简介" class="headerlink" title="简介"></a>简介</h3><ol>
+<li>上游的 input 是其他分布式节点经过 partial agg 的数据, 被 split 成了 256 个 buckets, 有多个 inputs, 单个输出</li>
+<li>按照 bucket number group by, 对上游的 chunk 组成一个 list 传给下游</li>
+<li>上游传输的 chunk 都是按照 agg_info 中 的 bucket number 保序传输过来的, 如果a &lt; b, 则bucket_num = a 块在bucket_num = b 之前, 利用这个机制, 可以每次只保留一个 chunk 在内存中</li>
+</ol>
+<h3 id="源码-1"><a href="#源码-1" class="headerlink" title="源码"></a>源码</h3><h4 id="GroupingAggregatedTransform-prepare"><a href="#GroupingAggregatedTransform-prepare" class="headerlink" title="GroupingAggregatedTransform::prepare"></a>GroupingAggregatedTransform::prepare</h4><p>GroupingAggregatedTransform 最主要逻辑就在 prepare 方法中</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br><span class="line">91</span><br><span class="line">92</span><br><span class="line">93</span><br><span class="line">94</span><br><span class="line">95</span><br><span class="line">96</span><br><span class="line">97</span><br><span class="line">98</span><br><span class="line">99</span><br><span class="line">100</span><br><span class="line">101</span><br><span class="line">102</span><br><span class="line">103</span><br><span class="line">104</span><br><span class="line">105</span><br><span class="line">106</span><br><span class="line">107</span><br><span class="line">108</span><br><span class="line">109</span><br><span class="line">110</span><br><span class="line">111</span><br><span class="line">112</span><br><span class="line">113</span><br><span class="line">114</span><br><span class="line">115</span><br><span class="line">116</span><br><span class="line">117</span><br><span class="line">118</span><br><span class="line">119</span><br><span class="line">120</span><br><span class="line">121</span><br><span class="line">122</span><br><span class="line">123</span><br><span class="line">124</span><br><span class="line">125</span><br><span class="line">126</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">IProcessor::Status <span class="title">GroupingAggregatedTransform::prepare</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/// Check can output.</span></span><br><span class="line">    <span class="keyword">auto</span> &amp; output = outputs.<span class="built_in">front</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (output.<span class="built_in">isFinished</span>())</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> &amp; input : inputs)</span><br><span class="line">            input.<span class="built_in">close</span>();</span><br><span class="line"></span><br><span class="line">        chunks_map.<span class="built_in">clear</span>();</span><br><span class="line">        last_bucket_number.<span class="built_in">clear</span>();</span><br><span class="line">        <span class="keyword">return</span> Status::Finished;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Read first time from each input to understand if we have two-level aggregation.</span></span><br><span class="line">    <span class="keyword">if</span> (!read_from_all_inputs)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">readFromAllInputs</span>();</span><br><span class="line">        <span class="keyword">if</span> (!read_from_all_inputs)</span><br><span class="line">            <span class="keyword">return</span> Status::NeedData;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Convert single level to two levels if have two-level input.</span></span><br><span class="line">    <span class="keyword">if</span> (has_two_level &amp;&amp; !single_level_chunks.<span class="built_in">empty</span>())</span><br><span class="line">        <span class="keyword">return</span> Status::Ready;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Check can push (to avoid data caching).</span></span><br><span class="line">    <span class="keyword">if</span> (!output.<span class="built_in">canPush</span>())</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">auto</span> &amp; input : inputs)</span><br><span class="line">            input.<span class="built_in">setNotNeeded</span>();</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> Status::PortFull;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">bool</span> pushed_to_output = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Output if has data.</span></span><br><span class="line">    <span class="keyword">if</span> (has_two_level)</span><br><span class="line">        pushed_to_output = <span class="built_in">tryPushTwoLevelData</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> need_input = [<span class="keyword">this</span>](<span class="keyword">size_t</span> input_num)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (last_bucket_number[input_num] &lt; current_bucket)</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> expect_several_chunks_for_single_bucket_per_source &amp;&amp; last_bucket_number[input_num] == current_bucket;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Read next bucket if can.</span></span><br><span class="line">    <span class="keyword">for</span> (; ; ++current_bucket)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">bool</span> finished = <span class="literal">true</span>;</span><br><span class="line">        <span class="keyword">bool</span> need_data = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">auto</span> in = inputs.<span class="built_in">begin</span>();</span><br><span class="line">        <span class="keyword">for</span> (<span class="keyword">size_t</span> input_num = <span class="number">0</span>; input_num &lt; num_inputs; ++input_num, ++in)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span> (in-&gt;<span class="built_in">isFinished</span>())</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">            finished = <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!<span class="built_in">need_input</span>(input_num))</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line"></span><br><span class="line">            in-&gt;<span class="built_in">setNeeded</span>();</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!in-&gt;<span class="built_in">hasData</span>())</span><br><span class="line">            &#123;</span><br><span class="line">                need_data = <span class="literal">true</span>;</span><br><span class="line">                <span class="keyword">continue</span>;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">auto</span> chunk = in-&gt;<span class="built_in">pull</span>();</span><br><span class="line">            <span class="built_in">addChunk</span>(std::<span class="built_in">move</span>(chunk), input_num);</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (has_two_level &amp;&amp; !single_level_chunks.<span class="built_in">empty</span>())</span><br><span class="line">                <span class="keyword">return</span> Status::Ready;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">if</span> (!in-&gt;<span class="built_in">isFinished</span>() &amp;&amp; <span class="built_in">need_input</span>(input_num))</span><br><span class="line">                need_data = <span class="literal">true</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (finished)</span><br><span class="line">        &#123;</span><br><span class="line">            all_inputs_finished = <span class="literal">true</span>;</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (need_data)</span><br><span class="line">            <span class="keyword">return</span> Status::NeedData;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (pushed_to_output)</span><br><span class="line">        <span class="keyword">return</span> Status::PortFull;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (has_two_level)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">tryPushTwoLevelData</span>())</span><br><span class="line">            <span class="keyword">return</span> Status::PortFull;</span><br><span class="line"></span><br><span class="line">        <span class="comment">/// Sanity check. If new bucket was read, we should be able to push it.</span></span><br><span class="line">        <span class="comment">/// This is always false, but we still keep this condition in case the code will be changed.</span></span><br><span class="line">        <span class="keyword">if</span> (!all_inputs_finished) <span class="comment">// -V547</span></span><br><span class="line">            <span class="keyword">throw</span> <span class="built_in">Exception</span>(<span class="string">&quot;GroupingAggregatedTransform has read new two-level bucket, but couldn&#x27;t push it.&quot;</span>,</span><br><span class="line">                            ErrorCodes::LOGICAL_ERROR);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (!all_inputs_finished) <span class="comment">// -V547</span></span><br><span class="line">            <span class="keyword">throw</span> <span class="built_in">Exception</span>(<span class="string">&quot;GroupingAggregatedTransform should have read all chunks for single level aggregation, &quot;</span></span><br><span class="line">                            <span class="string">&quot;but not all of the inputs are finished.&quot;</span>, ErrorCodes::LOGICAL_ERROR);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">tryPushSingleLevelData</span>())</span><br><span class="line">            <span class="keyword">return</span> Status::PortFull;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// If we haven&#x27;t pushed to output, then all data was read. Push overflows if have.</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">tryPushOverflowData</span>())</span><br><span class="line">        <span class="keyword">return</span> Status::PortFull;</span><br><span class="line"></span><br><span class="line">    output.<span class="built_in">finish</span>();</span><br><span class="line">    <span class="keyword">return</span> Status::Finished;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>比较关键的是里面两个 for 循环, 会遍历所有的 inputs, 如果 input 的当前的 last_bucket_number(Last bucket read from each input) 小于 current_bucket(``need_input` 方法), 就说明需要从上游 pull data</p>
+<p>举例来说, 如果这个算子有两个 input(对应两个节点), current_bucket 是 1, 可以看到截图里第 0 号 input 接受的 chunk 的 bucket num已经是 1 了, 所以它 need_input 返回 false, 而另一个 input 的 last_bucket_number 是 0, 小于 current_bucket, 下面会有个判断, 如果 <code>in-&gt;hasData</code>, 会直接 pull 然后 addChunk, 否则会直接返回<code>Status::NeedData</code></p>
+<p>所以这也带来一个问题, 一个流需要等另一个流的 input, 只有所有流的 bucket_num 都对齐, 才能进行下一步的工作</p>
+<img src="/2022/10/26/ch-dist-agg-mem-effect/image-20221026195559320.png" alt="image-20221026195559320" style="zoom:50%;">
+
+<p>对这个 case 来说, 当下面的 chunk 被加到 chunks_map 的时候, 这里的 for 循环就算执行完成了</p>
+<img src="/2022/10/26/ch-dist-agg-mem-effect/image-20221026201705647.png" alt="image-20221026201705647" style="zoom: 33%;">
+
+<h4 id="GroupingAggregatedTransform-addChunk"><a href="#GroupingAggregatedTransform-addChunk" class="headerlink" title="GroupingAggregatedTransform::addChunk"></a>GroupingAggregatedTransform::addChunk</h4><p>这个方法比较简单, 就是把上游 input 收到的 chunk 加到一个 chunks_map 中, 这也是我们要关注的核心结构, 同时也把上面提到的<code>last_bucket_number</code> 更新</p>
+<p><code>std::map&lt;Int32, Chunks&gt; chunks_map</code>, 虽然是一个 map, 但是他只会存储一个 bucket num 的数据, 每当所有 input 的某个 bucket num 的 chunk 都收齐之后, 会发给下游算子, 然后会把这个 bucket numb 的 chunk erase 掉</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">GroupingAggregatedTransform::addChunk</span><span class="params">(Chunk chunk, <span class="keyword">size_t</span> input)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> &amp; info = chunk.<span class="built_in">getChunkInfo</span>();</span><br><span class="line">    <span class="keyword">if</span> (!info)</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">Exception</span>(<span class="string">&quot;Chunk info was not set for chunk in GroupingAggregatedTransform.&quot;</span>, ErrorCodes::LOGICAL_ERROR);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> * agg_info = typeid_cast&lt;<span class="keyword">const</span> AggregatedChunkInfo *&gt;(info.<span class="built_in">get</span>());</span><br><span class="line">    <span class="keyword">if</span> (!agg_info)</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">Exception</span>(<span class="string">&quot;Chunk should have AggregatedChunkInfo in GroupingAggregatedTransform.&quot;</span>, ErrorCodes::LOGICAL_ERROR);</span><br><span class="line"></span><br><span class="line">    Int32 bucket = agg_info-&gt;bucket_num;</span><br><span class="line">    <span class="keyword">bool</span> is_overflows = agg_info-&gt;is_overflows;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (is_overflows)</span><br><span class="line">        overflow_chunks.<span class="built_in">emplace_back</span>(std::<span class="built_in">move</span>(chunk));</span><br><span class="line">    <span class="keyword">else</span> <span class="keyword">if</span> (bucket &lt; <span class="number">0</span>)</span><br><span class="line">        single_level_chunks.<span class="built_in">emplace_back</span>(std::<span class="built_in">move</span>(chunk));</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        chunks_map[bucket].<span class="built_in">emplace_back</span>(std::<span class="built_in">move</span>(chunk));</span><br><span class="line">        has_two_level = <span class="literal">true</span>;</span><br><span class="line">        last_bucket_number[input] = bucket;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="GroupingAggregatedTransform-tryPushTwoLevelData"><a href="#GroupingAggregatedTransform-tryPushTwoLevelData" class="headerlink" title="GroupingAggregatedTransform::tryPushTwoLevelData"></a>GroupingAggregatedTransform::tryPushTwoLevelData</h4><p>这里会把会判断下 chunk 能不能被 push, 如果可以的话, 就从 map 中 erase 掉, 然后调用<code>pushData</code> 方法, 这就是为什么 <code>distributed_aggregation_memory_efficient</code> 可以节省内存, <strong>他每次只存储一个 bucket_num 的 chunk 列表</strong>, 发到下游之后就 erase 掉</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">GroupingAggregatedTransform::tryPushTwoLevelData</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> try_push_by_iter = [&amp;](<span class="keyword">auto</span> batch_it)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (batch_it == chunks_map.<span class="built_in">end</span>())</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">        Chunks &amp; cur_chunks = batch_it-&gt;second;</span><br><span class="line">        <span class="keyword">if</span> (cur_chunks.<span class="built_in">empty</span>())</span><br><span class="line">        &#123;</span><br><span class="line">            chunks_map.<span class="built_in">erase</span>(batch_it);</span><br><span class="line">            <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="built_in">pushData</span>(std::<span class="built_in">move</span>(cur_chunks), batch_it-&gt;first, <span class="literal">false</span>);</span><br><span class="line">        chunks_map.<span class="built_in">erase</span>(batch_it);</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (all_inputs_finished)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/// Chunks are sorted by bucket.</span></span><br><span class="line">        <span class="keyword">while</span> (!chunks_map.<span class="built_in">empty</span>())</span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">try_push_by_iter</span>(chunks_map.<span class="built_in">begin</span>()))</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">for</span> (; next_bucket_to_push &lt; current_bucket; ++next_bucket_to_push)</span><br><span class="line">            <span class="keyword">if</span> (<span class="built_in">try_push_by_iter</span>(chunks_map.<span class="built_in">find</span>(next_bucket_to_push)))</span><br><span class="line">                <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<h4 id="GroupingAggregatedTransform-pushData"><a href="#GroupingAggregatedTransform-pushData" class="headerlink" title="GroupingAggregatedTransform::pushData"></a>GroupingAggregatedTransform::pushData</h4><p>会把同个 bucket 的 chunk 放到 ChunksToMerge 中去, 作为 ChunkInfo 传递给下游output, 算是个 trick 把</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">GroupingAggregatedTransform::pushData</span><span class="params">(Chunks chunks, Int32 bucket, <span class="keyword">bool</span> is_overflows)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> &amp; output = outputs.<span class="built_in">front</span>();</span><br><span class="line">    <span class="keyword">auto</span> info = std::make_shared&lt;ChunksToMerge&gt;();</span><br><span class="line">    info-&gt;bucket_num = bucket;</span><br><span class="line">    info-&gt;is_overflows = is_overflows;</span><br><span class="line">    info-&gt;chunks = std::make_unique&lt;Chunks&gt;(std::<span class="built_in">move</span>(chunks));</span><br><span class="line"></span><br><span class="line">    Chunk chunk;</span><br><span class="line">    chunk.<span class="built_in">setChunkInfo</span>(std::<span class="built_in">move</span>(info));</span><br><span class="line">    output.<span class="built_in">push</span>(std::<span class="built_in">move</span>(chunk));</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="MergingAggregatedBucketTransform"><a href="#MergingAggregatedBucketTransform" class="headerlink" title="MergingAggregatedBucketTransform"></a>MergingAggregatedBucketTransform</h2><p>Merge aggregated data from single bucket.</p>
+<p>这一步比较简单, 上面 GroupingAggregatedTransform 算子传下来的 chunk 是空的, 实际数据存储在 chunk_info 中, <code>ChunksToMerge</code> 里面记录了同一个 bucket num 的所有 chunks</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ChunksToMerge</span> :</span> <span class="keyword">public</span> ChunkInfo</span><br><span class="line">&#123;</span><br><span class="line">    std::unique_ptr&lt;Chunks&gt; chunks;</span><br><span class="line">    Int32 bucket_num = <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">bool</span> is_overflows = <span class="literal">false</span>;</span><br><span class="line">&#125;;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>MergingAggregatedBucketTransform 做的就是把童儿 bucket num 的 chunk merge 起来: <code>params-&gt;aggregator.mergeBlocks(blocks_list, params-&gt;final)</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">MergingAggregatedBucketTransform::transform</span><span class="params">(Chunk &amp; chunk)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> &amp; info = chunk.<span class="built_in">getChunkInfo</span>();</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> * chunks_to_merge = typeid_cast&lt;<span class="keyword">const</span> ChunksToMerge *&gt;(info.<span class="built_in">get</span>());</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!chunks_to_merge)</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">Exception</span>(<span class="string">&quot;MergingAggregatedSimpleTransform chunk must have ChunkInfo with type ChunksToMerge.&quot;</span>,</span><br><span class="line">                        ErrorCodes::LOGICAL_ERROR);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> header = params-&gt;aggregator.<span class="built_in">getHeader</span>(<span class="literal">false</span>);</span><br><span class="line"></span><br><span class="line">    BlocksList blocks_list;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">auto</span> &amp; cur_chunk : *chunks_to_merge-&gt;chunks)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">auto</span> &amp; cur_info = cur_chunk.<span class="built_in">getChunkInfo</span>();</span><br><span class="line">        <span class="keyword">if</span> (!cur_info)</span><br><span class="line">            <span class="keyword">throw</span> <span class="built_in">Exception</span>(<span class="string">&quot;Chunk info was not set for chunk in MergingAggregatedBucketTransform.&quot;</span>,</span><br><span class="line">                    ErrorCodes::LOGICAL_ERROR);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">auto</span> * agg_info = typeid_cast&lt;<span class="keyword">const</span> AggregatedChunkInfo *&gt;(cur_info.<span class="built_in">get</span>());</span><br><span class="line">        <span class="keyword">if</span> (!agg_info)</span><br><span class="line">            <span class="keyword">throw</span> <span class="built_in">Exception</span>(<span class="string">&quot;Chunk should have AggregatedChunkInfo in MergingAggregatedBucketTransform.&quot;</span>,</span><br><span class="line">                    ErrorCodes::LOGICAL_ERROR);</span><br><span class="line"></span><br><span class="line">        Block block = header.<span class="built_in">cloneWithColumns</span>(cur_chunk.<span class="built_in">detachColumns</span>());</span><br><span class="line">        block.info.is_overflows = agg_info-&gt;is_overflows;</span><br><span class="line">        block.info.bucket_num = agg_info-&gt;bucket_num;</span><br><span class="line"></span><br><span class="line">        blocks_list.<span class="built_in">emplace_back</span>(std::<span class="built_in">move</span>(block));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> res_info = std::make_shared&lt;AggregatedChunkInfo&gt;();</span><br><span class="line">    res_info-&gt;is_overflows = chunks_to_merge-&gt;is_overflows;</span><br><span class="line">    res_info-&gt;bucket_num = chunks_to_merge-&gt;bucket_num;</span><br><span class="line">    chunk.<span class="built_in">setChunkInfo</span>(std::<span class="built_in">move</span>(res_info));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> block = params-&gt;aggregator.<span class="built_in">mergeBlocks</span>(blocks_list, params-&gt;<span class="keyword">final</span>);</span><br><span class="line">    <span class="keyword">size_t</span> num_rows = block.<span class="built_in">rows</span>();</span><br><span class="line">    chunk.<span class="built_in">setColumns</span>(block.<span class="built_in">getColumns</span>(), num_rows);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="SortingAggregatedTransform"><a href="#SortingAggregatedTransform" class="headerlink" title="SortingAggregatedTransform"></a>SortingAggregatedTransform</h2><p>读取 MergingAggregatedBucketTransform 聚合好后的数据, 按照 bucket num 排序然后输出</p>
+<p>Presumption: inputs 返回的 chunks 都是递增的bucket number, 每个 bucket number 都至多只有一个 chunk(因为上面都聚合过了)</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/Clickhouse/" rel="tag"><i class="fa fa-tag"></i> Clickhouse</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/15/clickhouse-pipeline/" rel="prev" title="Clickhouse pipeline/processor 源码解析 101">
+      <i class="fa fa-chevron-left"></i> Clickhouse pipeline/processor 源码解析 101
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Clickhouse-distributed-aggregation-memory-efficient"><span class="nav-number">1.</span> <span class="nav-text">Clickhouse distributed aggregation memory efficient</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-amp-%E8%83%8C%E6%99%AF"><span class="nav-number">1.1.</span> <span class="nav-text">配置&amp;背景</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E6%BA%90%E7%A0%81"><span class="nav-number">1.2.</span> <span class="nav-text">源码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#GroupingAggregatedTransform"><span class="nav-number">1.3.</span> <span class="nav-text">GroupingAggregatedTransform</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E7%AE%80%E4%BB%8B"><span class="nav-number">1.3.1.</span> <span class="nav-text">简介</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%BA%90%E7%A0%81-1"><span class="nav-number">1.3.2.</span> <span class="nav-text">源码</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#MergingAggregatedBucketTransform"><span class="nav-number">1.4.</span> <span class="nav-text">MergingAggregatedBucketTransform</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SortingAggregatedTransform"><span class="nav-number">1.5.</span> <span class="nav-text">SortingAggregatedTransform</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Jiatao Tao"
+      src="/images/head.png">
+  <p class="site-author-name" itemprop="name">Jiatao Tao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">35</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2022</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Jiatao Tao</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
