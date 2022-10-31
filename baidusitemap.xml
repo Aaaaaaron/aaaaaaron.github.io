@@ -1,6 +1,10 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url>
+    <loc>https://aaaaaaron.github.io/2022/10/31/grace-hash-join/</loc>
+    <lastmod>2022-10-31</lastmod>
+  </url>
+  <url>
     <loc>https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/</loc>
     <lastmod>2022-10-26</lastmod>
   </url>
