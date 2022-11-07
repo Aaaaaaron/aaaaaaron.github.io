@@ -52,14 +52,14 @@
 
   <meta name="description" content="Hash joinbuild 侧(小表): 建立 hash 表 probe 侧(大表): 扫描建立的 hash 表是否有相等的行 probe(探测) hash 冲突严重的话, 会退化成 NLJ(nest loop join) Grace Hash Joinbuild 表大, 内存无法存下所有数据, 需要刷盘 有两种方法:   改成 SMJ  分片 build (GHJ)  具体做法:  对两个表用">
 <meta property="og:type" content="article">
-<meta property="og:title" content="Grace Hash Join">
+<meta property="og:title" content="Grace Hash Join &amp; Clickhouse merge join">
 <meta property="og:url" content="https://aaaaaaron.github.io/2022/10/31/grace-hash-join/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
 <meta property="og:description" content="Hash joinbuild 侧(小表): 建立 hash 表 probe 侧(大表): 扫描建立的 hash 表是否有相等的行 probe(探测) hash 冲突严重的话, 会退化成 NLJ(nest loop join) Grace Hash Joinbuild 表大, 内存无法存下所有数据, 需要刷盘 有两种方法:   改成 SMJ  分片 build (GHJ)  具体做法:  对两个表用">
 <meta property="og:locale">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/31/grace-hash-join/image-20221031162135908.png">
 <meta property="article:published_time" content="2022-10-31T07:39:45.000Z">
-<meta property="article:modified_time" content="2022-10-31T08:43:26.573Z">
+<meta property="article:modified_time" content="2022-11-01T12:59:43.988Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta property="article:tag" content="SQL">
 <meta name="twitter:card" content="summary">
@@ -77,7 +77,7 @@
   };
 </script>
 
-  <title>Grace Hash Join | Jiatao Tao's blog</title>
+  <title>Grace Hash Join & Clickhouse merge join | Jiatao Tao's blog</title>
   
 
 
@@ -188,7 +188,7 @@
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
-          Grace Hash Join
+          Grace Hash Join & Clickhouse merge join
         </h2>
 
         <div class="post-meta">
@@ -197,10 +197,16 @@
                 <i class="fa fa-calendar-o"></i>
               </span>
               <span class="post-meta-item-text">Posted on</span>
-              
 
-              <time title="Created: 2022-10-31 15:39:45 / Modified: 16:43:26" itemprop="dateCreated datePublished" datetime="2022-10-31T15:39:45+08:00">2022-10-31</time>
+              <time title="Created: 2022-10-31 15:39:45" itemprop="dateCreated datePublished" datetime="2022-10-31T15:39:45+08:00">2022-10-31</time>
             </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2022-11-01 20:59:43" itemprop="dateModified" datetime="2022-11-01T20:59:43+08:00">2022-11-01</time>
+              </span>
 
           
 
@@ -246,8 +252,17 @@
 </ol>
 <img src="/2022/10/31/grace-hash-join/image-20221031162135908.png" alt="image-20221031162135908" style="zoom:50%;">
 
+<h1 id="Clickhouse-merge-join"><a href="#Clickhouse-merge-join" class="headerlink" title="Clickhouse merge join"></a>Clickhouse merge join</h1><p>CH 要把小表作为右表, 右表会构建 hash 表(之后优化器做好了应该也不需要)</p>
+<p>CH 默认是 hashjoin, 如果发现右表放不下内存会 Switch 到 mergejoin, 这里比较简单就带过了</p>
+<h2 id="Join-基本接口"><a href="#Join-基本接口" class="headerlink" title="Join 基本接口"></a>Join 基本接口</h2><h3 id="addJoinedBlock"><a href="#addJoinedBlock" class="headerlink" title="addJoinedBlock"></a>addJoinedBlock</h3><p>把右表的 block 加载进来</p>
+<h3 id="joinBlock"><a href="#joinBlock" class="headerlink" title="joinBlock"></a>joinBlock</h3><p>用左表的 block join 右表的 block, 其中右表的 block 已经提前构建好了(addJoinedBlock)</p>
+<h3 id="setTotals-getTotals"><a href="#setTotals-getTotals" class="headerlink" title="setTotals/getTotals"></a>setTotals/getTotals</h3><h2 id="merge-join"><a href="#merge-join" class="headerlink" title="merge join"></a>merge join</h2><h3 id="SMJ"><a href="#SMJ" class="headerlink" title="SMJ"></a>SMJ</h3><p>分为排序和归并两个阶段。</p>
+<p>排序: 就是对两表根据 Join Key 进行排序</p>
+<p>归并: 因为两张表已经按照同样的顺序排列，两表各一次循环遍历即可。</p>
+<p>A、B 两个表各设置一个指针, 分别为 I 和 J, 若A表第 I 行 Key 小于 B 表第 J 行 Key, 则 I ++, 否则 J ++, 直到匹配到数据则添加到结果集; 若表的记录本身就是有序的, 或者 Join key 刚好是索引列, 选择排序归并成本更低</p>
 <h1 id="一些思考"><a href="#一些思考" class="headerlink" title="一些思考"></a>一些思考</h1><p>对于分布式场景下的 shuffle hash join, 其实本质上非常类似 grace hash join</p>
 <h1 id="参考文档"><a href="#参考文档" class="headerlink" title="参考文档"></a>参考文档</h1><p><a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/35040231">https://zhuanlan.zhihu.com/p/35040231</a></p>
+<p><a target="_blank" rel="noopener" href="https://juejin.cn/post/7105938321326473252">https://juejin.cn/post/7105938321326473252</a></p>
 
     </div>
 
@@ -330,7 +345,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Hash-join"><span class="nav-number">1.</span> <span class="nav-text">Hash join</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Grace-Hash-Join"><span class="nav-number">2.</span> <span class="nav-text">Grace Hash Join</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Hybrid-Hash-Join"><span class="nav-number">3.</span> <span class="nav-text">Hybrid Hash Join</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83"><span class="nav-number">4.</span> <span class="nav-text">一些思考</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">5.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Hash-join"><span class="nav-number">1.</span> <span class="nav-text">Hash join</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Grace-Hash-Join"><span class="nav-number">2.</span> <span class="nav-text">Grace Hash Join</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Hybrid-Hash-Join"><span class="nav-number">3.</span> <span class="nav-text">Hybrid Hash Join</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Clickhouse-merge-join"><span class="nav-number">4.</span> <span class="nav-text">Clickhouse merge join</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Join-%E5%9F%BA%E6%9C%AC%E6%8E%A5%E5%8F%A3"><span class="nav-number">4.1.</span> <span class="nav-text">Join 基本接口</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#addJoinedBlock"><span class="nav-number">4.1.1.</span> <span class="nav-text">addJoinedBlock</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#joinBlock"><span class="nav-number">4.1.2.</span> <span class="nav-text">joinBlock</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#setTotals-getTotals"><span class="nav-number">4.1.3.</span> <span class="nav-text">setTotals&#x2F;getTotals</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#merge-join"><span class="nav-number">4.2.</span> <span class="nav-text">merge join</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#SMJ"><span class="nav-number">4.2.1.</span> <span class="nav-text">SMJ</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E4%B8%80%E4%BA%9B%E6%80%9D%E8%80%83"><span class="nav-number">5.</span> <span class="nav-text">一些思考</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%8F%82%E8%80%83%E6%96%87%E6%A1%A3"><span class="nav-number">6.</span> <span class="nav-text">参考文档</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
