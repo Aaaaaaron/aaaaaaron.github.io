@@ -50,18 +50,18 @@
   };
 </script>
 
-  <meta name="description" content="Clickhouse Aggregation 源码分析一个大体的数据流程:   AggregatingStep::transformPipeline, 构造 many data &amp; AggregatingTransform, 其中 ManyAggregatedData 用来传输数据的, 下面有具体介绍  1234567auto many_data &#x3D; std::make_shared&amp;lt">
+  <meta name="description" content="Clickhouse Aggregation 源码分析一个大体的数据流程也是重要问题:   列内存从哪里分配 分配的内存结构，长度是如何的   AggregatingStep::transformPipeline, 构造 many data &amp; AggregatingTransform, 其中 ManyAggregatedData 用来传输数据的, 下面有具体介绍  1234567auto">
 <meta property="og:type" content="article">
 <meta property="og:title" content="Clickhouse distributed aggregation memory efficient">
 <meta property="og:url" content="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/index.html">
 <meta property="og:site_name" content="Jiatao Tao&#39;s blog">
-<meta property="og:description" content="Clickhouse Aggregation 源码分析一个大体的数据流程:   AggregatingStep::transformPipeline, 构造 many data &amp; AggregatingTransform, 其中 ManyAggregatedData 用来传输数据的, 下面有具体介绍  1234567auto many_data &#x3D; std::make_shared&amp;lt">
+<meta property="og:description" content="Clickhouse Aggregation 源码分析一个大体的数据流程也是重要问题:   列内存从哪里分配 分配的内存结构，长度是如何的   AggregatingStep::transformPipeline, 构造 many data &amp; AggregatingTransform, 其中 ManyAggregatedData 用来传输数据的, 下面有具体介绍  1234567auto">
 <meta property="og:locale">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/image-20221026195408114.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/image-20221026195559320.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/26/ch-dist-agg-mem-effect/image-20221026201705647.png">
 <meta property="article:published_time" content="2022-10-26T08:37:44.000Z">
-<meta property="article:modified_time" content="2022-11-16T14:34:10.825Z">
+<meta property="article:modified_time" content="2022-11-16T15:08:42.801Z">
 <meta property="article:author" content="Jiatao Tao">
 <meta property="article:tag" content="Clickhouse">
 <meta name="twitter:card" content="summary">
@@ -207,7 +207,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-11-16 22:34:10" itemprop="dateModified" datetime="2022-11-16T22:34:10+08:00">2022-11-16</time>
+                <time title="Modified: 2022-11-16 23:08:42" itemprop="dateModified" datetime="2022-11-16T23:08:42+08:00">2022-11-16</time>
               </span>
 
           
@@ -221,7 +221,11 @@
     <div class="post-body" itemprop="articleBody">
 
       
-        <h1 id="Clickhouse-Aggregation-源码分析"><a href="#Clickhouse-Aggregation-源码分析" class="headerlink" title="Clickhouse Aggregation 源码分析"></a>Clickhouse Aggregation 源码分析</h1><p>一个大体的数据流程: </p>
+        <h1 id="Clickhouse-Aggregation-源码分析"><a href="#Clickhouse-Aggregation-源码分析" class="headerlink" title="Clickhouse Aggregation 源码分析"></a>Clickhouse Aggregation 源码分析</h1><p>一个大体的数据流程也是重要问题: </p>
+<ul>
+<li>列内存从哪里分配</li>
+<li>分配的内存结构，长度是如何的</li>
+</ul>
 <ol>
 <li>AggregatingStep::transformPipeline, 构造 many data &amp; AggregatingTransform, 其中 ManyAggregatedData 用来传输数据的, 下面有具体介绍</li>
 </ol>
@@ -248,6 +252,27 @@
 
 <p>然后调用 agg func add的实现</p>
 <figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// Add values to the aggregate functions.</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; aggregate_functions.<span class="built_in">size</span>(); ++i)</span><br><span class="line">&#123;</span><br><span class="line">    AggregateFunctionInstruction * inst = aggregate_instructions + i;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (inst-&gt;offsets)</span><br><span class="line">        inst-&gt;batch_that-&gt;<span class="built_in">addBatchArray</span>(rows, places.<span class="built_in">get</span>(), inst-&gt;state_offset, inst-&gt;batch_arguments, inst-&gt;offsets, aggregates_pool);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        inst-&gt;batch_that-&gt;<span class="built_in">addBatch</span>(rows, places.<span class="built_in">get</span>(), inst-&gt;state_offset, inst-&gt;batch_arguments, aggregates_pool);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>IAggregateFunction</code>定义的3个接口:</p>
+<ul>
+<li><code>add</code>函数将<strong>对应AggregateDataPtr指针之中数据取出，与列columns中的第row_num的数据进行对应的聚合计算</strong>。</li>
+<li><code>addBatch</code>函数：这是函数也是非常重要的，虽然它仅仅实现了一个for循环调用add函数。它通过这样的方式来减少虚函数的调用次数，并且增加了编译器内联的概率，同样，它实现了高效的向量化。</li>
+<li><code>merge</code>函数：将两个聚合结果进行合并的函数，通常用在并发执行聚合函数的过程之中，需要将对应的聚合结果进行合并。</li>
+</ul>
+<p><strong>举例 AggregateFunctionSum:</strong></p>
+<p><code>AggregateFunction</code>的函数就是通过<code>AggregateDataPtr</code>指针来获取<code>AggregateFunctionSumData</code>的地址, 来调用add实现聚合算子的</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> Data &amp; <span class="title">data</span><span class="params">(AggregateDataPtr __restrict place)</span> </span>&#123; <span class="keyword">return</span> *<span class="keyword">reinterpret_cast</span>&lt;Data *&gt;(place); &#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(AggregateDataPtr __restrict place, <span class="keyword">const</span> IColumn ** columns, <span class="keyword">size_t</span> row_num, Arena *)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> &amp; column = assert_cast&lt;<span class="keyword">const</span> ColVecType &amp;&gt;(*columns[<span class="number">0</span>]);</span><br><span class="line">    <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(is_big_int_v&lt;T&gt;)</span></span></span><br><span class="line"><span class="function">        <span class="keyword">this</span>-&gt;<span class="title">data</span><span class="params">(place)</span>.<span class="title">add</span><span class="params">(<span class="keyword">static_cast</span>&lt;TResult&gt;(column.getData()[row_num]))</span></span>;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        <span class="keyword">this</span>-&gt;<span class="built_in">data</span>(place).<span class="built_in">add</span>(column.<span class="built_in">getData</span>()[row_num]);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>AggregateFunctionSumData</code>实现了前文提到的<code>add, merge, write,read</code>四大方法，正好与接口<code>IAggregateFunction</code>一一对应上了</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">AggregateFunctionSumData</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    T sum&#123;&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(T value)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        sum += value;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">merge</span><span class="params">(<span class="keyword">const</span> AggregateFunctionSumData &amp; rhs)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        sum += rhs.sum;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">write</span><span class="params">(WriteBuffer &amp; buf)</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">writeBinary</span>(sum, buf);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">read</span><span class="params">(ReadBuffer &amp; buf)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">readBinary</span>(sum, buf);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">T <span class="title">get</span><span class="params">()</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> sum;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+
+
+
+
+
 
 
 
