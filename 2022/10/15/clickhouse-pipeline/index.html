@@ -54,7 +54,7 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="Clickhouse pipeline&#x2F;processor 源码解析 101">
 <meta property="og:url" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/index.html">
-<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:site_name" content="Tao&#39;s blog">
 <meta property="og:description" content="概览所用代码为 2022.10.15 ClickHouse master 分支: 9ccbadc359d05fad8a1f3d80d6677b55b3006c2c 概念Block：数据块，ClickHouse进行数据读、写的基本单元，每一个Block实例，不仅包含数据域，还包含了每个列的meta信息。 Chunk：数据块，保存实际数据的单元，Block中的数据域的指向的就是这个类型的实例。 Row">
 <meta property="og:locale">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTQ0NDU0OTk=,size_16,color_FFFFFF,t_70-20221015185919620.png">
@@ -64,7 +64,7 @@
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221016182708361.png">
 <meta property="article:published_time" content="2022-10-15T10:37:35.000Z">
 <meta property="article:modified_time" content="2022-10-16T13:51:44.163Z">
-<meta property="article:author" content="Jiatao Tao">
+<meta property="article:author" content="Tao">
 <meta property="article:tag" content="clickhouse">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTQ0NDU0OTk=,size_16,color_FFFFFF,t_70-20221015185919620.png">
@@ -81,7 +81,7 @@
   };
 </script>
 
-  <title>Clickhouse pipeline/processor 源码解析 101 | Jiatao Tao's blog</title>
+  <title>Clickhouse pipeline/processor 源码解析 101 | Tao's blog</title>
   
 
 
@@ -125,7 +125,7 @@
     <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="site-title">Tao's blog</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
@@ -183,12 +183,12 @@
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/head.png">
-      <meta itemprop="name" content="Jiatao Tao">
+      <meta itemprop="name" content="Tao">
       <meta itemprop="description" content="">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiatao Tao's blog">
+      <meta itemprop="name" content="Tao's blog">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -437,8 +437,8 @@
       <i class="fa fa-chevron-left"></i> CPP 并发编程实战
     </a></div>
       <div class="post-nav-item">
-    <a href="/2022/10/26/ch-dist-agg-mem-effect/" rel="next" title="Clickhouse distributed aggregation memory efficient">
-      Clickhouse distributed aggregation memory efficient <i class="fa fa-chevron-right"></i>
+    <a href="/2022/10/26/ch-dist-agg-mem-effect/" rel="next" title="Clickhouse aggregation 代码分析">
+      Clickhouse aggregation 代码分析 <i class="fa fa-chevron-right"></i>
     </a></div>
     </div>
       </footer>
@@ -505,9 +505,9 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Jiatao Tao"
+    <img class="site-author-image" itemprop="image" alt="Tao"
       src="/images/head.png">
-  <p class="site-author-name" itemprop="name">Jiatao Tao</p>
+  <p class="site-author-name" itemprop="name">Tao</p>
   <div class="site-description" itemprop="description"></div>
 </div>
 <div class="site-state-wrap motion-element">
@@ -561,7 +561,7 @@
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">Jiatao Tao</span>
+  <span class="author" itemprop="copyrightHolder">Tao</span>
 </div>
   <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
   </div>

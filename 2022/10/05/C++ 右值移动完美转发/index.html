@@ -54,14 +54,14 @@
 <meta property="og:type" content="article">
 <meta property="og:title" content="C++ 右值&#x2F;移动&#x2F;完美转发">
 <meta property="og:url" content="https://aaaaaaron.github.io/2022/10/05/C++%20%E5%8F%B3%E5%80%BC%E7%A7%BB%E5%8A%A8%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/index.html">
-<meta property="og:site_name" content="Jiatao Tao&#39;s blog">
+<meta property="og:site_name" content="Tao&#39;s blog">
 <meta property="og:description" content="C++ 右值&#x2F;移动&#x2F;完美转发总结: std::move并不移动任何东西; 完美转发也并不完美; 移动操作并不永远比复制操作更廉价, 而且它也并不总是被调用，即使在当移动操作可用的时候; 构造“type&amp;&amp;”也并非总是代表一个右值引用。 要牢记形参永远是左值，即使它的类型是一个右值引用: void f(Widget&amp;&amp; w); 引用理解左右值之前, 最重要是理解引用,">
 <meta property="og:locale">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/05/C++%20%E5%8F%B3%E5%80%BC%E7%A7%BB%E5%8A%A8%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/18b692072537d4ce179d3857a8a0133c.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/05/C++%20%E5%8F%B3%E5%80%BC%E7%A7%BB%E5%8A%A8%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/036cc6865a9623a48918b504e408945a-20221004235155403.png">
 <meta property="article:published_time" content="2022-10-05T15:44:11.000Z">
 <meta property="article:modified_time" content="2022-10-15T11:33:03.998Z">
-<meta property="article:author" content="Jiatao Tao">
+<meta property="article:author" content="Tao">
 <meta property="article:tag" content="cpp">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://aaaaaaron.github.io/2022/10/05/C++%20%E5%8F%B3%E5%80%BC%E7%A7%BB%E5%8A%A8%E5%AE%8C%E7%BE%8E%E8%BD%AC%E5%8F%91/18b692072537d4ce179d3857a8a0133c.png">
@@ -78,7 +78,7 @@
   };
 </script>
 
-  <title>C++ 右值/移动/完美转发 | Jiatao Tao's blog</title>
+  <title>C++ 右值/移动/完美转发 | Tao's blog</title>
   
 
 
@@ -122,7 +122,7 @@
     <div>
       <a href="/" class="brand" rel="start">
         <span class="logo-line-before"><i></i></span>
-        <span class="site-title">Jiatao Tao's blog</span>
+        <span class="site-title">Tao's blog</span>
         <span class="logo-line-after"><i></i></span>
       </a>
     </div>
@@ -180,12 +180,12 @@
 
     <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
       <meta itemprop="image" content="/images/head.png">
-      <meta itemprop="name" content="Jiatao Tao">
+      <meta itemprop="name" content="Tao">
       <meta itemprop="description" content="">
     </span>
 
     <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
-      <meta itemprop="name" content="Jiatao Tao's blog">
+      <meta itemprop="name" content="Tao's blog">
     </span>
       <header class="post-header">
         <h2 class="post-title" itemprop="name headline">
@@ -490,9 +490,9 @@
 
       <div class="site-overview-wrap sidebar-panel">
         <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
-    <img class="site-author-image" itemprop="image" alt="Jiatao Tao"
+    <img class="site-author-image" itemprop="image" alt="Tao"
       src="/images/head.png">
-  <p class="site-author-name" itemprop="name">Jiatao Tao</p>
+  <p class="site-author-name" itemprop="name">Tao</p>
   <div class="site-description" itemprop="description"></div>
 </div>
 <div class="site-state-wrap motion-element">
@@ -546,7 +546,7 @@
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>
-  <span class="author" itemprop="copyrightHolder">Jiatao Tao</span>
+  <span class="author" itemprop="copyrightHolder">Tao</span>
 </div>
   <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
   </div>
