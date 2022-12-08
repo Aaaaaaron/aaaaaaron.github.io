@@ -4,7 +4,7 @@ date: 2018-07-19 22:32:24
 ---
 
 # Mail
-taojiatao@gmail.com
+245915794@qq.com
 
 tao@apache.org
 
@@ -15,5 +15,3 @@ tao@apache.org
 Shanghai/ByteDance
 
 ***
-
-![](https://gitee.com/Meldoy/image/raw/master/life/head.jpg)
