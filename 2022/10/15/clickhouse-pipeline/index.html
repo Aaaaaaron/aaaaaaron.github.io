@@ -59,11 +59,15 @@
 <meta property="og:locale">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTQ0NDU0OTk=,size_16,color_FFFFFF,t_70-20221015185919620.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221015190825669.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221220154520344.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221220154601800.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221220154827374.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221220154919838.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221015195335512.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221015195701706.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/10/15/clickhouse-pipeline/image-20221016182708361.png">
 <meta property="article:published_time" content="2022-10-15T10:37:35.000Z">
-<meta property="article:modified_time" content="2022-10-16T13:51:44.163Z">
+<meta property="article:modified_time" content="2022-12-20T07:49:25.766Z">
 <meta property="article:author" content="Tao">
 <meta property="article:tag" content="clickhouse">
 <meta name="twitter:card" content="summary">
@@ -209,7 +213,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2022-10-16 21:51:44" itemprop="dateModified" datetime="2022-10-16T21:51:44+08:00">2022-10-16</time>
+                <time title="Modified: 2022-12-20 15:49:25" itemprop="dateModified" datetime="2022-12-20T15:49:25+08:00">2022-12-20</time>
               </span>
 
           
@@ -235,6 +239,16 @@
 
 <p><img src="/2022/10/15/clickhouse-pipeline/watermark,type_ZmFuZ3poZW5naGVpdGk,shadow_10,text_aHR0cHM6Ly9ibG9nLmNzZG4ubmV0L3UwMTQ0NDU0OTk=,size_16,color_FFFFFF,t_70-20221015185919620.png" alt="在这里插入图片描述"></p>
 <p><img src="/2022/10/15/clickhouse-pipeline/image-20221015190825669.png" alt="image-20221015190825669"></p>
+<img src="/2022/10/15/clickhouse-pipeline/image-20221220154520344.png" alt="image-20221220154520344" style="zoom:50%;">
+
+
+
+<img src="/2022/10/15/clickhouse-pipeline/image-20221220154601800.png" alt="image-20221220154601800" style="zoom:50%;">
+
+<img src="/2022/10/15/clickhouse-pipeline/image-20221220154827374.png" alt="image-20221220154827374" style="zoom:50%;">
+
+<img src="/2022/10/15/clickhouse-pipeline/image-20221220154919838.png" alt="image-20221220154919838" style="zoom:50%;">
+
 <h1 id="具体流程"><a href="#具体流程" class="headerlink" title="具体流程"></a>具体流程</h1><p>由于之前一直做优化器相关的 SQL 层, 各个引擎都是大同小异, 所以这里对 SQL 层不会特别深入, CH 的 SQL 层目前也不太完善, 没有太多可介绍的</p>
 <h2 id="Interpreter"><a href="#Interpreter" class="headerlink" title="Interpreter"></a>Interpreter</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">interpreter = InterpreterFactory::<span class="built_in">get</span>(ast, context, <span class="built_in">SelectQueryOptions</span>(stage).<span class="built_in">setInternal</span>(internal));</span><br></pre></td></tr></table></figure>
 
@@ -514,7 +528,7 @@
   <nav class="site-state">
       <div class="site-state-item site-state-posts">
           <a href="/archives">
-          <span class="site-state-item-count">36</span>
+          <span class="site-state-item-count">37</span>
           <span class="site-state-item-name">posts</span>
         </a>
       </div>
@@ -557,7 +571,7 @@
 <div class="copyright">
   
   &copy; 2018 – 
-  <span itemprop="copyrightYear">2022</span>
+  <span itemprop="copyrightYear">2023</span>
   <span class="with-love">
     <i class="fa fa-heart"></i>
   </span>

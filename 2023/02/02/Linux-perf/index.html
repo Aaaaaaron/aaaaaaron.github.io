@@ -1,0 +1,423 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="google-site-verification" content="oi9cACXaYdEyQVeGEUG_WUOEeFyJe9ey2Sj7Dcribng">
+  <meta name="baidu-site-verification" content="code-W1bppEiaZ5">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Noto Serif SC:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="常用命令12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758$ perf usage: perf [--version] [--help] [OPTIONS] COMMAND [ARGS] The most commonly used p">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Linux 性能调优">
+<meta property="og:url" content="https://aaaaaaron.github.io/2023/02/02/Linux-perf/index.html">
+<meta property="og:site_name" content="Tao&#39;s blog">
+<meta property="og:description" content="常用命令12345678910111213141516171819202122232425262728293031323334353637383940414243444546474849505152535455565758$ perf usage: perf [--version] [--help] [OPTIONS] COMMAND [ARGS] The most commonly used p">
+<meta property="og:locale">
+<meta property="article:published_time" content="2023-02-02T11:08:04.000Z">
+<meta property="article:modified_time" content="2023-02-02T11:29:44.951Z">
+<meta property="article:author" content="Tao">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2023/02/02/Linux-perf/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>Linux 性能调优 | Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2023/02/02/Linux-perf/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.png">
+      <meta itemprop="name" content="Tao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          Linux 性能调优
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-02-02 19:08:04 / Modified: 19:29:44" itemprop="dateCreated datePublished" datetime="2023-02-02T19:08:04+08:00">2023-02-02</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="常用命令"><a href="#常用命令" class="headerlink" title="常用命令"></a>常用命令</h1><figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line">$ perf</span><br><span class="line"></span><br><span class="line"> usage: perf [--version] [--help] [OPTIONS] COMMAND [ARGS]</span><br><span class="line"></span><br><span class="line"> The most commonly used perf commands are:</span><br><span class="line">   annotate        Read perf.data (created by perf record) and display annotated code</span><br><span class="line">   archive         Create archive with object files with build-ids found in perf.data file</span><br><span class="line">   bench           General framework for benchmark suites</span><br><span class="line">   buildid-cache   Manage build-id cache.</span><br><span class="line">   buildid-list    List the buildids in a perf.data file</span><br><span class="line">   c2c             Shared Data C2C/HITM Analyzer.</span><br><span class="line">   config          Get and set variables in a configuration file.</span><br><span class="line">   data            Data file related processing</span><br><span class="line">   diff            Read perf.data files and display the differential profile</span><br><span class="line">   evlist          List the event names in a perf.data file</span><br><span class="line">   ftrace          simple wrapper for kernel&#x27;s ftrace functionality</span><br><span class="line">   inject          Filter to augment the events stream with additional information</span><br><span class="line">   kallsyms        Searches running kernel for symbols</span><br><span class="line">   kmem            Tool to trace/measure kernel memory properties</span><br><span class="line">   kvm             Tool to trace/measure kvm guest os</span><br><span class="line">   list            List all symbolic event types</span><br><span class="line">   lock            Analyze lock events</span><br><span class="line">   mem             Profile memory accesses</span><br><span class="line">   record          Run a command and record its profile into perf.data</span><br><span class="line">   report          Read perf.data (created by perf record) and display the profile</span><br><span class="line">   sched           Tool to trace/measure scheduler properties (latencies)</span><br><span class="line">   script          Read perf.data (created by perf record) and display trace output</span><br><span class="line">   stat            Run a command and gather performance counter statistics</span><br><span class="line">   test            Runs sanity tests.</span><br><span class="line">   timechart       Tool to visualize total system behavior during a workload</span><br><span class="line">   top             System profiling tool.</span><br><span class="line">   version         display the version of perf binary</span><br><span class="line">   probe           Define new dynamic tracepoints</span><br><span class="line">   trace           strace inspired tool</span><br><span class="line">````</span><br><span class="line"></span><br><span class="line">`perf list`: 产看 perf的 events</span><br><span class="line"></span><br><span class="line">`perf top`</span><br><span class="line"></span><br><span class="line">`perf record -a -g -p [pid]`/`perf report -g`</span><br><span class="line"></span><br><span class="line">`perf stat -p [pid]``</span><br><span class="line">开始了, 跑程序, 然后 ctrl+c</span><br><span class="line">```bash</span><br><span class="line">         59,665.07 msec task-clock                #   25.719 CPUs utilized</span><br><span class="line">            29,686      context-switches          #    0.498 K/sec</span><br><span class="line">             4,043      cpu-migrations            #    0.068 K/sec</span><br><span class="line">           904,315      page-faults               #    0.015 M/sec</span><br><span class="line">   182,466,072,426      cycles                    #    3.058 GHz                      (83.06%)</span><br><span class="line">    48,393,560,647      stalled-cycles-frontend   #   26.52% frontend cycles idle     (83.27%)</span><br><span class="line">    41,766,561,738      stalled-cycles-backend    #   22.89% backend cycles idle      (83.35%)</span><br><span class="line">   127,710,645,250      instructions              #    0.70  insn per cycle</span><br><span class="line">                                                  #    0.38  stalled cycles per insn  (83.58%)</span><br><span class="line">    24,547,226,083      branches                  #  411.417 M/sec                    (83.73%)</span><br><span class="line">       693,011,495      branch-misses             #    2.82% of all branches          (83.00%)</span><br><span class="line"></span><br><span class="line">       2.319854477 seconds time elapsed</span><br></pre></td></tr></table></figure>
+
+<p><code>perf stat -e L1-dcache-load-misses -e L1-dcache-load -p</code></p>
+<p><code>perf stat -e L1-icache-load-misses -e L1-icache-load -p [pid]</code></p>
+<figure class="highlight bash"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Performance counter stats <span class="keyword">for</span> process id <span class="string">&#x27;xxx&#x27;</span>:</span><br><span class="line"></span><br><span class="line">       22,036,023      L1-icache-load-misses     <span class="comment">#    1.03% of all L1-icache hits</span></span><br><span class="line">    2,132,515,373      L1-icache-load</span><br><span class="line"></span><br><span class="line">      2.590468195 seconds time elapsed</span><br></pre></td></tr></table></figure>
+
+<pre><code class="bash">#perf record -e cpu-clock -g -p $pid -- sleep $sec
+perf record -F 99 -e cpu-clock -g -p $pid --call-graph dwarf -- sleep $sec
+perf script &gt; out.perf
+/code/FlameGraph/stackcollapse-perf.pl out.perf &gt; out.folded
+/code/FlameGraph/flamegraph.pl out.folded &gt; $file_name.svg
+</code></pre>
+<p><code>numactl --cpubind=0</code> 绑定核数</p>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2022/10/31/grace-hash-join/" rel="prev" title="Grace Hash Join & Clickhouse merge join">
+      <i class="fa fa-chevron-left"></i> Grace Hash Join & Clickhouse merge join
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#%E5%B8%B8%E7%94%A8%E5%91%BD%E4%BB%A4"><span class="nav-number">1.</span> <span class="nav-text">常用命令</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Tao"
+      src="/images/head.png">
+  <p class="site-author-name" itemprop="name">Tao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">37</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">25</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tao</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
