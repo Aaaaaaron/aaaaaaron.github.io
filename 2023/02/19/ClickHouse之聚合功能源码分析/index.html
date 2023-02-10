@@ -1,0 +1,648 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="google-site-verification" content="oi9cACXaYdEyQVeGEUG_WUOEeFyJe9ey2Sj7Dcribng">
+  <meta name="baidu-site-verification" content="code-W1bppEiaZ5">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Noto Serif SC:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="原文转发自  知乎叶绿素: https:&#x2F;&#x2F;zhuanlan.zhihu.com&#x2F;p&#x2F;591575835 ClickHouse源码笔记5:聚合函数的源码再梳理: https:&#x2F;&#x2F;www.cnblogs.com&#x2F;happenlee&#x2F;p&#x2F;14681401.html  从InterpreterSelectQuery::buildQueryPlan开始在ClickHouse中，一条SQL语句的处理流程是：">
+<meta property="og:type" content="article">
+<meta property="og:title" content="ClickHouse之聚合功能源码分析">
+<meta property="og:url" content="https://aaaaaaron.github.io/2023/02/19/ClickHouse%E4%B9%8B%E8%81%9A%E5%90%88%E5%8A%9F%E8%83%BD%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/index.html">
+<meta property="og:site_name" content="Tao&#39;s blog">
+<meta property="og:description" content="原文转发自  知乎叶绿素: https:&#x2F;&#x2F;zhuanlan.zhihu.com&#x2F;p&#x2F;591575835 ClickHouse源码笔记5:聚合函数的源码再梳理: https:&#x2F;&#x2F;www.cnblogs.com&#x2F;happenlee&#x2F;p&#x2F;14681401.html  从InterpreterSelectQuery::buildQueryPlan开始在ClickHouse中，一条SQL语句的处理流程是：">
+<meta property="og:locale">
+<meta property="og:image" content="https://pic3.zhimg.com/80/v2-da94e3ebfd5b720c1de9a43fba81e1da_1440w.webp">
+<meta property="og:image" content="https://aaaaaaron.github.io/2023/02/19/ClickHouse%E4%B9%8B%E8%81%9A%E5%90%88%E5%8A%9F%E8%83%BD%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/image-20230208170547432.png">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/8552201-bdde87fda4ea15e3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="og:image" content="https://upload-images.jianshu.io/upload_images/8552201-b9358551ed05cfed.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240">
+<meta property="article:published_time" content="2023-02-19T10:37:35.000Z">
+<meta property="article:modified_time" content="2023-02-10T09:10:46.259Z">
+<meta property="article:author" content="Tao">
+<meta property="article:tag" content="clickhouse">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://pic3.zhimg.com/80/v2-da94e3ebfd5b720c1de9a43fba81e1da_1440w.webp">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2023/02/19/ClickHouse%E4%B9%8B%E8%81%9A%E5%90%88%E5%8A%9F%E8%83%BD%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>ClickHouse之聚合功能源码分析 | Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2023/02/19/ClickHouse%E4%B9%8B%E8%81%9A%E5%90%88%E5%8A%9F%E8%83%BD%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.png">
+      <meta itemprop="name" content="Tao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          ClickHouse之聚合功能源码分析
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+
+              <time title="Created: 2023-02-19 18:37:35" itemprop="dateCreated datePublished" datetime="2023-02-19T18:37:35+08:00">2023-02-19</time>
+            </span>
+              <span class="post-meta-item">
+                <span class="post-meta-item-icon">
+                  <i class="fa fa-calendar-check-o"></i>
+                </span>
+                <span class="post-meta-item-text">Edited on</span>
+                <time title="Modified: 2023-02-10 17:10:46" itemprop="dateModified" datetime="2023-02-10T17:10:46+08:00">2023-02-10</time>
+              </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>原文转发自</p>
+<ul>
+<li>知乎叶绿素: <a target="_blank" rel="noopener" href="https://zhuanlan.zhihu.com/p/591575835">https://zhuanlan.zhihu.com/p/591575835</a></li>
+<li>ClickHouse源码笔记5:聚合函数的源码再梳理: <a target="_blank" rel="noopener" href="https://www.cnblogs.com/happenlee/p/14681401.html">https://www.cnblogs.com/happenlee/p/14681401.html</a></li>
+</ul>
+<h2 id="从InterpreterSelectQuery-buildQueryPlan开始"><a href="#从InterpreterSelectQuery-buildQueryPlan开始" class="headerlink" title="从InterpreterSelectQuery::buildQueryPlan开始"></a>从InterpreterSelectQuery::buildQueryPlan开始</h2><p>在ClickHouse中，一条SQL语句的处理流程是：</p>
+<p>sql -&gt; ast -&gt; query_plan -&gt; pipeline -&gt; execute</p>
+<p>本文不关注sql解析到ast的过程（我也没看过…看其他文章，clickhouse手写了个递归下降的语法分析器），从构造query_plan开始分析。query_plan由具有执行先后顺序的query_plan_step组成，聚合操作本身作为一个query_plan_step，排在where操作之后：</p>
+<p><img src="https://pic3.zhimg.com/80/v2-da94e3ebfd5b720c1de9a43fba81e1da_1440w.webp" alt="img"></p>
+<h2 id="InterpreterSelectQuery-executeAggregation"><a href="#InterpreterSelectQuery-executeAggregation" class="headerlink" title="InterpreterSelectQuery::executeAggregation"></a>InterpreterSelectQuery::executeAggregation</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">InterpreterSelectQuery::executeAggregation</span><span class="params">(QueryPlan &amp; query_plan, <span class="keyword">const</span> ActionsDAGPtr &amp; expression, <span class="keyword">bool</span> overflow_row, <span class="keyword">bool</span> <span class="keyword">final</span>, InputOrderInfoPtr group_by_info)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    AggregateDescriptions aggregates = query_analyzer-&gt;<span class="built_in">aggregates</span>();</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 我们先不关心GROUPING SETS modifier，这个配置项忽略</span></span><br><span class="line">    <span class="keyword">auto</span> grouping_sets_params = <span class="built_in">getAggregatorGroupingSetsParams</span>(*query_analyzer, keys);</span><br><span class="line"></span><br><span class="line">    SortDescription group_by_sort_description;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 先不关心GROUP BY Optimization Depending on Table Sorting Key这个优化，即默认group_by_info == nullptr;</span></span><br><span class="line">    <span class="keyword">if</span> (group_by_info &amp;&amp; settings.optimize_aggregation_in_order &amp;&amp; !query_analyzer-&gt;<span class="built_in">useGroupingSetKey</span>())</span><br><span class="line">        group_by_sort_description = <span class="built_in">getSortDescriptionFromGroupBy</span>(<span class="built_in">getSelectQuery</span>());</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        group_by_info = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> merge_threads = max_streams;</span><br><span class="line">    <span class="comment">// aggregation_memory_efficient_merge_threads这个配置项和分布式查询相关，用来降低内存使用的，先不关心。</span></span><br><span class="line">    <span class="keyword">auto</span> temporary_data_merge_threads = settings.aggregation_memory_efficient_merge_threads</span><br><span class="line">        ? <span class="keyword">static_cast</span>&lt;<span class="keyword">size_t</span>&gt;(settings.aggregation_memory_efficient_merge_threads)</span><br><span class="line">        : <span class="keyword">static_cast</span>&lt;<span class="keyword">size_t</span>&gt;(settings.max_threads);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">bool</span> storage_has_evenly_distributed_read = storage &amp;&amp; storage-&gt;<span class="built_in">hasEvenlyDistributedRead</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 分布式查询相关，先不关心</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">bool</span> should_produce_results_in_order_of_bucket_number</span><br><span class="line">        = options.to_stage == QueryProcessingStage::WithMergeableState &amp;&amp; settings.distributed_aggregation_memory_efficient;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">auto</span> aggregating_step = std::make_unique&lt;AggregatingStep&gt;(</span><br><span class="line">        query_plan.<span class="built_in">getCurrentDataStream</span>(),</span><br><span class="line">        std::<span class="built_in">move</span>(aggregator_params),</span><br><span class="line">        std::<span class="built_in">move</span>(grouping_sets_params),</span><br><span class="line">        <span class="keyword">final</span>,</span><br><span class="line">        settings.max_block_size,</span><br><span class="line">        settings.aggregation_in_order_max_block_bytes,</span><br><span class="line">        merge_threads,</span><br><span class="line">        temporary_data_merge_threads,</span><br><span class="line">        storage_has_evenly_distributed_read,</span><br><span class="line">        settings.group_by_use_nulls,</span><br><span class="line">        std::<span class="built_in">move</span>(group_by_info),</span><br><span class="line">        std::<span class="built_in">move</span>(group_by_sort_description),</span><br><span class="line">        should_produce_results_in_order_of_bucket_number);</span><br><span class="line">    query_plan.<span class="built_in">addStep</span>(std::<span class="built_in">move</span>(aggregating_step));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>executeAggregation函数的主要流程是，初始化各种配置项，构造AggregatingStep，并将其添加到query_plan中。</p>
+<h2 id="AggregatingStep-transformPipeline"><a href="#AggregatingStep-transformPipeline" class="headerlink" title="AggregatingStep::transformPipeline"></a>AggregatingStep::transformPipeline</h2><p>在query_plan构造pipeline时，实际上是调用每个step的transformPipeline函数完成：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">AggregatingStep::transformPipeline</span><span class="params">(QueryPipelineBuilder &amp; pipeline, <span class="keyword">const</span> BuildQueryPipelineSettings &amp; settings)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">bool</span> allow_to_use_two_level_group_by = pipeline.<span class="built_in">getNumStreams</span>() &gt; <span class="number">1</span> || params.max_bytes_before_external_group_by != <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// optimize_aggregation_in_order</span></span><br><span class="line">    <span class="keyword">if</span> (group_by_info)</span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!allow_to_use_two_level_group_by)</span><br><span class="line">    &#123;</span><br><span class="line">        params.group_by_two_level_threshold = <span class="number">0</span>;</span><br><span class="line">        params.group_by_two_level_threshold_bytes = <span class="number">0</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Two-level aggregation is useful in two cases:</span></span><br><span class="line"><span class="comment">      * 1. Parallel aggregation is done, and the results should be merged in parallel.</span></span><br><span class="line"><span class="comment">      * 2. An aggregation is done with store of temporary data on the disk, and they need to be merged in a memory efficient way.</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> src_header = pipeline.<span class="built_in">getHeader</span>();</span><br><span class="line">    <span class="keyword">auto</span> transform_params = std::make_shared&lt;AggregatingTransformParams&gt;(src_header, std::<span class="built_in">move</span>(params), <span class="keyword">final</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 默认为空，不关心GROUPING SETS modifier</span></span><br><span class="line">    <span class="keyword">if</span> (!grouping_sets_params.<span class="built_in">empty</span>())</span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 不关心GROUP BY Optimization Depending on Table Sorting Key这个优化，即默认group_by_info == nullptr;</span></span><br><span class="line">    <span class="keyword">if</span> (group_by_info)</span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// If there are several sources, then we perform parallel aggregation</span></span><br><span class="line">    <span class="keyword">if</span> (pipeline.<span class="built_in">getNumStreams</span>() &gt; <span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/// Add resize transform to uniformly distribute data between aggregating streams.</span></span><br><span class="line">        <span class="keyword">if</span> (!storage_has_evenly_distributed_read)</span><br><span class="line">            pipeline.<span class="built_in">resize</span>(pipeline.<span class="built_in">getNumStreams</span>(), <span class="literal">true</span>, <span class="literal">true</span>);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">auto</span> many_data = std::make_shared&lt;ManyAggregatedData&gt;(pipeline.<span class="built_in">getNumStreams</span>());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">size_t</span> counter = <span class="number">0</span>;</span><br><span class="line">        pipeline.<span class="built_in">addSimpleTransform</span>([&amp;](<span class="keyword">const</span> Block &amp; header)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">return</span> std::make_shared&lt;AggregatingTransform&gt;(header, transform_params, many_data, counter++, merge_threads, temporary_data_merge_threads);</span><br><span class="line">        &#125;);</span><br><span class="line"></span><br><span class="line">        <span class="comment">/// We add the explicit resize here, but not in case of aggregating in order, since AIO don&#x27;t use two-level hash tables and thus returns only buckets with bucket_number = -1.</span></span><br><span class="line">        pipeline.<span class="built_in">resize</span>(should_produce_results_in_order_of_bucket_number ? <span class="number">1</span> : params.max_threads, <span class="literal">true</span> <span class="comment">/* force */</span>);</span><br><span class="line"></span><br><span class="line">        aggregating = collector.<span class="built_in">detachProcessors</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        pipeline.<span class="built_in">addSimpleTransform</span>([&amp;](<span class="keyword">const</span> Block &amp; header) &#123; <span class="keyword">return</span> std::make_shared&lt;AggregatingTransform&gt;(header, transform_params); &#125;);</span><br><span class="line"></span><br><span class="line">        pipeline.<span class="built_in">resize</span>(should_produce_results_in_order_of_bucket_number ? <span class="number">1</span> : params.max_threads, <span class="literal">false</span> <span class="comment">/* force */</span>);</span><br><span class="line"></span><br><span class="line">        aggregating = collector.<span class="built_in">detachProcessors</span>(<span class="number">0</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ClickHouse中对于每个上游的数据流，会构造一个AggregatingTransform的节点进行预聚合，当所有AggregatingTransform节点预聚合完毕后，会通过ExpandPipeline扩展新的节点，这些新的节点负责将预聚合的数据进行合并（Merge）。</p>
+<p>也就是说，ClickHouse中的聚合操作整体上分为两个阶段：<strong>预聚合</strong>阶段和<strong>合并</strong>阶段，预聚合阶段是可以并行进行的，（合并阶段在使用两层哈希的情况下也是可以并行的，详见后续）。</p>
+<p>注意到，pipeline最后resize了一下，手动调整了output_port的数量，开始我并不明白这里resize的意义是什么，后来搜了一下issue，找到了<a href="https://link.zhihu.com/?target=https://github.com/ClickHouse/ClickHouse/issues/35096">这个</a> ，里面介绍了在某些情况下会产生性能问题，这里不再展开，感兴趣的朋友可以跳转过去看看。</p>
+<h2 id="AggregatingTransform"><a href="#AggregatingTransform" class="headerlink" title="AggregatingTransform"></a>AggregatingTransform</h2><p>AggregatingTransform的工作主要分为两个阶段：</p>
+<ol>
+<li>预聚合阶段，通过调用aggregator.executeOnBlock(…)函数执行预聚合。</li>
+<li>合并阶段，当预聚合阶段结束（上游通道关闭，或者聚合行数到达了设定的上限），通过扩展pipeline替换上游节点，然后等待合并数据。</li>
+</ol>
+<p>注意：</p>
+<ul>
+<li>aggregator这个对象是真正封装了具体的聚合函数、参数、预聚合操作、合并操作的对象，并提供了将聚合结果转换为Blocks的接口，我们暂且可以将aggregator当做一个<strong>黑盒子</strong>，其内部实现涉及到很多优化细节，包括内存池、针对特定类型的哈希表、单层哈希转两层哈希表等等。</li>
+<li>虽然AggregatingTransform有合并阶段，但真正的合并操作不在这个节点上执行，而是由其扩展的节点执行，这个阶段它只负责传递数据。</li>
+<li>只有最后一个完成第一阶段的AggregatingTransform才会扩展pipeline，见源码：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">AggregatingTransform::work</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (is_consume_finished)</span><br><span class="line">        <span class="built_in">initGenerate</span>();</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">consume</span>(std::<span class="built_in">move</span>(current_chunk));</span><br><span class="line">        read_current_chunk = <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>many_data在所有的AggregatingTransform节点中共享。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">AggregatingTransform::initGenerate</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (many_data-&gt;num_finished.<span class="built_in">fetch_add</span>(<span class="number">1</span>) + <span class="number">1</span> &lt; many_data-&gt;variants.<span class="built_in">size</span>())</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="AggregatingTransform之扩展pipeline"><a href="#AggregatingTransform之扩展pipeline" class="headerlink" title="AggregatingTransform之扩展pipeline"></a>AggregatingTransform之扩展pipeline</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">AggregatingTransform::initGenerate</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (many_data-&gt;num_finished.<span class="built_in">fetch_add</span>(<span class="number">1</span>) + <span class="number">1</span> &lt; many_data-&gt;variants.<span class="built_in">size</span>())</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!params-&gt;aggregator.<span class="built_in">hasTemporaryData</span>())</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">auto</span> prepared_data = params-&gt;aggregator.<span class="built_in">prepareVariantsToMerge</span>(many_data-&gt;variants);</span><br><span class="line">        <span class="keyword">auto</span> prepared_data_ptr = std::make_shared&lt;ManyAggregatedDataVariants&gt;(std::<span class="built_in">move</span>(prepared_data));</span><br><span class="line">        processors.<span class="built_in">emplace_back</span>(std::make_shared&lt;ConvertingAggregatedToChunksTransform&gt;(params, std::<span class="built_in">move</span>(prepared_data_ptr), max_threads));</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">auto</span> &amp; tmp_data = params-&gt;aggregator.<span class="built_in">getTemporaryData</span>();</span><br><span class="line"></span><br><span class="line">        Pipe pipe;</span><br><span class="line">        &#123;</span><br><span class="line">            Pipes pipes;</span><br><span class="line"></span><br><span class="line">            <span class="keyword">for</span> (<span class="keyword">auto</span> * tmp_stream : tmp_data.<span class="built_in">getStreams</span>())</span><br><span class="line">                pipes.<span class="built_in">emplace_back</span>(<span class="built_in">Pipe</span>(std::make_unique&lt;SourceFromNativeStream&gt;(tmp_stream)));</span><br><span class="line"></span><br><span class="line">            pipe = Pipe::<span class="built_in">unitePipes</span>(std::<span class="built_in">move</span>(pipes));</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">        <span class="built_in">addMergingAggregatedMemoryEfficientTransform</span>(pipe, params, temporary_data_merge_threads);</span><br><span class="line"></span><br><span class="line">        processors = Pipe::<span class="built_in">detachProcessors</span>(std::<span class="built_in">move</span>(pipe));</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">addMergingAggregatedMemoryEfficientTransform</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    Pipe &amp; pipe,</span></span></span><br><span class="line"><span class="params"><span class="function">    AggregatingTransformParamsPtr params,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">size_t</span> num_merging_processors)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    pipe.<span class="built_in">addTransform</span>(std::make_shared&lt;GroupingAggregatedTransform&gt;(pipe.<span class="built_in">getHeader</span>(), pipe.<span class="built_in">numOutputPorts</span>(), params));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (num_merging_processors &lt;= <span class="number">1</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/// --&gt; GroupingAggregated --&gt; MergingAggregatedBucket --&gt;</span></span><br><span class="line">        pipe.<span class="built_in">addTransform</span>(std::make_shared&lt;MergingAggregatedBucketTransform&gt;(params));</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// --&gt;                                        --&gt; MergingAggregatedBucket --&gt;</span></span><br><span class="line">    <span class="comment">/// --&gt; GroupingAggregated --&gt; ResizeProcessor --&gt; MergingAggregatedBucket --&gt; SortingAggregated --&gt;</span></span><br><span class="line">    <span class="comment">/// --&gt;                                        --&gt; MergingAggregatedBucket --&gt;</span></span><br><span class="line"></span><br><span class="line">    pipe.<span class="built_in">resize</span>(num_merging_processors);</span><br><span class="line"></span><br><span class="line">    pipe.<span class="built_in">addSimpleTransform</span>([params](<span class="keyword">const</span> Block &amp;)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">return</span> std::make_shared&lt;MergingAggregatedBucketTransform&gt;(params);</span><br><span class="line">    &#125;);</span><br><span class="line"></span><br><span class="line">    pipe.<span class="built_in">addTransform</span>(std::make_shared&lt;SortingAggregatedTransform&gt;(num_merging_processors, params));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>扩展pipeline的具体逻辑在initGenerate()函数中，这里根据aggregator在预聚合过程中是否因为<strong>限制内存使用而将数据写到磁盘文件</strong>，扩展的节点是不同的，</p>
+<ul>
+<li>如果没有写到磁盘文件，扩展ConvertingAggregatedToChunksTransform节点</li>
+<li>否则扩展：</li>
+</ul>
+<ol>
+<li>SourceFromNativeStream节点（每个磁盘文件扩展一个SourceFromNativeStream节点）+</li>
+<li>GroupingAggregatedTransform（一个）+</li>
+<li>MergingAggregatedBucketTransform（一个或多个，如果一个则结束）+</li>
+<li>SortingAggregatedTransform</li>
+</ol>
+<p>在进行下面的分析之前，这里需要介绍一下aggregator的两层哈希表机制：</p>
+<p>aggregator的预聚合操作，其内部数据是通过哈希表存储的，哈希表的键是“grouping key” value（举例：如果sql语句中group by b，那么哈希表的键是表中b的所有不同的值）。这个哈希表是动态的，随着键数量的增加，ClickHouse会将其切换到两级哈希表以提升性能；另外对于不同的键类型，ClickHouse提供了很多特化版本，以针对特定类型进行优化。</p>
+<p>对于单层哈希表，aggregator转化的block是single_level block，对于双层哈希表，aggregator转化的block是two_level block，two_level block会有一个block_num，<strong>可以认为block_num就是双层哈希表的第一层的键</strong>。使用two_level block有两个好处：</p>
+<ol>
+<li>可以将执行预聚合的多个节点的相同block_num的block进行组合，那么<strong>不同的组合可以并行的执行合并操作</strong></li>
+<li>如果限制产生two_level block的节点必须按照block_num递增的顺序，那么可以减少内存使用量，因为<strong>需要执行合并操作的数据一定在同一个组合内，当看到一个新的block_num时，意味着所有之前的合并操作已经完成。</strong></li>
+</ol>
+<p>实际上上文将数据写到磁盘文件的分支，就是做了这样的优化。在GroupingAggregatedTransform节点中，会将single_level block转化为two_level block，并按照block_num进行组合，然后交给MergingAggregatedBucketTransform进行合并操作，因为MergingAggregatedBucketTransform可以有多个，因此<strong>合并阶段也可以是并行的</strong>。最后交给SortingAggregatedTransform节点根据block_num进行排序。（老实说不清楚为啥要排序，哈希结果乱序有啥问题呢？）</p>
+<p>对于数据没写到磁盘文件的分支，可以看下ConvertingAggregatedToChunksTransform节点的注释：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">/// Generates chunks with aggregated data.</span><br><span class="line">/// In single level case, aggregates data itself.</span><br><span class="line">/// In two-level case, creates `ConvertingAggregatedToChunksSource` workers:</span><br><span class="line">///</span><br><span class="line">/// ConvertingAggregatedToChunksSource -&gt;</span><br><span class="line">/// ConvertingAggregatedToChunksSource -&gt; ConvertingAggregatedToChunksTransform -&gt; AggregatingTransform</span><br><span class="line">/// ConvertingAggregatedToChunksSource -&gt;</span><br><span class="line">///</span><br><span class="line">/// Result chunks guaranteed to be sorted by bucket number.</span><br><span class="line">class ConvertingAggregatedToChunksTransform : public IProcessor</span><br></pre></td></tr></table></figure>
+
+<p>如果预聚合数据是two_level block，则扩展节点进行并行合并，然后在本节点进行sort；否则直接在本节点合并，这个分支就不详细展开了，如果熟悉了ClickHouse的套路，其实看懂就很简单了。</p>
+<p>现在回来说说AggregatingTransform是如何从预聚合阶段切换到合并阶段的，这部分内容也是典型的运行时扩展Pipeline的案例：需要根据计算时的数据动态的判断之后需要执行的节点类型和结构。老实说之前在看Pipeline执行引擎的时候并不理解为什么需要这样的功能，ClickHouse的Pipeline执行引擎真的好强大。（<strong>这部分内容需要你理解Pipeline执行引擎的内部实现</strong>）</p>
+<ul>
+<li>在预聚合阶段，AggregatingTransform只有一个input_port，这个是原始的上游数据流，节点执行预聚合直到这个input_port被关闭，这时设置is_consume_finished = true并返回Status::Ready;</li>
+<li>下次执行work()函数的时候会调用initGenerate()函数，这个函数在上面分析过，根据预聚合的数据生成扩展的节点，并且设置is_generate_initialized=true。</li>
+<li>下次执行prepare()函数的时候会返回Status::ExpandPipeline，见代码：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (is_generate_initialized &amp;&amp; !is_pipeline_created &amp;&amp; !processors.<span class="built_in">empty</span>())</span><br><span class="line">    <span class="keyword">return</span> Status::ExpandPipeline;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>Pipeline执行引擎看到这个状态，调用节点的expandPipeline()函数拿到扩展的节点，并合并到初始的pipeline中：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Processors <span class="title">AggregatingTransform::expandPipeline</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (processors.<span class="built_in">empty</span>())</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">Exception</span>(<span class="string">&quot;Can not expandPipeline in AggregatingTransform. This is a bug.&quot;</span>, ErrorCodes::LOGICAL_ERROR);</span><br><span class="line">    <span class="keyword">auto</span> &amp; out = processors.<span class="built_in">back</span>()-&gt;<span class="built_in">getOutputs</span>().<span class="built_in">front</span>();</span><br><span class="line">    inputs.<span class="built_in">emplace_back</span>(out.<span class="built_in">getHeader</span>(), <span class="keyword">this</span>);</span><br><span class="line">    <span class="built_in">connect</span>(out, inputs.<span class="built_in">back</span>());</span><br><span class="line">    is_pipeline_created = <span class="literal">true</span>;</span><br><span class="line">    <span class="keyword">return</span> std::<span class="built_in">move</span>(processors);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在这个函数中，AggregatingTransform构造了一个新的input_port，和扩展节点中的最下游节点的output_port连接起来。</p>
+<ul>
+<li>下次执行prepare()函数的时候，获取的input_port是新构造的那个，<strong>这里实际上等价于切换了上游数据流，切换完成。</strong></li>
+</ul>
+<h2 id="aggregator"><a href="#aggregator" class="headerlink" title="aggregator"></a>aggregator</h2><p>aggregator的类型是Aggregator，它封装了封装了具体的聚合和合并操作。首先来看它的构造函数：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br></pre></td><td class="code"><pre><span class="line">Aggregator::<span class="built_in">Aggregator</span>(<span class="keyword">const</span> Block &amp; header_, <span class="keyword">const</span> Params &amp; params_)</span><br><span class="line">    : <span class="built_in">header</span>(header_)</span><br><span class="line">    , <span class="built_in">keys_positions</span>(<span class="built_in">calculateKeysPositions</span>(header, params_))</span><br><span class="line">    , <span class="built_in">params</span>(params_)</span><br><span class="line">    , <span class="built_in">tmp_data</span>(params.tmp_data_scope ? std::make_unique&lt;TemporaryDataOnDisk&gt;(params.tmp_data_scope, CurrentMetrics::TemporaryFilesForAggregation) : <span class="literal">nullptr</span>)</span><br><span class="line">    , <span class="built_in">min_bytes_for_prefetch</span>(<span class="built_in">getMinBytesForPrefetch</span>())</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">/// Use query-level memory tracker</span></span><br><span class="line">    <span class="comment">// 记录预聚合前的内存使用，作为后续是否写入磁盘文件的依据</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">auto</span> * memory_tracker_child = CurrentThread::<span class="built_in">getMemoryTracker</span>())</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">auto</span> * memory_tracker = memory_tracker_child-&gt;<span class="built_in">getParent</span>())</span><br><span class="line">            memory_usage_before_aggregation = memory_tracker-&gt;<span class="built_in">get</span>();</span><br><span class="line"></span><br><span class="line">    aggregate_functions.<span class="built_in">resize</span>(params.aggregates_size);</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; params.aggregates_size; ++i)</span><br><span class="line">        aggregate_functions[i] = params.aggregates[i].function.<span class="built_in">get</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Initialize sizes of aggregation states and its offsets.</span></span><br><span class="line">    offsets_of_aggregate_states.<span class="built_in">resize</span>(params.aggregates_size);</span><br><span class="line">    total_size_of_aggregate_states = <span class="number">0</span>;</span><br><span class="line">    all_aggregates_has_trivial_destructor = <span class="literal">true</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// aggregate_states will be aligned as below:</span></span><br><span class="line">    <span class="comment">// |&lt;-- state_1 --&gt;|&lt;-- pad_1 --&gt;|&lt;-- state_2 --&gt;|&lt;-- pad_2 --&gt;| .....</span></span><br><span class="line">    <span class="comment">//</span></span><br><span class="line">    <span class="comment">// pad_N will be used to match alignment requirement for each next state.</span></span><br><span class="line">    <span class="comment">// The address of state_1 is aligned based on maximum alignment requirements in states</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; params.aggregates_size; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        offsets_of_aggregate_states[i] = total_size_of_aggregate_states;</span><br><span class="line"></span><br><span class="line">        total_size_of_aggregate_states += params.aggregates[i].function-&gt;<span class="built_in">sizeOfData</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">// aggregate states are aligned based on maximum requirement</span></span><br><span class="line">        align_aggregate_states = std::<span class="built_in">max</span>(align_aggregate_states, params.aggregates[i].function-&gt;<span class="built_in">alignOfData</span>());</span><br><span class="line"></span><br><span class="line">        <span class="comment">// If not the last aggregate_state, we need pad it so that next aggregate_state will be aligned.</span></span><br><span class="line">        <span class="keyword">if</span> (i + <span class="number">1</span> &lt; params.aggregates_size)</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">size_t</span> alignment_of_next_state = params.aggregates[i + <span class="number">1</span>].function-&gt;<span class="built_in">alignOfData</span>();</span><br><span class="line">            <span class="keyword">if</span> ((alignment_of_next_state &amp; (alignment_of_next_state - <span class="number">1</span>)) != <span class="number">0</span>)</span><br><span class="line">                <span class="keyword">throw</span> <span class="built_in">Exception</span>(<span class="string">&quot;Logical error: alignOfData is not 2^N&quot;</span>, ErrorCodes::LOGICAL_ERROR);</span><br><span class="line"></span><br><span class="line">            <span class="comment">/// Extend total_size to next alignment requirement</span></span><br><span class="line">            <span class="comment">/// Add padding by rounding up &#x27;total_size_of_aggregate_states&#x27; to be a multiplier of alignment_of_next_state.</span></span><br><span class="line">            total_size_of_aggregate_states = (total_size_of_aggregate_states + alignment_of_next_state - <span class="number">1</span>) / alignment_of_next_state * alignment_of_next_state;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (!params.aggregates[i].function-&gt;<span class="built_in">hasTrivialDestructor</span>())</span><br><span class="line">            all_aggregates_has_trivial_destructor = <span class="literal">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    method_chosen = <span class="built_in">chooseAggregationMethod</span>();</span><br><span class="line">    HashMethodContext::Settings cache_settings;</span><br><span class="line">    cache_settings.max_threads = params.max_threads;</span><br><span class="line">    aggregation_state_cache = AggregatedDataVariants::<span class="built_in">createCache</span>(method_chosen, cache_settings);</span><br><span class="line"></span><br><span class="line"><span class="meta">#<span class="meta-keyword">if</span> USE_EMBEDDED_COMPILER</span></span><br><span class="line">    <span class="built_in">compileAggregateFunctionsIfNeeded</span>();</span><br><span class="line"><span class="meta">#<span class="meta-keyword">endif</span></span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>构造函数中主要做了以下几件事：</p>
+<ul>
+<li>记录预聚合前的内存使用，作为是否将预聚合数据写入磁盘文件的依据</li>
+<li>每个聚合函数有个对应的State对象，该对象作为预聚合过程中内部数据的存储点，一个sql语句中可以有多个聚合函数，ClickHouse中是将多个聚合函数的State对象分配在一整块内存上的，因此，这里需要计算每个State对象的大小和偏移量。</li>
+<li>根据键类型选择合适的哈希表，代码见下：</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">AggregatedDataVariants::Type <span class="title">Aggregator::chooseAggregationMethod</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/// If no keys. All aggregating to single row.</span></span><br><span class="line">    <span class="keyword">if</span> (params.keys_size == <span class="number">0</span>)</span><br><span class="line">        <span class="keyword">return</span> AggregatedDataVariants::Type::without_key;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (has_nullable_key)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span> (params.keys_size == num_fixed_contiguous_keys &amp;&amp; !has_low_cardinality)</span><br><span class="line">        &#123;</span><br><span class="line">             ...</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (has_low_cardinality &amp;&amp; params.keys_size == <span class="number">1</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// No key has been found to be nullable.</span></span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Single numeric key.</span></span><br><span class="line">    <span class="keyword">if</span> (params.keys_size == <span class="number">1</span> &amp;&amp; types_removed_nullable[<span class="number">0</span>]-&gt;<span class="built_in">isValueRepresentedByNumber</span>())</span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (params.keys_size == <span class="number">1</span> &amp;&amp; <span class="built_in">isFixedString</span>(types_removed_nullable[<span class="number">0</span>]))</span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// If all keys fits in N bits, will use hash table with all keys packed (placed contiguously) to single N-bit key.</span></span><br><span class="line">    <span class="keyword">if</span> (params.keys_size == num_fixed_contiguous_keys)</span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// If single string key - will use hash table with references to it. Strings itself are stored separately in Arena.</span></span><br><span class="line">    <span class="keyword">if</span> (params.keys_size == <span class="number">1</span> &amp;&amp; <span class="built_in">isString</span>(types_removed_nullable[<span class="number">0</span>]))</span><br><span class="line">    &#123;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> AggregatedDataVariants::Type::serialized;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里根据“grouping key” 的数量、特点（lowCardinality、isNullable、isFixedString）等性质，选择合适的哈希表类型（具体细节各位可以看下源码），默认选择serialized类型的哈希表，这个哈希表的键就是将多个“grouping key”拼接。</p>
+<ul>
+<li>针对个别类型的哈希表，构造cache，本文不关注。</li>
+</ul>
+<p>这里我们总结一下，aggregator的预聚合阶段使用哈希表来存储数据，这个哈希表的键由“grouping key”决定，值就是分配有多个state对象的那块内存。根据“grouping key” 的数量和特点，Clickhouse提供了很多版本的哈希表。</p>
+<h3 id="Aggregator-executeOnBlock"><a href="#Aggregator-executeOnBlock" class="headerlink" title="Aggregator::executeOnBlock"></a>Aggregator::executeOnBlock</h3><p>executeOnBlock是执行预聚合的接口</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br><span class="line">87</span><br><span class="line">88</span><br><span class="line">89</span><br><span class="line">90</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">Aggregator::executeOnBlock</span><span class="params">(Columns columns,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">size_t</span> row_begin, <span class="keyword">size_t</span> row_end,</span></span></span><br><span class="line"><span class="params"><span class="function">    AggregatedDataVariants &amp; result,</span></span></span><br><span class="line"><span class="params"><span class="function">    ColumnRawPtrs &amp; key_columns,</span></span></span><br><span class="line"><span class="params"><span class="function">    AggregateColumns &amp; aggregate_columns,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">bool</span> &amp; no_more_keys)</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">/// `result` will destroy the states of aggregate functions in the destructor</span></span><br><span class="line">    result.aggregator = <span class="keyword">this</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// How to perform the aggregation?</span></span><br><span class="line">    <span class="keyword">if</span> (result.<span class="built_in">empty</span>())</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">initDataVariantsWithSizeHint</span>(result, method_chosen, params);</span><br><span class="line">        result.keys_size = params.keys_size;</span><br><span class="line">        result.key_sizes = key_sizes;</span><br><span class="line">        <span class="built_in">LOG_TRACE</span>(log, <span class="string">&quot;Aggregation method: &#123;&#125;&quot;</span>, result.<span class="built_in">getMethodName</span>());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Constant columns are not supported directly during aggregation.</span></span><br><span class="line"><span class="comment">      * To make them work anyway, we materialize them.</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">    Columns materialized_columns;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Remember the columns we will work with</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; params.keys_size; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        materialized_columns.<span class="built_in">push_back</span>(<span class="built_in">recursiveRemoveSparse</span>(columns.<span class="built_in">at</span>(keys_positions[i]))-&gt;<span class="built_in">convertToFullColumnIfConst</span>());</span><br><span class="line">        key_columns[i] = materialized_columns.<span class="built_in">back</span>().<span class="built_in">get</span>();</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    NestedColumnsHolder nested_columns_holder;</span><br><span class="line">    AggregateFunctionInstructions aggregate_functions_instructions;</span><br><span class="line">    <span class="built_in">prepareAggregateInstructions</span>(columns, aggregate_columns, materialized_columns, aggregate_functions_instructions, nested_columns_holder);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> ((params.overflow_row || result.type == AggregatedDataVariants::Type::without_key) &amp;&amp; !result.without_key)</span><br><span class="line">    &#123;</span><br><span class="line">        AggregateDataPtr place = result.aggregates_pool-&gt;<span class="built_in">alignedAlloc</span>(total_size_of_aggregate_states, align_aggregate_states);</span><br><span class="line">        <span class="built_in">createAggregateStates</span>(place);</span><br><span class="line">        result.without_key = place;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (result.type == AggregatedDataVariants::Type::without_key)</span><br><span class="line">    &#123;</span><br><span class="line">        executeWithoutKeyImpl&lt;<span class="literal">false</span>&gt;(result.without_key, row_begin, row_end, aggregate_functions_instructions.<span class="built_in">data</span>(), result.aggregates_pool);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/// This is where data is written that does not fit in `max_rows_to_group_by` with `group_by_overflow_mode = any`.</span></span><br><span class="line">        AggregateDataPtr overflow_row_ptr = params.overflow_row ? result.without_key : <span class="literal">nullptr</span>;</span><br><span class="line">        <span class="built_in">executeImpl</span>(result, row_begin, row_end, key_columns, aggregate_functions_instructions.<span class="built_in">data</span>(), no_more_keys, overflow_row_ptr);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">size_t</span> result_size = result.<span class="built_in">sizeWithoutOverflowRow</span>();</span><br><span class="line">    Int64 current_memory_usage = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">auto</span> * memory_tracker_child = CurrentThread::<span class="built_in">getMemoryTracker</span>())</span><br><span class="line">        <span class="keyword">if</span> (<span class="keyword">auto</span> * memory_tracker = memory_tracker_child-&gt;<span class="built_in">getParent</span>())</span><br><span class="line">            current_memory_usage = memory_tracker-&gt;<span class="built_in">get</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Here all the results in the sum are taken into account, from different threads.</span></span><br><span class="line">    <span class="keyword">auto</span> result_size_bytes = current_memory_usage - memory_usage_before_aggregation;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">bool</span> worth_convert_to_two_level = <span class="built_in">worthConvertToTwoLevel</span>(</span><br><span class="line">        params.group_by_two_level_threshold, result_size, params.group_by_two_level_threshold_bytes, result_size_bytes);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Converting to a two-level data structure.</span></span><br><span class="line"><span class="comment">      * It allows you to make, in the subsequent, an effective merge - either economical from memory or parallel.</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">    <span class="keyword">if</span> (result.<span class="built_in">isConvertibleToTwoLevel</span>() &amp;&amp; worth_convert_to_two_level)</span><br><span class="line">        result.<span class="built_in">convertToTwoLevel</span>();</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Checking the constraints.</span></span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">checkLimits</span>(result_size, no_more_keys))</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Flush data to disk if too much RAM is consumed.</span></span><br><span class="line"><span class="comment">      * Data can only be flushed to disk if a two-level aggregation structure is used.</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">    <span class="keyword">if</span> (params.max_bytes_before_external_group_by</span><br><span class="line">        &amp;&amp; result.<span class="built_in">isTwoLevel</span>()</span><br><span class="line">        &amp;&amp; current_memory_usage &gt; <span class="keyword">static_cast</span>&lt;Int64&gt;(params.max_bytes_before_external_group_by)</span><br><span class="line">        &amp;&amp; worth_convert_to_two_level)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">size_t</span> size = current_memory_usage + params.min_free_disk_space;</span><br><span class="line">        <span class="built_in">writeToTemporaryFile</span>(result, size);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个函数主要做了以下工作：</p>
+<ul>
+<li>initDataVariantsWithSizeHint</li>
+</ul>
+<p>result（类型AggregatedDataVariants）是一个out型参数，实际的哈希表也是在这个对象中，这里会执行初始化操作，即根据aggregator选择的哈希表类型来初始化对应的哈希表，略微截图给大家看一下：</p>
+<p><img src="/2023/02/19/ClickHouse%E4%B9%8B%E8%81%9A%E5%90%88%E5%8A%9F%E8%83%BD%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/image-20230208170547432.png" alt="image-20230208170547432"></p>
+<p>直接将各种哈希表硬编码进AggregatedDataVariants类型中，太暴力了。</p>
+<ul>
+<li>materialize columns</li>
+</ul>
+<p>ClickHouse中有些列不能在聚合操作中直接使用，比如Const Column、Sparse Column等。这里对“grouping key”中这些列做了具化处理（即格式转换为普通格式）。</p>
+<ul>
+<li>prepareAggregateInstructions</li>
+</ul>
+<p>这个函数内部是聚合函数的参数拼接的过程，聚合函数的参数，根据名字找到对应的列数据。</p>
+<ul>
+<li>executeWithoutKeyImpl / executeImpl</li>
+</ul>
+<p>执行聚合操作，下面分析</p>
+<ul>
+<li>if convertToTwoLevel</li>
+<li>if writeToTemporaryFile</li>
+</ul>
+<p>聚合操作之后，判断是否要将单层哈希表转换为双层，以及是否将数据写到磁盘文件中。</p>
+<h3 id="executeWithoutKeyImpl-executeImpl"><a href="#executeWithoutKeyImpl-executeImpl" class="headerlink" title="executeWithoutKeyImpl / executeImpl"></a>executeWithoutKeyImpl / executeImpl</h3><p>executeWithoutKeyImpl实际上是没有group by语句时的聚合操作，比较简单，我们分析executeImpl，executeImpl实际上转发到了executeImplBatch：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">bool</span> no_more_keys, <span class="keyword">bool</span> use_compiled_functions, <span class="keyword">bool</span> prefetch, <span class="keyword">typename</span> Method&gt;</span><br><span class="line"><span class="function"><span class="keyword">void</span> NO_INLINE <span class="title">Aggregator::executeImplBatch</span><span class="params">(</span></span></span><br><span class="line"><span class="params"><span class="function">    Method &amp; method,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">typename</span> Method::State &amp; state,</span></span></span><br><span class="line"><span class="params"><span class="function">    Arena * aggregates_pool,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">size_t</span> row_begin,</span></span></span><br><span class="line"><span class="params"><span class="function">    <span class="keyword">size_t</span> row_end,</span></span></span><br><span class="line"><span class="params"><span class="function">    AggregateFunctionInstruction * aggregate_instructions,</span></span></span><br><span class="line"><span class="params"><span class="function">    AggregateDataPtr overflow_row)</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">/// <span class="doctag">NOTE:</span> only row_end-row_start is required, but:</span></span><br><span class="line">    <span class="comment">/// - this affects only optimize_aggregation_in_order,</span></span><br><span class="line">    <span class="comment">/// - this is just a pointer, so it should not be significant,</span></span><br><span class="line">    <span class="comment">/// - and plus this will require other changes in the interface.</span></span><br><span class="line">    <span class="function">std::unique_ptr&lt;AggregateDataPtr[]&gt; <span class="title">places</span><span class="params">(<span class="keyword">new</span> AggregateDataPtr[row_end])</span></span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// For all rows.</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = row_begin; i &lt; row_end; ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        AggregateDataPtr aggregate_data = <span class="literal">nullptr</span>;</span><br><span class="line"></span><br><span class="line">        <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(!no_more_keys)</span></span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">            ...</span><br><span class="line">            <span class="keyword">auto</span> emplace_result = state.<span class="built_in">emplaceKey</span>(method.data, i, *aggregates_pool);</span><br><span class="line"></span><br><span class="line">            <span class="comment">/// If a new key is inserted, initialize the states of the aggregate functions, and possibly something related to the key.</span></span><br><span class="line">            <span class="keyword">if</span> (emplace_result.<span class="built_in">isInserted</span>())</span><br><span class="line">            &#123;</span><br><span class="line">                <span class="comment">/// exception-safety - if you can not allocate memory or create states, then destructors will not be called.</span></span><br><span class="line">                emplace_result.<span class="built_in">setMapped</span>(<span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">                aggregate_data = aggregates_pool-&gt;<span class="built_in">alignedAlloc</span>(total_size_of_aggregate_states, align_aggregate_states);</span><br><span class="line">                ...</span><br><span class="line">                &#123;</span><br><span class="line">                    <span class="built_in">createAggregateStates</span>(aggregate_data);</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                emplace_result.<span class="built_in">setMapped</span>(aggregate_data);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                aggregate_data = emplace_result.<span class="built_in">getMapped</span>();</span><br><span class="line"></span><br><span class="line">            <span class="built_in">assert</span>(aggregate_data != <span class="literal">nullptr</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">/// Add only if the key already exists.</span></span><br><span class="line">            <span class="keyword">auto</span> find_result = state.<span class="built_in">findKey</span>(method.data, i, *aggregates_pool);</span><br><span class="line">            <span class="keyword">if</span> (find_result.<span class="built_in">isFound</span>())</span><br><span class="line">                aggregate_data = find_result.<span class="built_in">getMapped</span>();</span><br><span class="line">            <span class="keyword">else</span></span><br><span class="line">                aggregate_data = overflow_row;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        places[i] = aggregate_data;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">/// Add values to the aggregate functions.</span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; aggregate_functions.<span class="built_in">size</span>(); ++i)</span><br><span class="line">    &#123;</span><br><span class="line">        AggregateFunctionInstruction * inst = aggregate_instructions + i;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (inst-&gt;offsets)</span><br><span class="line">            inst-&gt;batch_that-&gt;<span class="built_in">addBatchArray</span>(row_begin, row_end, places.<span class="built_in">get</span>(), inst-&gt;state_offset, inst-&gt;batch_arguments, inst-&gt;offsets, aggregates_pool);</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (inst-&gt;has_sparse_arguments)</span><br><span class="line">            inst-&gt;batch_that-&gt;<span class="built_in">addBatchSparse</span>(row_begin, row_end, places.<span class="built_in">get</span>(), inst-&gt;state_offset, inst-&gt;batch_arguments, aggregates_pool);</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            inst-&gt;batch_that-&gt;<span class="built_in">addBatch</span>(row_begin, row_end, places.<span class="built_in">get</span>(), inst-&gt;state_offset, inst-&gt;batch_arguments, aggregates_pool);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这个函数做了以下工作：</p>
+<ul>
+<li>遍历需要聚合的行，对每一行我们计算其哈希表中的键，如果这个键在哈希表中不存在，则通过aggregates_pool-&gt;alignedAlloc申请一个内存块，并在内存块上初始化每个聚合函数的State对象</li>
+<li>遍历聚合函数，依次执行预聚合操作（addBatchArray / addBatchSparse / addBatch）。</li>
+</ul>
+<p>这部分内容分析到此为止，ClickHouse对聚合函数的封装可以参考<a href="https://link.zhihu.com/?target=https://www.cnblogs.com/happenlee/p/14681401.html">这篇文章</a> 。</p>
+<hr>
+<h3 id="1-IAggregateFunction接口梳理"><a href="#1-IAggregateFunction接口梳理" class="headerlink" title="1.IAggregateFunction接口梳理"></a>1.IAggregateFunction接口梳理</h3><p>话不多说，直接上代码，笔者这里会将所有聚合函数的核心接口代码全部列出，一一梳理各个部分：</p>
+<h5 id="构造函数"><a href="#构造函数" class="headerlink" title="构造函数"></a>构造函数</h5><figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">IAggregateFunction(<span class="keyword">const</span> DataTypes &amp; argument_types_, <span class="keyword">const</span> <span class="built_in">Array</span> &amp; parameters_)</span><br><span class="line">       : argument_types(argument_types_), <span class="function"><span class="title">parameters</span>(<span class="params">parameters_</span>)</span> &#123;&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面的代码实现了<code>IAggregateFunction</code>接口的构造函数，初始化了该接口的两个成员变量：</p>
+<ul>
+<li><code>argument_type</code>：函数的参数类型，比如函数<code>select sum(a), sum(b), c from test group by c</code>, 这里<code>a</code>, <code>b</code>分别是UInt16类型与Double类型，那么这个<code>sum(a)</code>与<code>sum(b)</code>的参数就不同。</li>
+<li><code>parameters</code>: 参数，实际类型为<code>std::vector&lt;Field&gt;</code>。它代表着函数的除了数据的输入参数之外的其他参数。比如聚合函数<code>topk</code>，其中需要传入的<code>k</code>的值就在<code>parameters</code>之中。</li>
+</ul>
+<h5 id="内存分配接口"><a href="#内存分配接口" class="headerlink" title="内存分配接口"></a>内存分配接口</h5><p>在Clickhouse的聚合执行过程之中，所有的聚合函数都是通过列来进行的。而这里有两个重要的问题：</p>
+<ul>
+<li>列内存从哪里分配</li>
+<li>分配的内存结构，长度是如何的<br>笔者在梳理下面代码的过程之中给出解答,</li>
+</ul>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Create empty data for aggregation with `placement new` at the specified location.</span></span><br><span class="line"><span class="comment">  * You will have to destroy them using the `destroy` method.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">create</span><span class="params">(AggregateDataPtr place)</span> <span class="keyword">const</span> </span>= <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">/// Delete data for aggregation.</span></span><br><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">destroy</span><span class="params">(AggregateDataPtr place)</span> <span class="keyword">const</span> <span class="keyword">noexcept</span> </span>= <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>IAggregateFunction</code>定义的两个接口<code>create</code>与<code>destory</code>接口完成了内存结构与长度的确定，这里可能描述的不是很明白，这里了解Doris聚合实现的同学可以这样理解。<code>create</code>函数本身就是完成了Doris聚合函数之中<code>init</code>函数所完成的工作。这里通过子类<code>IAggregateFunctionDataHelper</code>的实现代码来进一步理解它做了什么事情：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">create</span><span class="params">(AggregateDataPtr place)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">new</span> (place) Data;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">destroy</span><span class="params">(AggregateDataPtr place)</span> <span class="keyword">const</span> <span class="keyword">noexcept</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="built_in">data</span>(place).~<span class="built_in">Data</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这部分代码很简单，<code>Data</code>就是模板派生的类型，然后通过<code>placement new</code>与<code>placement delete</code>的方式完成了<code>Data</code>类型的构造与析构。而这个<code>Data</code>类型就是聚合函数存储中间结果的类型，比如<code>sum</code>的聚合函数的派生类型是类<code>AggregateFunctionSumData</code>的内存结构，它不仅包含了聚合结果的数据<code>sum</code>同时也包含了一组进行聚合计算的函数接口<code>add</code>,<code>merge</code>等:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">AggregateFunctionSumData</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    T sum&#123;&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(T value)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        sum += value;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">merge</span><span class="params">(<span class="keyword">const</span> AggregateFunctionSumData &amp; rhs)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        sum += rhs.sum;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">T <span class="title">get</span><span class="params">()</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> sum;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>这里就是通过<code>create</code>与<code>destory</code>函数调用<code>AggregateFunctionSumData</code>的构造函数与析构函数。而问题又绕回第一个问题了，这部分内存是在哪里分配的呢？</p>
+<figure class="highlight lisp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">aggregate_data = aggregates_pool-&gt;alignedAlloc(<span class="name">total_size_of_aggregate_states</span>, align_aggregate_states)<span class="comment">;</span></span><br><span class="line">createAggregateStates(<span class="name">aggregate_data</span>)<span class="comment">;</span></span><br></pre></td></tr></table></figure>
+
+<p>在进行聚合运算时，通过<code>Aggregator</code>之中的内存池进行单行所有的聚合函数的数据结果的内存分配。并且调用<code>createAggregateStates</code>依次调用各个聚合函数的<code>create</code>方法进行构造函数的调用。这部分可能有些难理解，我们接着看下面的流程图，来更好的帮助理解：</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/8552201-bdde87fda4ea15e3.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="create函数在聚合的流程之中的作用"></p>
+<p>通过上述流程图可以看到，<code>create</code>这部分就是在构造聚合hash表时，进行内存初始化工作的，而这部分内存不仅仅包含了聚合函数的结果数据，还包含了对应聚合算子的函数指针。后文我们分析计算接口的时候也会同样看到。接下来，来看<code>destory</code>就很容易理解了，就是在聚合计算结束或取消时，遍历hash表，并调用析构函数对hash表中存储的<code>Data</code>类型调用析构函数，而最终的内存伴随着<code>aggregates_pool</code>内存池的析构而同时释放。</p>
+<p><img src="https://upload-images.jianshu.io/upload_images/8552201-b9358551ed05cfed.png?imageMogr2/auto-orient/strip%7CimageView2/2/w/1240" alt="detory函数在聚合流程之中的作用"></p>
+<h5 id="函数计算接口"><a href="#函数计算接口" class="headerlink" title="函数计算接口"></a>函数计算接口</h5><p>接下来就是聚合函数最核心的部分，聚合函数的计算。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Adds a value into aggregation data on which place points to.</span></span><br><span class="line"><span class="comment">     *  columns points to columns containing arguments of aggregation function.</span></span><br><span class="line"><span class="comment">     *  row_num is number of row which should be added.</span></span><br><span class="line"><span class="comment">     *  Additional parameter arena should be used instead of standard memory allocator if the addition requires memory allocation.</span></span><br><span class="line"><span class="comment">     */</span></span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">add</span><span class="params">(AggregateDataPtr place, <span class="keyword">const</span> IColumn ** columns, <span class="keyword">size_t</span> row_num, Arena * arena)</span> <span class="keyword">const</span> </span>= <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// Merges state (on which place points to) with other state of current aggregation function.</span></span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">merge</span><span class="params">(AggregateDataPtr place, ConstAggregateDataPtr rhs, Arena * arena)</span> <span class="keyword">const</span> </span>= <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line">    <span class="comment">/** Contains a loop with calls to &quot;add&quot; function. You can collect arguments into array &quot;places&quot;</span></span><br><span class="line"><span class="comment">      *  and do a single call to &quot;addBatch&quot; for devirtualization and inlining.</span></span><br><span class="line"><span class="comment">      */</span></span><br><span class="line">    <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">addBatch</span><span class="params">(<span class="keyword">size_t</span> batch_size, AggregateDataPtr * places, <span class="keyword">size_t</span> place_offset, <span class="keyword">const</span> IColumn ** columns, Arena * arena)</span> <span class="keyword">const</span> </span>= <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p><code>IAggregateFunction</code>定义的3个接口:</p>
+<ul>
+<li><code>add</code>函数将<strong>对应AggregateDataPtr指针之中数据取出，与列columns中的第row_num的数据进行对应的聚合计算</strong>。</li>
+<li><code>addBatch</code>函数：这是函数也是非常重要的，虽然它仅仅实现了一个for循环调用add函数。它通过这样的方式来减少虚函数的调用次数，并且增加了编译器内联的概率，同样，它实现了高效的向量化。</li>
+<li><code>merge</code>函数：将两个聚合结果进行合并的函数，通常用在并发执行聚合函数的过程之中，需要将对应的聚合结果进行合并。</li>
+</ul>
+<p>这里的两个函数类似Doris之中聚合函数的<code>update</code>与<code>merge</code>。接下来我们看它是如何完成工作的。</p>
+<p>首先看聚合节点Aggregetor是如何调用<code>addBatch</code>函数：</p>
+<figure class="highlight rust"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// Add values to the aggregate functions.</span></span><br><span class="line"> <span class="keyword">for</span> (AggregateFunctionInstruction * inst = aggregate_instructions; inst-&gt;that; ++inst)</span><br><span class="line">     inst-&gt;that-&gt;addBatch(rows, places.data(), inst-&gt;state_offset, inst-&gt;arguments, aggregates_pool);</span><br></pre></td></tr></table></figure>
+
+<p>这里依次遍历<code>AggregateFunction</code>，并调用<code>addBatch</code>接口。而<code>addBatch</code>接口就是一行行的遍历列，将参数列<code>inst-&gt;arguments</code>与上文提到<code>create</code>函数构造的聚合数据结构的两列列数据进行聚合计算:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">addBatch</span><span class="params">(<span class="keyword">size_t</span> batch_size, AggregateDataPtr * places, <span class="keyword">size_t</span> place_offset, <span class="keyword">const</span> IColumn ** columns, Arena * arena)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; batch_size; ++i)</span><br><span class="line">        <span class="keyword">static_cast</span>&lt;<span class="keyword">const</span> Derived *&gt;(<span class="keyword">this</span>)-&gt;<span class="built_in">add</span>(places[i] + place_offset, columns, i, arena);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里还是调用了<code>add</code>函数，我们通过<code>AggregateFunctionSum</code>作为子类来具体看一下add的具体实现:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(AggregateDataPtr place, <span class="keyword">const</span> IColumn ** columns, <span class="keyword">size_t</span> row_num, Arena *)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function"> </span>&#123;</span><br><span class="line">     <span class="keyword">const</span> <span class="keyword">auto</span> &amp; column = <span class="keyword">static_cast</span>&lt;<span class="keyword">const</span> ColVecType &amp;&gt;(*columns[<span class="number">0</span>]);</span><br><span class="line">     <span class="keyword">this</span>-&gt;<span class="built_in">data</span>(place).<span class="built_in">add</span>(column.<span class="built_in">getData</span>()[row_num]);</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里其实还是调用上文提到的<code>AggregateFunctionSumData</code>的内存结构的<code>add</code>函数完成聚合计算。而这个<code>add</code>函数就是一个简单的相加逻辑，这样就完成了简单的一次聚合运算。</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="function"><span class="title">add</span>(<span class="params">T value</span>)</span></span><br><span class="line"> &#123;</span><br><span class="line">     sum += value;</span><br><span class="line"> &#125;</span><br></pre></td></tr></table></figure>
+
+<p>而<code>merge</code>函数的实现逻辑类似于<code>add</code>函数，这里就不展开再次分析了。</p>
+<h5 id="函数结果输出接口"><a href="#函数结果输出接口" class="headerlink" title="函数结果输出接口"></a>函数结果输出接口</h5><p>最后就是聚合函数结果输出接口，将聚合计算的结果重新组织为列存。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/// Inserts results into a column.</span></span><br><span class="line">  <span class="function"><span class="keyword">virtual</span> <span class="keyword">void</span> <span class="title">insertResultInto</span><span class="params">(ConstAggregateDataPtr place, IColumn &amp; to)</span> <span class="keyword">const</span> </span>= <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+<p>首先看聚合节点<code>Aggregator</code>是如何调用<code>insertResultInto</code>函数的</p>
+<figure class="highlight scss"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">data<span class="selector-class">.forEachValue</span>([&amp;](const auto &amp; key, auto &amp; mapped)</span><br><span class="line">   &#123;</span><br><span class="line">       method<span class="selector-class">.insertKeyIntoColumns</span>(key, key_columns, key_sizes);</span><br><span class="line"></span><br><span class="line">       for (size_t i = <span class="number">0</span>; i &lt; params.aggregates_size; ++i)</span><br><span class="line">           aggregate_functions<span class="selector-attr">[i]</span>-&gt;insertResultInto(</span><br><span class="line">               mapped + offsets_of_aggregate_states[i],</span><br><span class="line">               *final_aggregate_columns[i]);</span><br><span class="line">   &#125;);</span><br></pre></td></tr></table></figure>
+
+<p><code>Aggregetor</code>同样是遍历hash表之中的结果，将<code>key</code>列先组织成列存，然后调用<code>insertResultInto</code>函数将聚合计算的结果也转换为列存。<br>这里我们找一个<code>sum</code>函数的实现，来看看<code>insertResultInto</code>函数接口是如何工作的：</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">insertResultInto</span><span class="params">(ConstAggregateDataPtr place, IColumn &amp; to)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> &amp; column = <span class="keyword">static_cast</span>&lt;ColVecResult &amp;&gt;(to);</span><br><span class="line">    column.<span class="built_in">getData</span>().<span class="built_in">push_back</span>(<span class="keyword">this</span>-&gt;<span class="built_in">data</span>(place).<span class="built_in">get</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实很简单，就是调用<code>AggregateDataPtr</code>,也就是<code>AggregateFunctionSumData</code>的<code>get()</code>函数获取<code>sum</code>计算的结果，然后添加到列内存之中。</p>
+<p><code>get</code>函数接口的实现如下：</p>
+<figure class="highlight csharp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">T <span class="title">get</span>(<span class="params"></span>) <span class="keyword">const</span></span></span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> sum;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-聚合函数的注册流程"><a href="#2-聚合函数的注册流程" class="headerlink" title="2.聚合函数的注册流程"></a>2.聚合函数的注册流程</h3><p>有了上述的背景知识，我们接下来举个<strong>栗子</strong>。来看看一个聚合函数的实现细节，以及它是如何被使用的。</p>
+<h4 id="AggregateFunctionSum"><a href="#AggregateFunctionSum" class="headerlink" title="AggregateFunctionSum"></a>AggregateFunctionSum</h4><p>这里选取了一个很简单的聚合算子Sum，我们来看看它实现的代码细节。<br>这里我们可以看到<code>AggregateFunctionSum</code>是个final类，无法被继承了。而它继承<code>IAggregateFunctionHelp</code>类与<code>IAggregateFunctionDataHelper</code>类。</p>
+<ul>
+<li><code>IAggregateFunctionHelp</code>类 通过<strong>CRTP</strong>让父类可以直接调用子类的<code>add</code>函数指针而避免了虚函数调用的开销。</li>
+<li><code>IAggregateFunctionHelper</code>类则包含了<code>Data</code>的模板数据类型，也就是上文提及的<code>AggregateFunctionSumData</code>进行内存结构的<code>create</code>，<code>destory</code>等等。</li>
+</ul>
+<p>这里我们就重点看，这个类override了<code>getName</code>方法，返回了对应的名字时<code>sum</code>。并且实现了我们上文提到核心方法。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T, <span class="keyword">typename</span> TResult, <span class="keyword">typename</span> Data&gt;</span><br><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AggregateFunctionSum</span> <span class="keyword">final</span> :</span> <span class="keyword">public</span> IAggregateFunctionDataHelper&lt;Data, AggregateFunctionSum&lt;T, TResult, Data&gt;&gt;</span><br><span class="line">&#123;</span><br><span class="line"><span class="keyword">public</span>:</span><br><span class="line">    <span class="keyword">using</span> ResultDataType = std::<span class="keyword">conditional_t</span>&lt;IsDecimalNumber&lt;T&gt;, DataTypeDecimal&lt;TResult&gt;, DataTypeNumber&lt;TResult&gt;&gt;;</span><br><span class="line">    <span class="keyword">using</span> ColVecType = std::<span class="keyword">conditional_t</span>&lt;IsDecimalNumber&lt;T&gt;, ColumnDecimal&lt;T&gt;, ColumnVector&lt;T&gt;&gt;;</span><br><span class="line">    <span class="keyword">using</span> ColVecResult = std::<span class="keyword">conditional_t</span>&lt;IsDecimalNumber&lt;T&gt;, ColumnDecimal&lt;TResult&gt;, ColumnVector&lt;TResult&gt;&gt;;</span><br><span class="line"></span><br><span class="line">    <span class="function">String <span class="title">getName</span><span class="params">()</span> <span class="keyword">const</span> <span class="keyword">override</span> </span>&#123; <span class="keyword">return</span> <span class="string">&quot;sum&quot;</span>; &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">AggregateFunctionSum</span>(<span class="keyword">const</span> DataTypes &amp; argument_types_)</span><br><span class="line">        : IAggregateFunctionDataHelper&lt;Data, AggregateFunctionSum&lt;T, TResult, Data&gt;&gt;(argument_types_, &#123;&#125;)</span><br><span class="line">        , <span class="built_in">scale</span>(<span class="number">0</span>)</span><br><span class="line">    &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">AggregateFunctionSum</span>(<span class="keyword">const</span> IDataType &amp; data_type, <span class="keyword">const</span> DataTypes &amp; argument_types_)</span><br><span class="line">        : IAggregateFunctionDataHelper&lt;Data, AggregateFunctionSum&lt;T, TResult, Data&gt;&gt;(argument_types_, &#123;&#125;)</span><br><span class="line">        , <span class="built_in">scale</span>(<span class="built_in">getDecimalScale</span>(data_type))</span><br><span class="line">    &#123;&#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">DataTypePtr <span class="title">getReturnType</span><span class="params">()</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">if</span> <span class="title">constexpr</span> <span class="params">(IsDecimalNumber&lt;T&gt;)</span></span></span><br><span class="line"><span class="function">            <span class="keyword">return</span> std::make_shared&lt;ResultDataType&gt;<span class="params">(ResultDataType::maxPrecision(), scale)</span></span>;</span><br><span class="line">        <span class="keyword">else</span></span><br><span class="line">            <span class="keyword">return</span> std::make_shared&lt;ResultDataType&gt;();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(AggregateDataPtr place, <span class="keyword">const</span> IColumn ** columns, <span class="keyword">size_t</span> row_num, Arena *)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">auto</span> &amp; column = <span class="keyword">static_cast</span>&lt;<span class="keyword">const</span> ColVecType &amp;&gt;(*columns[<span class="number">0</span>]);</span><br><span class="line">        <span class="keyword">this</span>-&gt;<span class="built_in">data</span>(place).<span class="built_in">add</span>(column.<span class="built_in">getData</span>()[row_num]);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">merge</span><span class="params">(AggregateDataPtr place, ConstAggregateDataPtr rhs, Arena *)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>-&gt;<span class="built_in">data</span>(place).<span class="built_in">merge</span>(<span class="keyword">this</span>-&gt;<span class="built_in">data</span>(rhs));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">serialize</span><span class="params">(ConstAggregateDataPtr place, WriteBuffer &amp; buf)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>-&gt;<span class="built_in">data</span>(place).<span class="built_in">write</span>(buf);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">deserialize</span><span class="params">(AggregateDataPtr place, ReadBuffer &amp; buf, Arena *)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">this</span>-&gt;<span class="built_in">data</span>(place).<span class="built_in">read</span>(buf);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">insertResultInto</span><span class="params">(ConstAggregateDataPtr place, IColumn &amp; to)</span> <span class="keyword">const</span> <span class="keyword">override</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">auto</span> &amp; column = <span class="keyword">static_cast</span>&lt;ColVecResult &amp;&gt;(to);</span><br><span class="line">        column.<span class="built_in">getData</span>().<span class="built_in">push_back</span>(<span class="keyword">this</span>-&gt;<span class="built_in">data</span>(place).<span class="built_in">get</span>());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">private</span>:</span><br><span class="line">    UInt32 scale;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>之前我们讲到<code>AggregateFunction</code>的函数就是通过<code>AggregateDataPtr</code>指针来获取<code>AggregateFunctionSumData</code>的地址，来调用add实现聚合算子的。我们可以看到<code>AggregateFunctionSumData</code>实现了前文提到的<code>add, merge, write,read</code>四大方法，正好与接口<code>IAggregateFunction</code>一一对应上了。</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="keyword">typename</span> T&gt;</span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">AggregateFunctionSumData</span></span></span><br><span class="line"><span class="class">&#123;</span></span><br><span class="line">    T sum&#123;&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">add</span><span class="params">(T value)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        sum += value;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">merge</span><span class="params">(<span class="keyword">const</span> AggregateFunctionSumData &amp; rhs)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        sum += rhs.sum;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">write</span><span class="params">(WriteBuffer &amp; buf)</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">writeBinary</span>(sum, buf);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">read</span><span class="params">(ReadBuffer &amp; buf)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="built_in">readBinary</span>(sum, buf);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function">T <span class="title">get</span><span class="params">()</span> <span class="keyword">const</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> sum;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>ClickHouse在Server启动时。main函数之中会调用<code>registerAggregateFunction</code>的初始化函数注册所有的聚合函数。<br>然后调用到下面的函数注册<code>sum</code>的聚合函数：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> <span class="function"><span class="title">registerAggregateFunctionSum</span>(<span class="params">AggregateFunctionFactory &amp; factory</span>)</span></span><br><span class="line">&#123;</span><br><span class="line">    factory.registerFunction(<span class="string">&quot;sum&quot;</span>, createAggregateFunctionSum&lt;AggregateFunctionSumSimple&gt;, AggregateFunctionFactory::CaseInsensitive);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是完成了这个<code>sum</code>聚合函数的注册，后续我们get出来就可以愉快的调用啦。（这部分有许多模板派生的复杂代码，建议与源码结合梳理才能事半功倍~~）</p>
+<h3 id="3-要点梳理"><a href="#3-要点梳理" class="headerlink" title="3.要点梳理"></a>3.要点梳理</h3><p>第二小节解析了一个聚合函数与接口意义对应的流程，这里重点梳理聚合函数实现的源码要点：</p>
+<ol>
+<li>各个聚合函数核心的实现<code>add</code>,<code>merge</code>与序列化，内存结构初始化，内存结构释放的接口。</li>
+<li>各个函数的实现需要继承<strong>IAggregateFunctionDataHelper</strong>的接口，而它的父类是<code>IAggregateFunctionHelper</code>与<code>IAggregateFunction</code>接口。</li>
+<li>ClickHouse的聚合函数保证了每次循环遍历一个Block只调用一个<code>IAggregateFunction</code>的聚合函数，这样最大程度上确保了向量化执行的可能性，减少了数据偏移与依赖。</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/clickhouse/" rel="tag"><i class="fa fa-tag"></i> clickhouse</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/02/10/CPP-debug/" rel="prev" title="CPP debug(GDB/LLDB)">
+      <i class="fa fa-chevron-left"></i> CPP debug(GDB/LLDB)
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/02/19/ClickHouse%E4%B9%8BPipeline%E6%89%A7%E8%A1%8C%E5%BC%95%E6%93%8E/" rel="next" title="ClickHouse之Pipeline执行引擎">
+      ClickHouse之Pipeline执行引擎 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%8EInterpreterSelectQuery-buildQueryPlan%E5%BC%80%E5%A7%8B"><span class="nav-number">1.</span> <span class="nav-text">从InterpreterSelectQuery::buildQueryPlan开始</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#InterpreterSelectQuery-executeAggregation"><span class="nav-number">2.</span> <span class="nav-text">InterpreterSelectQuery::executeAggregation</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AggregatingStep-transformPipeline"><span class="nav-number">3.</span> <span class="nav-text">AggregatingStep::transformPipeline</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#AggregatingTransform"><span class="nav-number">4.</span> <span class="nav-text">AggregatingTransform</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#AggregatingTransform%E4%B9%8B%E6%89%A9%E5%B1%95pipeline"><span class="nav-number">4.1.</span> <span class="nav-text">AggregatingTransform之扩展pipeline</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#aggregator"><span class="nav-number">5.</span> <span class="nav-text">aggregator</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Aggregator-executeOnBlock"><span class="nav-number">5.1.</span> <span class="nav-text">Aggregator::executeOnBlock</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#executeWithoutKeyImpl-executeImpl"><span class="nav-number">5.2.</span> <span class="nav-text">executeWithoutKeyImpl &#x2F; executeImpl</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-IAggregateFunction%E6%8E%A5%E5%8F%A3%E6%A2%B3%E7%90%86"><span class="nav-number">5.3.</span> <span class="nav-text">1.IAggregateFunction接口梳理</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0%E7%9A%84%E6%B3%A8%E5%86%8C%E6%B5%81%E7%A8%8B"><span class="nav-number">5.4.</span> <span class="nav-text">2.聚合函数的注册流程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-%E8%A6%81%E7%82%B9%E6%A2%B3%E7%90%86"><span class="nav-number">5.5.</span> <span class="nav-text">3.要点梳理</span></a></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Tao"
+      src="/images/head.png">
+  <p class="site-author-name" itemprop="name">Tao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">40</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">26</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tao</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
