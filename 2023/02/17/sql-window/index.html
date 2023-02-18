@@ -1,0 +1,521 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="google-site-verification" content="oi9cACXaYdEyQVeGEUG_WUOEeFyJe9ey2Sj7Dcribng">
+  <meta name="baidu-site-verification" content="code-W1bppEiaZ5">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Noto Serif SC:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="转载防止失联: https:&#x2F;&#x2F;ericfu.me&#x2F;sql-window-function&#x2F; 窗口函数（Window Function）是 SQL2003 标准中定义的一项新特性，并在 SQL2011、SQL2016 中又加以完善，添加了若干处拓展。窗口函数不同于我们熟悉的普通函数和聚合函数，它为每行数据进行一次计算：输入多行（一个窗口）、返回一个值。在报表等分析型查询中，窗口函数能优雅地表达某些">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sql-window">
+<meta property="og:url" content="https://aaaaaaron.github.io/2023/02/17/sql-window/index.html">
+<meta property="og:site_name" content="Tao&#39;s blog">
+<meta property="og:description" content="转载防止失联: https:&#x2F;&#x2F;ericfu.me&#x2F;sql-window-function&#x2F; 窗口函数（Window Function）是 SQL2003 标准中定义的一项新特性，并在 SQL2011、SQL2016 中又加以完善，添加了若干处拓展。窗口函数不同于我们熟悉的普通函数和聚合函数，它为每行数据进行一次计算：输入多行（一个窗口）、返回一个值。在报表等分析型查询中，窗口函数能优雅地表达某些">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2023/02/17/sql-window/windows-function-concepts.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2023/02/17/sql-window/frame-rows-range.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2023/02/17/sql-window/sql-logical-evaluate-order.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2023/02/17/sql-window/window-function-execution.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2023/02/17/sql-window/window-function-optimization.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2023/02/17/sql-window/segment-tree-sum.jpg">
+<meta property="article:published_time" content="2023-02-17T06:53:47.000Z">
+<meta property="article:modified_time" content="2023-02-17T06:54:35.085Z">
+<meta property="article:author" content="Tao">
+<meta property="article:tag" content="sql">
+<meta property="article:tag" content="window">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2023/02/17/sql-window/windows-function-concepts.png">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2023/02/17/sql-window/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>sql-window | Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2023/02/17/sql-window/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.png">
+      <meta itemprop="name" content="Tao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          sql-window
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2023-02-17 14:53:47 / Modified: 14:54:35" itemprop="dateCreated datePublished" datetime="2023-02-17T14:53:47+08:00">2023-02-17</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>转载防止失联: <a target="_blank" rel="noopener" href="https://ericfu.me/sql-window-function/">https://ericfu.me/sql-window-function/</a></p>
+<p><strong>窗口函数（Window Function）</strong>是 SQL2003 标准中定义的一项新特性，并在 SQL2011、SQL2016 中又加以完善，添加了若干处拓展。窗口函数不同于我们熟悉的普通函数和聚合函数，它为每行数据进行一次计算：<strong>输入多行（一个窗口）、返回一个值</strong>。在报表等分析型查询中，窗口函数能优雅地表达某些需求，发挥不可替代的作用。</p>
+<p>本文首先介绍窗口函数的定义及基本语法，之后将介绍在 DBMS 和大数据系统中是如何实现高效计算窗口函数的，包括窗口函数的优化、执行以及并行执行。</p>
+<h2 id="什么是窗口函数？"><a href="#什么是窗口函数？" class="headerlink" title="什么是窗口函数？"></a>什么是窗口函数？</h2><p>窗口函数出现在 SELECT 子句的表达式列表中，它最显著的特点就是 <code>OVER</code> 关键字。语法定义如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">window_function (expression) OVER (</span><br><span class="line">   [ PARTITION BY part_list ]</span><br><span class="line">   [ ORDER BY order_list ]</span><br><span class="line">   [ &#123; ROWS | RANGE &#125; BETWEEN frame_start AND frame_end ] )</span><br></pre></td></tr></table></figure>
+
+<p>其中包括以下可选项：</p>
+<ul>
+<li><strong>PARTITION BY</strong> 表示将数据先按 <code>part_list</code> 进行分区</li>
+<li><strong>ORDER BY</strong> 表示将各个分区内的数据按 <code>order_list</code> 进行排序</li>
+</ul>
+<p><img src="/2023/02/17/sql-window/windows-function-concepts.png" alt="Figure 1. 窗口函数的基本概念">Figure 1. 窗口函数的基本概念</p>
+<p>最后一项表示 Frame 的定义，即：当前窗口包含哪些数据？</p>
+<ul>
+<li><strong>ROWS</strong> 选择前后几行，例如 <code>ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING</code> 表示往前 3 行到往后 3 行，一共 7 行数据（或小于 7 行，如果碰到了边界）</li>
+<li><strong>RANGE</strong> 选择数据范围，例如 <code>RANGE BETWEEN 3 PRECEDING AND 3 FOLLOWING</code> 表示所有值在 [c−3,c+3][�−3,�+3] 这个范围内的行，c� 为当前行的值</li>
+</ul>
+<p><img src="/2023/02/17/sql-window/frame-rows-range.png" alt="Figure 2. Rows 窗口和 Range 窗口">Figure 2. Rows 窗口和 Range 窗口</p>
+<p>逻辑语义上说，一个窗口函数的计算“过程”如下：</p>
+<ol>
+<li>按窗口定义，将所有输入数据分区、再排序（如果需要的话）</li>
+<li>对每一行数据，计算它的 Frame 范围</li>
+<li>将 Frame 内的行集合输入窗口函数，计算结果填入当前行</li>
+</ol>
+<p>举个例子：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">SELECT dealer_id, emp_name, sales,</span><br><span class="line">       ROW_NUMBER() OVER (PARTITION BY dealer_id ORDER BY sales) AS rank,</span><br><span class="line">       AVG(sales) OVER (PARTITION BY dealer_id) AS avgsales </span><br><span class="line">FROM sales</span><br></pre></td></tr></table></figure>
+
+<p>上述查询中，<code>rank</code> 列表示在当前经销商下，该雇员的销售排名；<code>avgsales</code> 表示当前经销商下所有雇员的平均销售额。查询结果如下：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">+------------+-----------------+--------+------+---------------+</span><br><span class="line">| dealer_id  | emp_name        | sales  | rank | avgsales      |</span><br><span class="line">+------------+-----------------+--------+------+---------------+</span><br><span class="line">| 1          | Raphael Hull    | 8227   | 1    | 14356         |</span><br><span class="line">| 1          | Jack Salazar    | 9710   | 2    | 14356         |</span><br><span class="line">| 1          | Ferris Brown    | 19745  | 3    | 14356         |</span><br><span class="line">| 1          | Noel Meyer      | 19745  | 4    | 14356         |</span><br><span class="line">| 2          | Haviva Montoya  | 9308   | 1    | 13924         |</span><br><span class="line">| 2          | Beverly Lang    | 16233  | 2    | 13924         |</span><br><span class="line">| 2          | Kameko French   | 16233  | 3    | 13924         |</span><br><span class="line">| 3          | May Stout       | 9308   | 1    | 12368         |</span><br><span class="line">| 3          | Abel Kim        | 12369  | 2    | 12368         |</span><br><span class="line">| 3          | Ursa George     | 15427  | 3    | 12368         |</span><br><span class="line">+------------+-----------------+--------+------+---------------+</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注：语法中每个部分都是可选的：</p>
+<ul>
+<li>如果不指定 <code>PARTITION BY</code>，则不对数据进行分区；换句话说，所有数据看作同一个分区</li>
+<li>如果不指定 <code>ORDER BY</code>，则不对各分区做排序，通常用于那些顺序无关的窗口函数，例如 <code>SUM()</code></li>
+<li>如果不指定 Frame 子句，则默认采用以下的 Frame 定义：<ul>
+<li>若不指定 <code>ORDER BY</code>，默认使用分区内所有行 <code>RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</code></li>
+<li>若指定了 <code>ORDER BY</code>，默认使用分区内第一行到当前值 <code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code></li>
+</ul>
+</li>
+</ul>
+</blockquote>
+<p>最后，窗口函数可以分为以下 3 类：</p>
+<ul>
+<li><strong>聚合（Aggregate）</strong>：<code>AVG()</code>, <code>COUNT()</code>, <code>MIN()</code>, <code>MAX()</code>, <code>SUM()</code>…</li>
+<li><strong>取值（Value）</strong>：<code>FIRST_VALUE()</code>, <code>LAST_VALUE()</code>, <code>LEAD()</code>, <code>LAG()</code>…</li>
+<li><strong>排序（Ranking）</strong>：<code>RANK()</code>, <code>DENSE_RANK()</code>, <code>ROW_NUMBER()</code>, <code>NTILE()</code>…</li>
+</ul>
+<p>受限于篇幅，本文不去探讨各个窗口函数的含义，有兴趣的读者可以参考<a target="_blank" rel="noopener" href="https://drill.apache.org/docs/sql-window-functions-introduction/#types-of-window-functions">这篇文档</a>。</p>
+<blockquote>
+<p>注：Frame 定义并非所有窗口函数都适用，比如 <code>ROW_NUMBER()</code>、<code>RANK()</code>、<code>LEAD()</code> 等。这些函数总是应用于整个分区，而非当前 Frame。</p>
+</blockquote>
+<h2 id="窗口函数-VS-聚合函数"><a href="#窗口函数-VS-聚合函数" class="headerlink" title="窗口函数 VS. 聚合函数"></a>窗口函数 VS. 聚合函数</h2><p>从<em>聚合</em>这个意义上出发，似乎窗口函数和 Group By 聚合函数都能做到同样的事情。但是，它们之间的相似点也仅限于此了！这其中的关键区别在于：<strong>窗口函数仅仅只会将结果附加到当前的结果上，它不会对已有的行或列做任何修改</strong>。而 Group By 的做法完全不同：对于各个 Group 它仅仅会保留一行聚合结果。</p>
+<p>有的读者可能会问，加了窗口函数之后返回结果的顺序明显发生了变化，这不算一种修改吗？因为 SQL 及关系代数都是以 multi-set 为基础定义的，<strong>结果集本身并没有顺序可言</strong>，<code>ORDER BY</code> 仅仅是最终呈现结果的顺序。</p>
+<p>另一方面，从逻辑语义上说，SELECT 语句的各个部分可以看作是按以下顺序“执行”的：</p>
+<p><img src="/2023/02/17/sql-window/sql-logical-evaluate-order.png" alt="Figure 3. SQL 各部分的逻辑执行顺序">Figure 3. SQL 各部分的逻辑执行顺序</p>
+<p>注意到窗口函数的求值仅仅位于 <code>ORDER BY</code> 之前，而位于 SQL 的绝大部分之后。这也和窗口函数<strong>只附加、不修改</strong>的语义是呼应的——结果集在此时已经确定好了，再依此计算窗口函数。</p>
+<h2 id="窗口函数的执行"><a href="#窗口函数的执行" class="headerlink" title="窗口函数的执行"></a>窗口函数的执行</h2><p>窗口函数经典的执行方式分为<strong>排序</strong>和<strong>函数求值</strong>这 2 步。</p>
+<p><img src="/2023/02/17/sql-window/window-function-execution.png" alt="Figure 4. 一个窗口函数的执行过程，通常分为排序和求值 2 步">Figure 4. 一个窗口函数的执行过程，通常分为排序和求值 2 步</p>
+<p>窗口定义中的 <code>PARTITION BY</code> 和 <code>ORDER BY</code> 都很容易通过排序完成。例如，对于窗口 <code>PARTITION BY a, b ORDER BY c, d</code>，我们可以对输入数据按 (a,b,c,d)(�,�,�,�) 或 (b,a,c,d)(�,�,�,�) 做排序，之后数据就排列成 Figure 1 中那样了。</p>
+<p>接下来考虑：<strong>如何处理 Frame？</strong></p>
+<ul>
+<li>对于整个分区的 Frame（例如 <code>RANGE BETWEEN UNBOUNDED PRECEDING AND UNBOUNDED FOLLOWING</code>），只要对整个分区计算一次即可，没什么好说的；</li>
+<li>对于逐渐增长的 Frame（例如 <code>RANGE BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW</code>），可以用 Aggregator 维护累加的状态，这也很容易实现；</li>
+<li>对于滑动的 Frame（例如 <code>ROWS BETWEEN 3 PRECEDING AND 3 FOLLOWING</code>）相对困难一些。一种经典的做法是要求 Aggregator 不仅支持增加还支持删除（Removable），这可能比你想的要更复杂，例如考虑下 <code>MAX()</code> 的实现。</li>
+</ul>
+<h2 id="窗口函数的优化"><a href="#窗口函数的优化" class="headerlink" title="窗口函数的优化"></a>窗口函数的优化</h2><p>对于窗口函数，优化器能做的优化有限。这里为了行文的完整性，仍然做一个简要的说明。</p>
+<p>通常，我们首先会把窗口函数从 Project 中抽取出来，成为一个独立的算子称之为 Window。</p>
+<p><img src="/2023/02/17/sql-window/window-function-optimization.png" alt="Figure 5. 窗口函数的优化过程">Figure 5. 窗口函数的优化过程</p>
+<p>有时候，一个 SELECT 语句中包含多个窗口函数，它们的窗口定义（<code>OVER</code> 子句）可能相同、也可能不同。显然，对于相同的窗口，完全没必要再做一次分区和排序，我们可以将它们合并成一个 Window 算子。</p>
+<p>对于不同的窗口，最朴素地，我们可以将其全部分成不同的 Window，如上图所示。实际执行时，<strong>每个 Window 都需要先做一次排序</strong>，代价不小。</p>
+<p>那是否可能利用一次排序计算多个窗口函数呢？某些情况下，这是可能的。例如本文例子中的 2 个窗口函数：</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">... ROW_NUMBER() OVER (PARTITION BY dealer_id ORDER BY sales) AS rank,</span><br><span class="line">    AVG(sales) OVER (PARTITION BY dealer_id) AS avgsales ...</span><br></pre></td></tr></table></figure>
+
+<p>虽然这 2 个窗口并非完全一致，但是 <code>AVG(sales)</code> 不关心分区内的顺序，完全可以复用 <code>ROW_NUMBER()</code> 的窗口。<a target="_blank" rel="noopener" href="http://vldb.org/pvldb/vol5/p1244_yucao_vldb2012.pdf">这篇论文</a> 提供了一种启发式的算法，能尽可能利用能够复用的机会。</p>
+<h2 id="窗口函数的并行执行"><a href="#窗口函数的并行执行" class="headerlink" title="窗口函数的并行执行 *"></a>窗口函数的并行执行 *</h2><p>现代 DBMS 大多支持并行执行。对于窗口函数，由于各个分区之间的计算完全不相关，我们可以很容易地将各个分区分派给不同的节点（线程），从而达到<strong>分区间并行</strong>。</p>
+<p>但是，如果窗口函数只有一个全局分区（无 <code>PARTITION BY</code> 子句），或者分区数量很少、不足以充分并行时，怎么办呢？上文中我们提到的 Removable Aggregator 的技术显然无法继续使用了，它依赖于单个 Aggregator 的内部状态，很难有效地并行起来。</p>
+<p>TUM 的<a target="_blank" rel="noopener" href="http://www.vldb.org/pvldb/vol8/p1058-leis.pdf">这篇论文</a>中提出使用<strong>线段树</strong>（Segment Tree）实现高效的<strong>分区内并行</strong>。<a target="_blank" rel="noopener" href="https://en.wikipedia.org/wiki/Segment_tree">线段树</a>是一个 N 叉树数据结构，每个节点包含当前节点下的部分聚合结果。</p>
+<p>下图是一个使用二叉线段树计算 <code>SUM()</code> 的例子。例如下图中第三行的 1212，表示叶节点 5+75+7 的聚合结果；而它上方的 2525 表示叶节点 5+7+3+105+7+3+10 的聚合结果。</p>
+<p><img src="/2023/02/17/sql-window/segment-tree-sum.jpg" alt="Figure 6. 使用线段树计算给定范围的总和">Figure 6. 使用线段树计算给定范围的总和</p>
+<p>假设当前 Frame 是第 2 到第 8 行，即需要计算 7+3+10+…+47+3+10+…+4 区间之和。有了线段树以后，我们可以直接利用 7+13+207+13+20 （图中红色字体）计算出聚合结果。</p>
+<p>线段树可以在 O(nlogn)�(�log⁡�) 时间内构造，并能在 O(logn)�(log⁡�) 时间内查询任意区间的聚合结果。更棒的是，不仅查询可以多线程并发互不干扰，而且线段树的构造过程也能被很好地并行起来。</p>
+<h2 id="References"><a href="#References" class="headerlink" title="References"></a>References</h2><ol>
+<li><a target="_blank" rel="noopener" href="http://www.vldb.org/pvldb/vol8/p1058-leis.pdf">Efficient Processing of Window Functions in Analytical SQL Queries - Leis, Viktor, et al. (VLDB’15)</a></li>
+<li><a target="_blank" rel="noopener" href="http://vldb.org/pvldb/vol5/p1244_yucao_vldb2012.pdf">Optimization of Analytic Window Functions - Cao, Yu, et al. (VLDB’12)</a></li>
+<li><a target="_blank" rel="noopener" href="https://drill.apache.org/docs/sql-window-functions-introduction/">SQL Window Functions Introduction - Apache Drill</a></li>
+<li><a target="_blank" rel="noopener" href="https://modern-sql.com/blog/2019-02/postgresql-11">PostgreSQL 11 Reestablishes Window Functions Leadership</a></li>
+<li><a target="_blank" rel="noopener" href="https://www.red-gate.com/simple-talk/sql/learn-sql-server/window-functions-in-sql-server/">Window Functions in SQL Server</a></li>
+</ol>
+<ul>
+<li><strong>本文作者：</strong> Eric Fu</li>
+<li><strong>本文链接：</strong> <a target="_blank" rel="noopener" href="https://ericfu.me/sql-window-function/">https://ericfu.me/sql-window-function/</a></li>
+<li><strong>版权声明：</strong> 本博客所有文章除特别声明外，均采用 <a target="_blank" rel="noopener" href="https://creativecommons.org/licenses/by-nc-sa/4.0/">BY-NC-SA</a> 许可协议。转载请注明出处！</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/sql/" rel="tag"><i class="fa fa-tag"></i> sql</a>
+              <a href="/tags/window/" rel="tag"><i class="fa fa-tag"></i> window</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/02/17/sql-subquery-rewrite/" rel="prev" title="SQL 子查询的优化">
+      <i class="fa fa-chevron-left"></i> SQL 子查询的优化
+    </a></div>
+      <div class="post-nav-item">
+    <a href="/2023/02/19/ClickHouse%E4%B9%8B%E8%81%9A%E5%90%88%E5%8A%9F%E8%83%BD%E6%BA%90%E7%A0%81%E5%88%86%E6%9E%90/" rel="next" title="ClickHouse之聚合功能源码分析">
+      ClickHouse之聚合功能源码分析 <i class="fa fa-chevron-right"></i>
+    </a></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%80%E4%B9%88%E6%98%AF%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0%EF%BC%9F"><span class="nav-number">1.</span> <span class="nav-text">什么是窗口函数？</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0-VS-%E8%81%9A%E5%90%88%E5%87%BD%E6%95%B0"><span class="nav-number">2.</span> <span class="nav-text">窗口函数 VS. 聚合函数</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0%E7%9A%84%E6%89%A7%E8%A1%8C"><span class="nav-number">3.</span> <span class="nav-text">窗口函数的执行</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0%E7%9A%84%E4%BC%98%E5%8C%96"><span class="nav-number">4.</span> <span class="nav-text">窗口函数的优化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E7%AA%97%E5%8F%A3%E5%87%BD%E6%95%B0%E7%9A%84%E5%B9%B6%E8%A1%8C%E6%89%A7%E8%A1%8C"><span class="nav-number">5.</span> <span class="nav-text">窗口函数的并行执行 *</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#References"><span class="nav-number">6.</span> <span class="nav-text">References</span></a></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Tao"
+      src="/images/head.png">
+  <p class="site-author-name" itemprop="name">Tao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">42</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">29</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2023</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tao</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
