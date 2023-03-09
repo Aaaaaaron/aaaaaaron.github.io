@@ -59,8 +59,9 @@
 <meta property="og:locale">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/09/17/Mac-initalization/image-20221008145858555.png">
 <meta property="og:image" content="https://aaaaaaron.github.io/2022/09/17/Mac-initalization/image-20221008150107285.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2022/09/17/Mac-initalization/webp">
 <meta property="article:published_time" content="2022-09-17T10:18:16.000Z">
-<meta property="article:modified_time" content="2023-03-09T09:14:28.351Z">
+<meta property="article:modified_time" content="2023-03-09T09:30:06.203Z">
 <meta property="article:author" content="Tao">
 <meta name="twitter:card" content="summary">
 <meta name="twitter:image" content="https://aaaaaaron.github.io/2022/09/17/Mac-initalization/image-20221008145858555.png">
@@ -205,7 +206,7 @@
                   <i class="fa fa-calendar-check-o"></i>
                 </span>
                 <span class="post-meta-item-text">Edited on</span>
-                <time title="Modified: 2023-03-09 17:14:28" itemprop="dateModified" datetime="2023-03-09T17:14:28+08:00">2023-03-09</time>
+                <time title="Modified: 2023-03-09 17:30:06" itemprop="dateModified" datetime="2023-03-09T17:30:06+08:00">2023-03-09</time>
               </span>
 
           
@@ -293,6 +294,16 @@
 
 <img src="/2022/09/17/Mac-initalization/image-20221008150107285.png" alt="image-20221008150107285" style="zoom:50%;">
 
+
+
+<h3 id="删除迁移助理的用户"><a href="#删除迁移助理的用户" class="headerlink" title="删除迁移助理的用户"></a>删除迁移助理的用户</h3><p>强迫症看着不爽</p>
+<ol>
+<li>打开目录实用工具,删除的用户的用户名，接着点击左下角的“-”就可以删除了, 记得要鉴定下</li>
+</ol>
+<p><img src="/2022/09/17/Mac-initalization/webp" alt="img"></p>
+<ol start="2">
+<li>用户删了 但是个人目录还在, 而且 sudo 也删不掉, 有个简单方法是再创建一个普通同名用户, 然后把这个用户删了就 ok 了</li>
+</ol>
 <h3 id="配置定时任务"><a href="#配置定时任务" class="headerlink" title="配置定时任务"></a>配置定时任务</h3><p>举例 kinit</p>
 <ol>
 <li>配置 kinit 自动输入密码 <code>kinit --keychain xxx@xxx</code></li>
@@ -398,7 +409,7 @@
 
       <!--noindex-->
       <div class="post-toc-wrap sidebar-panel">
-          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#mac-%E5%9F%BA%E7%A1%80%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text">mac 基础设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E9%87%8D%E8%A6%81%E7%9A%84%E5%87%A0%E4%B8%AA%E8%BD%AF%E4%BB%B6%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">最重要的几个软件配置:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Command-Line-Tools-for-Xcode"><span class="nav-number">3.</span> <span class="nav-text">安装Command Line Tools for Xcode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7-Homebrew"><span class="nav-number">4.</span> <span class="nav-text">安装包管理工具 Homebrew</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%B7%B2%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6"><span class="nav-number">5.</span> <span class="nav-text">查看已安装软件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E7%9A%84%E4%B8%80%E4%BA%9B%E8%BD%AF%E4%BB%B6"><span class="nav-number">6.</span> <span class="nav-text">重要的一些软件:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%84%9A%E6%9C%AC"><span class="nav-number">7.</span> <span class="nav-text">脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1"><span class="nav-number">8.</span> <span class="nav-text">配置定时任务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-gdb-init"><span class="nav-number">9.</span> <span class="nav-text">配置 gdb init</span></a></li></ol></div>
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#mac-%E5%9F%BA%E7%A1%80%E8%AE%BE%E7%BD%AE"><span class="nav-number">1.</span> <span class="nav-text">mac 基础设置</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9C%80%E9%87%8D%E8%A6%81%E7%9A%84%E5%87%A0%E4%B8%AA%E8%BD%AF%E4%BB%B6%E9%85%8D%E7%BD%AE"><span class="nav-number">2.</span> <span class="nav-text">最重要的几个软件配置:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85Command-Line-Tools-for-Xcode"><span class="nav-number">3.</span> <span class="nav-text">安装Command Line Tools for Xcode</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%AE%89%E8%A3%85%E5%8C%85%E7%AE%A1%E7%90%86%E5%B7%A5%E5%85%B7-Homebrew"><span class="nav-number">4.</span> <span class="nav-text">安装包管理工具 Homebrew</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E6%9F%A5%E7%9C%8B%E5%B7%B2%E5%AE%89%E8%A3%85%E8%BD%AF%E4%BB%B6"><span class="nav-number">5.</span> <span class="nav-text">查看已安装软件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%87%8D%E8%A6%81%E7%9A%84%E4%B8%80%E4%BA%9B%E8%BD%AF%E4%BB%B6"><span class="nav-number">6.</span> <span class="nav-text">重要的一些软件:</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E8%84%9A%E6%9C%AC"><span class="nav-number">7.</span> <span class="nav-text">脚本</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%88%A0%E9%99%A4%E8%BF%81%E7%A7%BB%E5%8A%A9%E7%90%86%E7%9A%84%E7%94%A8%E6%88%B7"><span class="nav-number">8.</span> <span class="nav-text">删除迁移助理的用户</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE%E5%AE%9A%E6%97%B6%E4%BB%BB%E5%8A%A1"><span class="nav-number">9.</span> <span class="nav-text">配置定时任务</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#%E9%85%8D%E7%BD%AE-gdb-init"><span class="nav-number">10.</span> <span class="nav-text">配置 gdb init</span></a></li></ol></div>
       </div>
       <!--/noindex-->
 
