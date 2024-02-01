@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="google-site-verification" content="oi9cACXaYdEyQVeGEUG_WUOEeFyJe9ey2Sj7Dcribng">
+  <meta name="baidu-site-verification" content="code-W1bppEiaZ5">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Noto Serif SC:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Presto Spill 101内存管理worker 视角Presto 中的每个操作符都(比如 ScanFilterAndProjectOperator, HashAggregationOperator,)有一个操作符上下文 OperatorContext ，其中存储了关于这个 operator、计数器counters 以及 get&#x2F;create memory context 的信息。内存上下文实">
+<meta property="og:type" content="article">
+<meta property="og:title" content="presto-spill">
+<meta property="og:url" content="https://aaaaaaron.github.io/2024/02/01/presto-spill/index.html">
+<meta property="og:site_name" content="Tao&#39;s blog">
+<meta property="og:description" content="Presto Spill 101内存管理worker 视角Presto 中的每个操作符都(比如 ScanFilterAndProjectOperator, HashAggregationOperator,)有一个操作符上下文 OperatorContext ，其中存储了关于这个 operator、计数器counters 以及 get&#x2F;create memory context 的信息。内存上下文实">
+<meta property="og:locale">
+<meta property="og:image" content="https://aaaaaaron.github.io/2024/02/01/presto-spill/image-20240131163023787.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2024/02/01/presto-spill/image-20240131163215749.png">
+<meta property="og:image" content="https://aaaaaaron.github.io/2024/02/01/presto-spill/img_v3_027k_0f5aa5f7-7d8d-4874-924c-dc848c678e5g.jpg">
+<meta property="og:image" content="https://aaaaaaron.github.io/2024/02/01/presto-spill/image-20240124160913236.png">
+<meta property="article:published_time" content="2024-02-01T07:02:00.000Z">
+<meta property="article:modified_time" content="2024-02-01T07:04:09.637Z">
+<meta property="article:author" content="Tao">
+<meta property="article:tag" content="presto">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:image" content="https://aaaaaaron.github.io/2024/02/01/presto-spill/image-20240131163023787.png">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2024/02/01/presto-spill/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>presto-spill | Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2024/02/01/presto-spill/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.png">
+      <meta itemprop="name" content="Tao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          presto-spill
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2024-02-01 15:02:00 / Modified: 15:04:09" itemprop="dateCreated datePublished" datetime="2024-02-01T15:02:00+08:00">2024-02-01</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Presto-Spill-101"><a href="#Presto-Spill-101" class="headerlink" title="Presto Spill 101"></a>Presto Spill 101</h1><h2 id="内存管理"><a href="#内存管理" class="headerlink" title="内存管理"></a>内存管理</h2><h3 id="worker-视角"><a href="#worker-视角" class="headerlink" title="worker 视角"></a>worker 视角</h3><p>Presto 中的每个操作符都(比如 <code>ScanFilterAndProjectOperator</code>, <code>HashAggregationOperator</code>,)有一个操作符上下文 <code>OperatorContext</code> ，其中存储了关于这个 operator、计数器counters 以及 get/create memory context 的信息。内存上下文实例（Memory context instances）用于代表 Presto 引擎中的内存占用。通常的实现模式是：从操作符上下文 operator context 中 get/create 一个内存上下文 memory context，然后在这个memory context 上调用 setBytes(N) 方法来为这个运算符申请 N 字节的内存</p>
+<p>内存上下文是个树形结构, operators -&gt; drivers -&gt; pipelines -&gt; tasks -&gt; query, 通过这种跟踪机制，内存池可以跟踪每个算子以及该工作线程上运行的每个查询使用的内存，这些指标通过 REST 暴露 p.s. presto 也有一些内存无法追踪(memory.heap-headroom-per-node, 三方库中分配的内存, local/stack allocations)</p>
+<p>Presto 引擎的数据结构很复杂，因此需要正确计算 java 对象内存占用(这个代价并不总是轻微的, It is worth noting that calculating N is not always trivial as the engine has complex data structures and we need to properly account for the Java object overhead and we need to make sure that we don’t account for a piece of memory multiple times if there are multiple references to it )，对于这个问题, JOL (Java Object Layout) 库[3] 中提供了 API 来计算 Java 对象的保留大小。确保如果一个对象有多个引用的话，不会计算一段内存多次。只能通过仔细计算整个引擎的数据结构，避免重复计算</p>
+<p><code>LongBigArray.java</code></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">    <span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">final</span> <span class="keyword">int</span> INSTANCE_SIZE = ClassLayout.parseClass(LongBigArray.class).instanceSize(); <span class="comment">// jol 的 api</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">long</span> <span class="title">sizeOf</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">return</span> INSTANCE_SIZE + SizeOf.sizeOf(array) + (segments * SIZE_OF_SEGMENT);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>几乎所有的数据结构都有计算内存占用的方法</p>
+<img src="/2024/02/01/presto-spill/image-20240131163023787.png" alt="image-20240131163023787" style="zoom:50%;">
+
+<p><img src="/2024/02/01/presto-spill/image-20240131163215749.png" alt="image-20240131163215749"></p>
+<h3 id="coordinator-视角"><a href="#coordinator-视角" class="headerlink" title="coordinator 视角"></a>coordinator 视角</h3><p>coordinator 定期从所有worker收集内存池信息，并构建集群中所有内存池的全局状态, 提供集群级别的视角管理查询的内存使用, 以下是他的一些职责</p>
+<ul>
+<li><p>查询的分布式内存限制</p>
+</li>
+<li><p>将查询分配给保留池(一般保留池都是关闭的), 如果集群中的任何worker耗尽了其通用池，协调器会将最大的查询分配给所有worker的保留池。</p>
+</li>
+<li><p>当发生 oom 时 kill query</p>
+</li>
+<li><p>检测 memory leaks: 如果查询在 1min 前完成，但它在worker上仍然有非零的内存预留，则coordinator将查询标记为“可能泄漏”</p>
+</li>
+</ul>
+<h2 id="代码"><a href="#代码" class="headerlink" title="代码"></a>代码</h2><h3 id="内存申请"><a href="#内存申请" class="headerlink" title="内存申请"></a>内存申请</h3><p>Presto 的内存申请是在Operator操作中完成的, 比如 TableScanOperator / AggregationOperator 中申请的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br><span class="line">78</span><br><span class="line">79</span><br><span class="line">80</span><br><span class="line">81</span><br><span class="line">82</span><br><span class="line">83</span><br><span class="line">84</span><br><span class="line">85</span><br><span class="line">86</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">TableScanOperator</span> <span class="keyword">implements</span> <span class="title">SourceOperator</span>, <span class="title">Closeable</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Page <span class="title">getOutput</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        <span class="comment">// updating system memory usage should happen after page is loaded.</span></span><br><span class="line">        systemMemoryContext.setBytes(source.getSystemMemoryUsage());</span><br><span class="line"></span><br><span class="line">        <span class="keyword">return</span> page;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Group input data and produce a single block for each sequence of identical values.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">AggregationOperator</span> <span class="keyword">implements</span> <span class="title">Operator</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addInput</span><span class="params">(Page page)</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        ...</span><br><span class="line"></span><br><span class="line">        <span class="keyword">long</span> memorySize = <span class="number">0</span>;</span><br><span class="line">        <span class="keyword">for</span> (Aggregator aggregate : aggregates) &#123;</span><br><span class="line">            aggregate.processPage(page);</span><br><span class="line">            memorySize += aggregate.getEstimatedSize();</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (useSystemMemory) &#123;</span><br><span class="line">            systemMemoryContext.setBytes(memorySize);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            userMemoryContext.setBytes(memorySize);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">close</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        userMemoryContext.setBytes(<span class="number">0</span>);</span><br><span class="line">        systemMemoryContext.setBytes(<span class="number">0</span>);</span><br><span class="line">    &#125;  </span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SpillableHashAggregationBuilder</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">updateMemory</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        checkState(spillInProgress.isDone());</span><br><span class="line">        <span class="keyword">if</span> (producingOutput) &#123;</span><br><span class="line">            localRevocableMemoryContext.setBytes(<span class="number">0</span>);</span><br><span class="line">            localUserMemoryContext.setBytes(hashAggregationBuilder.getSizeInMemory());</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        localUserMemoryContext.setBytes(emptyHashAggregationBuilderSize);</span><br><span class="line">        localRevocableMemoryContext.setBytes(hashAggregationBuilder.getSizeInMemory() - emptyHashAggregationBuilderSize);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">HashBuilderOperator</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">finishInput</span><span class="params">()</span></span></span><br><span class="line"><span class="function">    </span>&#123;</span><br><span class="line">        checkState(state == State.CONSUMING_INPUT);</span><br><span class="line">        <span class="keyword">if</span> (lookupSourceFactoryDestroyed.isDone()) &#123;</span><br><span class="line">            close();</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        LookupSourceSupplier partition = buildLookupSource();</span><br><span class="line">        <span class="keyword">if</span> (spillEnabled) &#123;</span><br><span class="line">            localRevocableMemoryContext.setBytes(partition.get().getInMemorySizeInBytes());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            localUserMemoryContext.setBytes(partition.get().getInMemorySizeInBytes(), enforceBroadcastMemoryLimit);</span><br><span class="line">        &#125;</span><br><span class="line">        lookupSourceNotNeeded = Optional.of(lookupSourceFactory.lendPartitionLookupSource(partitionIndex, partition));</span><br><span class="line"></span><br><span class="line">        state = State.LOOKUP_SOURCE_BUILT;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>一共有三种 memory context, 如果 spill 开了的话, 就把内存加到 <code>RevocableMemoryContext</code> 中去, 代表这部分内存是可以被 spill 的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">AggregatedMemoryContext userAggregateMemoryContext</span><br><span class="line">AggregatedMemoryContext revocableAggregateMemoryContext</span><br><span class="line">AggregatedMemoryContext systemAggregateMemoryContext</span><br></pre></td></tr></table></figure>
+
+<p><strong>SimpleLocalMemoryContext#setBytes(long)</strong></p>
+<ol>
+<li>记录内存使用</li>
+<li>memory pool 的 <code>reserve()</code></li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">synchronized</span> ListenableFuture&lt;?&gt; setBytes(<span class="keyword">long</span> bytes)</span><br><span class="line">&#123;</span><br><span class="line">    checkState(!closed, <span class="string">&quot;SimpleLocalMemoryContext is already closed&quot;</span>);</span><br><span class="line">    checkArgument(bytes &gt;= <span class="number">0</span>, <span class="string">&quot;bytes cannot be negative&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (bytes == usedBytes) &#123;</span><br><span class="line">        <span class="keyword">return</span> NOT_BLOCKED;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// update the parent first as it may throw a runtime exception (e.g., ExceededMemoryLimitException)</span></span><br><span class="line">    ListenableFuture&lt;?&gt; future = parentMemoryContext.updateBytes(allocationTag, bytes - usedBytes, <span class="keyword">false</span>);</span><br><span class="line">    usedBytes = bytes;</span><br><span class="line">    <span class="keyword">return</span> future;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">synchronized</span> ListenableFuture&lt;?&gt; updateBytes(String allocationTag, <span class="keyword">long</span> bytes, <span class="keyword">boolean</span> enforceBroadcastMemoryLimit)</span><br><span class="line">&#123;</span><br><span class="line">    checkState(!isClosed(), <span class="string">&quot;RootAggregatedMemoryContext is already closed&quot;</span>);</span><br><span class="line">    ListenableFuture&lt;?&gt; future = reservationHandler.reserveMemory(allocationTag, bytes, enforceBroadcastMemoryLimit);</span><br><span class="line">    addBytes(bytes);</span><br><span class="line">    <span class="keyword">if</span> (enforceBroadcastMemoryLimit) &#123;</span><br><span class="line">        addBroadcastBytes(bytes);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// make sure we never block queries below guaranteedMemory</span></span><br><span class="line">    <span class="keyword">if</span> (getBytes() &lt; guaranteedMemory) &#123;</span><br><span class="line">        future = NOT_BLOCKED;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> future;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">synchronized</span> ListenableFuture&lt;?&gt; updateUserMemory(String allocationTag, <span class="keyword">long</span> delta)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (delta &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">        enforceUserMemoryLimit(queryMemoryContext.getUserMemory(), delta, maxUserMemory, allocationTag);</span><br><span class="line">        <span class="keyword">long</span> totalMemory = memoryPool.getQueryMemoryReservation(queryId);</span><br><span class="line">        enforceTotalMemoryLimit(totalMemory, delta, maxTotalMemory, allocationTag);</span><br><span class="line">        <span class="keyword">return</span> memoryPool.reserve(queryId, allocationTag, delta);</span><br><span class="line">    &#125;</span><br><span class="line">    memoryPool.free(queryId, allocationTag, -delta);</span><br><span class="line">    <span class="keyword">return</span> NOT_BLOCKED;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * Reserves the given number of bytes. Caller should wait on the returned future, before allocating more memory.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">public</span> ListenableFuture&lt;?&gt; reserve(QueryId queryId, String allocationTag, <span class="keyword">long</span> bytes)</span><br><span class="line">&#123;</span><br><span class="line">    checkArgument(bytes &gt;= <span class="number">0</span>, <span class="string">&quot;bytes is negative&quot;</span>);</span><br><span class="line"></span><br><span class="line">    ListenableFuture&lt;?&gt; result;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (bytes != <span class="number">0</span>) &#123;</span><br><span class="line">            queryMemoryReservations.merge(queryId, bytes, Long::sum);</span><br><span class="line">            updateTaggedMemoryAllocations(queryId, allocationTag, bytes);</span><br><span class="line">        &#125;</span><br><span class="line">        reservedBytes += bytes;</span><br><span class="line">        <span class="keyword">if</span> (getFreeBytes() &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="keyword">if</span> (future == <span class="keyword">null</span>) &#123;</span><br><span class="line">                future = NonCancellableMemoryFuture.create();</span><br><span class="line">            &#125;</span><br><span class="line">            checkState(!future.isDone(), <span class="string">&quot;future is already completed&quot;</span>);</span><br><span class="line">            result = future;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> &#123;</span><br><span class="line">            result = NOT_BLOCKED;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    onMemoryReserved(queryId);</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">QueryContext</span><span class="params">(...)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">        ...</span><br><span class="line">    <span class="keyword">this</span>.queryMemoryContext = <span class="keyword">new</span> MemoryTrackingContext(</span><br><span class="line">                newRootAggregatedMemoryContext(<span class="keyword">new</span> QueryMemoryReservationHandler(<span class="keyword">this</span>::updateUserMemory, <span class="keyword">this</span>::tryUpdateUserMemory, <span class="keyword">this</span>::updateBroadcastMemory, <span class="keyword">this</span>::tryUpdateBroadcastMemory), GUARANTEED_MEMORY),</span><br><span class="line">                newRootAggregatedMemoryContext(<span class="keyword">new</span> QueryMemoryReservationHandler(<span class="keyword">this</span>::updateRevocableMemory, <span class="keyword">this</span>::tryReserveMemoryNotSupported, <span class="keyword">this</span>::updateBroadcastMemory, <span class="keyword">this</span>::tryUpdateBroadcastMemory), <span class="number">0L</span>),</span><br><span class="line">                newRootAggregatedMemoryContext(<span class="keyword">new</span> QueryMemoryReservationHandler(<span class="keyword">this</span>::updateSystemMemory, <span class="keyword">this</span>::tryReserveMemoryNotSupported, <span class="keyword">this</span>::updateBroadcastMemory, <span class="keyword">this</span>::tryUpdateBroadcastMemory), <span class="number">0L</span>));</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">//////////////////////////////////</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">final</span> <span class="class"><span class="keyword">class</span> <span class="title">MemoryTrackingContext</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> AggregatedMemoryContext userAggregateMemoryContext;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> AggregatedMemoryContext revocableAggregateMemoryContext;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> AggregatedMemoryContext systemAggregateMemoryContext;</span><br><span class="line">&#125;</span><br><span class="line"> </span><br></pre></td></tr></table></figure>
+
+<h3 id="spill-代码分析"><a href="#spill-代码分析" class="headerlink" title="spill 代码分析"></a>spill 代码分析</h3><h4 id="MemoryRevokingScheduler"><a href="#MemoryRevokingScheduler" class="headerlink" title="MemoryRevokingScheduler"></a>MemoryRevokingScheduler</h4><p>配置相关:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">config.getMemoryRevokingThreshold(): Revoke memory when memory pool is filled over threshold</span><br><span class="line">config.getMemoryRevokingTarget(): When revoking memory, <span class="keyword">try</span> to revoke so much that pool is filled below target at the end</span><br><span class="line">config.getTaskSpillingStrategy(): PER_TASK_MEMORY_THRESHOLD 不支持 MemoryRevokingScheduler</span><br><span class="line">config.isQueryLimitSpillEnabled(): <span class="function">Spill whenever the total memory used by the <span class="title">query</span> <span class="params">(including revocable and non-revocable memory)</span> exceeds maxTotalMemoryPerNode, 当节点上的查询的用的内存到阈值就刷盘, 否则是看 memory pool 中的内存水位</span></span><br></pre></td></tr></table></figure>
+
+
+
+<p>成员变量<code>memoryPoolListener</code>: <code>private final MemoryPoolListener memoryPoolListener = this::onMemoryReserved;</code>,当memory reservation 完成的时候,  <code> MemoryPoolListener#onMemoryReserved</code> 会被调用(<code>queryMemoryReservation: the total amount of memory reserved by the query (revocable and regular)</code>)</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">onMemoryReserved</span><span class="params">(MemoryPool memoryPool, QueryId queryId, <span class="keyword">long</span> queryMemoryReservation)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="keyword">if</span> (queryLimitSpillEnabled) &#123;</span><br><span class="line">            QueryContext queryContext = queryContextSupplier.apply(queryId);</span><br><span class="line">            verify(queryContext != <span class="keyword">null</span>, <span class="string">&quot;QueryContext not found for queryId %s&quot;</span>, queryId);</span><br><span class="line">            <span class="keyword">long</span> maxTotalMemory = queryContext.getMaxTotalMemory();</span><br><span class="line">            <span class="keyword">if</span> (memoryRevokingNeededForQuery(queryMemoryReservation, maxTotalMemory)) &#123;</span><br><span class="line">                log.debug(<span class="string">&quot;Scheduling check for %s&quot;</span>, queryId);</span><br><span class="line">                scheduleQueryRevoking(queryContext, maxTotalMemory);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (memoryRevokingNeededForPool(memoryPool)) &#123;</span><br><span class="line">            log.debug(<span class="string">&quot;Scheduling check for %s&quot;</span>, memoryPool);</span><br><span class="line">            scheduleMemoryPoolRevoking(memoryPool);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        log.error(e, <span class="string">&quot;Error when acting on memory pool reservation&quot;</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 <code>revokeQueryMemory</code> 调用<code>operatorContext.requestMemoryRevoking()</code>, 设置 <code>memoryRevokingRequested</code> 为 true</p>
+<hr>
+<h4 id="算子-spill-代码"><a href="#算子-spill-代码" class="headerlink" title="算子 spill 代码"></a>算子 spill 代码</h4><p>判断 spill 是否开启, 选择算子</p>
+<p><img src="/2024/02/01/presto-spill/img_v3_027k_0f5aa5f7-7d8d-4874-924c-dc848c678e5g.jpg" alt="img_v3_027k_0f5aa5f7-7d8d-4874-924c-dc848c678e5g"></p>
+<p>通常在算子添加输入的时候判断是否内存超限，如果超限则进行spill，但是Presto较为特殊，在Driver执行前遍历所有的可Spill算子进行spill</p>
+<p><strong>Driver.cpp</strong></p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GuardedBy(&quot;exclusiveLock&quot;)</span></span><br><span class="line"><span class="keyword">private</span> ListenableFuture&lt;?&gt; processInternal(OperationTimer operationTimer)</span><br><span class="line">&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 检查可spill算子，并进行spill</span></span><br><span class="line">    handleMemoryRevoke();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 执行算子    </span></span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; activeOperators.size() - <span class="number">1</span> &amp;&amp; !driverContext.isDone(); i++) &#123;</span><br><span class="line">        Operator current = activeOperators.get(i);</span><br><span class="line">        Operator next = activeOperators.get(i + <span class="number">1</span>);</span><br><span class="line">        ...</span><br><span class="line">     &#125;</span><br><span class="line">      ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>判断<code>operator.getOperatorContext().isMemoryRevokingRequested()</code> , 如果是 true 则算子开始 memory revoke, 这个 <code>memoryRevokingRequested</code> 是``MemoryRevokingScheduler` 在每次 memory reserve 的时候设置的</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@GuardedBy(&quot;exclusiveLock&quot;)</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">handleMemoryRevoke</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; activeOperators.size() &amp;&amp; !driverContext.isDone(); i++) &#123;</span><br><span class="line">        Operator operator = activeOperators.get(i);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (revokingOperators.containsKey(operator)) &#123;</span><br><span class="line">            checkOperatorFinishedRevoking(operator);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">else</span> <span class="keyword">if</span> (operator.getOperatorContext().isMemoryRevokingRequested()) &#123;</span><br><span class="line">            ListenableFuture&lt;?&gt; future = operator.startMemoryRevoke();</span><br><span class="line">            revokingOperators.put(operator, future);</span><br><span class="line">            checkOperatorFinishedRevoking(operator);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * After calling this method operator should revoke all reserved revocable memory.</span></span><br><span class="line"><span class="comment"> * As soon as memory is revoked returned future should be marked as done.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> * Spawned threads can not modify OperatorContext because it&#x27;s not thread safe.</span></span><br><span class="line"><span class="comment"> * For this purpose implement &#123;<span class="doctag">@link</span> #finishMemoryRevoke()&#125;</span></span><br><span class="line"><span class="comment"> * &lt;p&gt;</span></span><br><span class="line"><span class="comment"> * Since memory revoking signal is delivered asynchronously to the Operator, implementation</span></span><br><span class="line"><span class="comment"> * must gracefully handle the case when there no longer is any revocable memory allocated.</span></span><br><span class="line"><span class="comment"></span></span><br><span class="line"><span class="comment"> * After this method is called on Operator the Driver is disallowed to call any</span></span><br><span class="line"><span class="comment"> * processing methods on it (isBlocked/needsInput/addInput/getOutput) until</span></span><br><span class="line"><span class="comment"> * &#123;<span class="doctag">@link</span> #finishMemoryRevoke()&#125; is called.</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="keyword">default</span> ListenableFuture&lt;?&gt; startMemoryRevoke()</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">return</span> NOT_BLOCKED;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<img src="/2024/02/01/presto-spill/image-20240124160913236.png" alt="image-20240124160913236" style="zoom:50%;">
+
+
+
+
+
+<h5 id="OrderBy"><a href="#OrderBy" class="headerlink" title="OrderBy"></a>OrderBy</h5><p>落盘调用路径如下</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">Driver::processInternal</span><br><span class="line">    \_ Driver::handleMemoryRevoke</span><br><span class="line">        \_ OrderByOperator::startMemoryRevoke</span><br><span class="line">            \_ OrderByOperator::spillToDisk</span><br><span class="line">                   // 排序</span><br><span class="line">                \_ PagesIndex::sort</span><br><span class="line">                   // 落盘</span><br><span class="line">                \_ GenericSpiller::spill</span><br><span class="line">                    \_ FileSingleStreamSpiller::spill</span><br><span class="line">                        \_ FileSingleStreamSpiller::writePages</span><br><span class="line">                               // 序列化</span><br><span class="line">                            \_ PagesSerde::serialize</span><br><span class="line">                               // 写序列化Page</span><br><span class="line">                            \_ PagesSerdeUtil::writeSerializedPage</span><br></pre></td></tr></table></figure>
+
+<p>读取Spill文件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">\_ OrderByOperator::finish</span><br><span class="line">    \_ OrderByOperator::getSpilledPages</span><br><span class="line">       // spilledPages是落盘数据，sortedPagesIndex是内存中数据，各自为1路Merge</span><br><span class="line">    \_ OrderByOperator::mergeSpilledAndMemoryPages(spilledPages, sortedPagesIndex)</span><br><span class="line">        \_ MergeSortedPages mergeSortedPages</span><br><span class="line">            \_ WorkProcessor::mergeSorted</span><br><span class="line">                \_ WorkProcessorUtils::mergeSorted</span><br></pre></td></tr></table></figure>
+
+<p>合并逻辑</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> &lt;T&gt; <span class="function">WorkProcessor&lt;T&gt; <span class="title">mergeSorted</span><span class="params">(Iterable&lt;WorkProcessor&lt;T&gt;&gt; processorIterable, Comparator&lt;T&gt; comparator)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 使用优先级队列进行Merge，每一个元素是ElementAndProcessor，里面的element是process一次的结果</span></span><br><span class="line">    PriorityQueue&lt;ElementAndProcessor&lt;T&gt;&gt; queue = <span class="keyword">new</span> PriorityQueue&lt;&gt;(<span class="number">2</span>, comparing(ElementAndProcessor::getElement, comparator));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> create(<span class="keyword">new</span> WorkProcessor.Process&lt;T&gt;()</span><br><span class="line">    &#123;</span><br><span class="line">        WorkProcessor&lt;T&gt; processor = requireNonNull(processorIterator.next());</span><br><span class="line"></span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> ProcessState&lt;T&gt; <span class="title">process</span><span class="params">()</span></span></span><br><span class="line"><span class="function">        </span>&#123;</span><br><span class="line">            <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">                <span class="comment">// processor对应Merge的一路，如果有数据入队</span></span><br><span class="line">                <span class="keyword">if</span> (processor.process()) &#123;</span><br><span class="line">                    <span class="keyword">if</span> (!processor.isFinished()) &#123;</span><br><span class="line">                        queue.add(<span class="keyword">new</span> ElementAndProcessor&lt;&gt;(processor.getResult(), processor));</span><br><span class="line">                    &#125;</span><br><span class="line">                &#125;</span><br><span class="line">                ...</span><br><span class="line">                <span class="comment">// 循环添加归并路数，直到所有归并路添加完</span></span><br><span class="line">                <span class="keyword">if</span> (processorIterator.hasNext()) &#123;</span><br><span class="line">                    processor = requireNonNull(processorIterator.next());</span><br><span class="line">                    <span class="keyword">continue</span>;</span><br><span class="line">                &#125;</span><br><span class="line"></span><br><span class="line">                <span class="keyword">if</span> (queue.isEmpty()) &#123;</span><br><span class="line">                    <span class="keyword">return</span> ProcessState.finished();</span><br><span class="line">                &#125;</span><br><span class="line">                </span><br><span class="line">                <span class="comment">// 优先级队列出一个数据，然后更新processor，在下一次循环中，processor会再次入队</span></span><br><span class="line">                ElementAndProcessor&lt;T&gt; elementAndProcessor = queue.poll();</span><br><span class="line">                processor = elementAndProcessor.getProcessor();</span><br><span class="line">                <span class="keyword">return</span> ProcessState.ofResult(elementAndProcessor.getElement());</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="Aggregation"><a href="#Aggregation" class="headerlink" title="Aggregation"></a>Aggregation</h5><p>落盘逻辑</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">\_ SpillableHashAggregationBuilder::startMemoryRevoke</span><br><span class="line">    \_ SpillableHashAggregationBuilder::spillToDisk</span><br><span class="line">           // 对HashTable进行排序</span><br><span class="line">        \_ InMemoryHashAggregationBuilder::buildHashSortedResult</span><br><span class="line">            \_ GroupByHash::getHashSortedGroupIds</span><br><span class="line">                \_ IntBigArray::sort</span><br><span class="line">        \_ Spiller::spill</span><br><span class="line">           // 清理掉原来的HashTable，构建新的HashTable</span><br><span class="line">        \_ SpillableHashAggregationBuilder::rebuildHashAggregationBuilder</span><br></pre></td></tr></table></figure>
+
+<p>归并逻辑</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">\_ SpillableHashAggregationBuilder::buildResult</span><br><span class="line">       // 对落盘文件进行归并</span><br><span class="line">    \_ SpillableHashAggregationBuilder::mergeFromDiskAndMemory</span><br><span class="line">        \_ MergeHashSort::merge</span><br><span class="line">            \_ MergeSortedPages::mergeSortedPages</span><br><span class="line">                \_ WorkProcessorUtils::mergeSorted</span><br><span class="line">           // 构造结果</span><br><span class="line">        \_ SpillableHashAggregationBuilder::mergeSortedPages</span><br><span class="line">            \_ MergingHashAggregationBuilder::buildResult</span><br></pre></td></tr></table></figure>
+
+<h5 id="文件Buffer"><a href="#文件Buffer" class="headerlink" title="文件Buffer"></a>文件Buffer</h5><p>无论是OrderBy还是Aggregation，读取的spill的链路都是一样的</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">\_ GenericSpiller::getSpills</span><br><span class="line">    \_ FileSingleStreamSpiller::getSpilledPages</span><br><span class="line">        \_ FileSingleStreamSpiller::readPages</span><br><span class="line">               // Buffer的大小为 4K</span><br><span class="line">            \_ PagesSerdeUtil.readPages(serde, new InputStreamSliceInput(input, BUFFER_SIZE));</span><br></pre></td></tr></table></figure>
+
+<p>Spill File Buffer内存的分配没有内存池管理，直接进行分配</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">InputStreamSliceInput</span><span class="params">(InputStream inputStream, <span class="keyword">int</span> bufferSize)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">this</span>.inputStream = inputStream;</span><br><span class="line">    <span class="comment">// 没有用内存池进行管理，直接分配</span></span><br><span class="line">    <span class="keyword">this</span>.buffer = <span class="keyword">new</span> <span class="keyword">byte</span>[bufferSize];</span><br><span class="line">    <span class="keyword">this</span>.slice = Slices.wrappedBuffer(buffer);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/presto/" rel="tag"><i class="fa fa-tag"></i> presto</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2023/10/08/135-to-4433/" rel="prev" title="135 转接 4433 镜头测试(基于 GFX)">
+      <i class="fa fa-chevron-left"></i> 135 转接 4433 镜头测试(基于 GFX)
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Presto-Spill-101"><span class="nav-number">1.</span> <span class="nav-text">Presto Spill 101</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E7%AE%A1%E7%90%86"><span class="nav-number">1.1.</span> <span class="nav-text">内存管理</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#worker-%E8%A7%86%E8%A7%92"><span class="nav-number">1.1.1.</span> <span class="nav-text">worker 视角</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#coordinator-%E8%A7%86%E8%A7%92"><span class="nav-number">1.1.2.</span> <span class="nav-text">coordinator 视角</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#%E4%BB%A3%E7%A0%81"><span class="nav-number">1.2.</span> <span class="nav-text">代码</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#%E5%86%85%E5%AD%98%E7%94%B3%E8%AF%B7"><span class="nav-number">1.2.1.</span> <span class="nav-text">内存申请</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#spill-%E4%BB%A3%E7%A0%81%E5%88%86%E6%9E%90"><span class="nav-number">1.2.2.</span> <span class="nav-text">spill 代码分析</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Tao"
+      src="/images/head.png">
+  <p class="site-author-name" itemprop="name">Tao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">45</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">31</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tao</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
