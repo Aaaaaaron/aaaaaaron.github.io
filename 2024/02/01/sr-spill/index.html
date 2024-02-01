@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="zh-Hans">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 5.4.0">
+  <link rel="apple-touch-icon" sizes="180x180" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon.ico">
+  <link rel="icon" type="image/png" sizes="16x16" href="/favicon.ico">
+  <link rel="mask-icon" href="/favicon.ico" color="#222">
+  <meta http-equiv="Cache-Control" content="no-transform">
+  <meta http-equiv="Cache-Control" content="no-siteapp">
+  <meta name="google-site-verification" content="oi9cACXaYdEyQVeGEUG_WUOEeFyJe9ey2Sj7Dcribng">
+  <meta name="baidu-site-verification" content="code-W1bppEiaZ5">
+
+<link rel="stylesheet" href="/css/main.css">
+
+<link rel="stylesheet" href="//fonts.loli.net/css?family=Noto Serif SC:300,300italic,400,400italic,700,700italic|Roboto Mono:300,300italic,400,400italic,700,700italic&display=swap&subset=latin,latin-ext">
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    hostname: new URL('https://aaaaaaron.github.io').hostname,
+    root: '/',
+    scheme: 'Gemini',
+    version: '7.7.0',
+    exturl: false,
+    sidebar: {"position":"left","display":"always","padding":18,"offset":12,"onmobile":false},
+    copycode: {"enable":true,"show_result":true,"style":"mac"},
+    back2top: {"enable":true,"sidebar":true,"scrollpercent":true},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: true,
+    lazyload: false,
+    pangu: false,
+    comments: {"style":"buttons","active":null,"storage":true,"lazyload":true,"nav":{"disqus":{"text":"Load Disqus","order":-1}}},
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":false,"async":true,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}}
+  };
+</script>
+
+  <meta name="description" content="Starrocks spill(TBD)SpillableMemTablespill data 的临时 buffe, 根据上层的需要, 可能是有序或者无序的. 主要接口: 123456789101112131415bool is_full() const &amp;#123; return _tracker-&gt;consumption() &gt;&#x3D; _max_buffer_size; &amp;#125;;">
+<meta property="og:type" content="article">
+<meta property="og:title" content="sr-spill">
+<meta property="og:url" content="https://aaaaaaron.github.io/2024/02/01/sr-spill/index.html">
+<meta property="og:site_name" content="Tao&#39;s blog">
+<meta property="og:description" content="Starrocks spill(TBD)SpillableMemTablespill data 的临时 buffe, 根据上层的需要, 可能是有序或者无序的. 主要接口: 123456789101112131415bool is_full() const &amp;#123; return _tracker-&gt;consumption() &gt;&#x3D; _max_buffer_size; &amp;#125;;">
+<meta property="og:locale">
+<meta property="article:published_time" content="2024-02-01T07:12:35.000Z">
+<meta property="article:modified_time" content="2024-02-01T07:13:26.389Z">
+<meta property="article:author" content="Tao">
+<meta property="article:tag" content="olap">
+<meta name="twitter:card" content="summary">
+
+<link rel="canonical" href="https://aaaaaaron.github.io/2024/02/01/sr-spill/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true
+  };
+</script>
+
+  <title>sr-spill | Tao's blog</title>
+  
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage">
+  <div class="container">
+    <div class="headband"></div>
+
+    <header class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">Tao's blog</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <h1 class="site-subtitle" itemprop="description">λ</h1>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <div class="toggle" aria-label="Toggle navigation bar">
+      <span class="toggle-line toggle-line-first"></span>
+      <span class="toggle-line toggle-line-middle"></span>
+      <span class="toggle-line toggle-line-last"></span>
+    </div>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+        <li class="menu-item menu-item-home">
+
+    <a href="/" rel="section"><i class="fa fa-fw fa-desktop"></i>Home</a>
+
+  </li>
+        <li class="menu-item menu-item-about">
+
+    <a href="/about" rel="section"><i class="fa fa-fw fa-user"></i>About</a>
+
+  </li>
+  </ul>
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="reading-progress-bar"></div>
+
+
+    <main class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          
+
+          <div class="content">
+            
+
+  <div class="posts-expand">
+      
+  
+  
+  <article itemscope itemtype="http://schema.org/Article" class="post-block " lang="zh-Hans">
+    <link itemprop="mainEntityOfPage" href="https://aaaaaaron.github.io/2024/02/01/sr-spill/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="image" content="/images/head.png">
+      <meta itemprop="name" content="Tao">
+      <meta itemprop="description" content="">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="Tao's blog">
+    </span>
+      <header class="post-header">
+        <h2 class="post-title" itemprop="name headline">
+          sr-spill
+        </h2>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">Posted on</span>
+              
+
+              <time title="Created: 2024-02-01 15:12:35 / Modified: 15:13:26" itemprop="dateCreated datePublished" datetime="2024-02-01T15:12:35+08:00">2024-02-01</time>
+            </span>
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="Starrocks-spill-TBD"><a href="#Starrocks-spill-TBD" class="headerlink" title="Starrocks spill(TBD)"></a>Starrocks spill(TBD)</h1><h2 id="SpillableMemTable"><a href="#SpillableMemTable" class="headerlink" title="SpillableMemTable"></a>SpillableMemTable</h2><p>spill data 的临时 buffe, 根据上层的需要, 可能是有序或者无序的.</p>
+<p>主要接口:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">bool</span> <span class="title">is_full</span><span class="params">()</span> <span class="keyword">const</span> </span>&#123; <span class="keyword">return</span> _tracker-&gt;<span class="built_in">consumption</span>() &gt;= _max_buffer_size; &#125;;</span><br><span class="line"><span class="function"><span class="keyword">virtual</span> <span class="keyword">bool</span> <span class="title">is_empty</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line"><span class="function"><span class="keyword">size_t</span> <span class="title">mem_usage</span><span class="params">()</span> </span>&#123; <span class="keyword">return</span> _tracker-&gt;<span class="built_in">consumption</span>(); &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// append data to mem table</span></span><br><span class="line">[[nodiscard]] <span class="function"><span class="keyword">virtual</span> Status <span class="title">append</span><span class="params">(ChunkPtr chunk)</span> </span>= <span class="number">0</span>;</span><br><span class="line">[[nodiscard]] <span class="function"><span class="keyword">virtual</span> Status <span class="title">append_selective</span><span class="params">(<span class="keyword">const</span> Chunk&amp; src, <span class="keyword">const</span> <span class="keyword">uint32_t</span>* indexes, <span class="keyword">uint32_t</span> from,</span></span></span><br><span class="line"><span class="params"><span class="function">                                              <span class="keyword">uint32_t</span> size)</span> </span>= <span class="number">0</span>;</span><br><span class="line"><span class="comment">// all of data has been added</span></span><br><span class="line"><span class="comment">// done will be called in pipeline executor threads</span></span><br><span class="line"><span class="function"><span class="keyword">virtual</span> Status <span class="title">done</span><span class="params">()</span> </span>= <span class="number">0</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">// flush all data to callback, then release the memory in memory table</span></span><br><span class="line"><span class="comment">// flush will be called in IO threads</span></span><br><span class="line"><span class="function"><span class="keyword">virtual</span> Status <span class="title">flush</span><span class="params">(FlushCallBack callback)</span> </span>= <span class="number">0</span>;</span><br></pre></td></tr></table></figure>
+
+
+
+<p>用法:</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> mem_table = <span class="built_in">create</span>();</span><br><span class="line"><span class="keyword">while</span> (!mem_table-&gt;<span class="built_in">is_full</span>()) &#123;</span><br><span class="line">    mem_table-&gt;<span class="built_in">append</span>(<span class="built_in">next_chunk</span>());</span><br><span class="line">&#125;</span><br><span class="line">mem_table-&gt;<span class="built_in">done</span>();</span><br><span class="line">mem_table-&gt;<span class="built_in">flush</span>();</span><br></pre></td></tr></table></figure>
+
+<h4 id="UnorderedMemTable"><a href="#UnorderedMemTable" class="headerlink" title="UnorderedMemTable"></a>UnorderedMemTable</h4><h4 id="OrderedMemTable"><a href="#OrderedMemTable" class="headerlink" title="OrderedMemTable"></a>OrderedMemTable</h4><h2 id="SpillerWriter"><a href="#SpillerWriter" class="headerlink" title="SpillerWriter"></a>SpillerWriter</h2><h4 id="RawSpillerWriter"><a href="#RawSpillerWriter" class="headerlink" title="RawSpillerWriter"></a>RawSpillerWriter</h4><h4 id="PartitionedSpillerWriter"><a href="#PartitionedSpillerWriter" class="headerlink" title="PartitionedSpillerWriter"></a>PartitionedSpillerWriter</h4><h2 id="SpillableHashJoinProbeOperator"><a href="#SpillableHashJoinProbeOperator" class="headerlink" title="SpillableHashJoinProbeOperator"></a>SpillableHashJoinProbeOperator</h2><h4 id="SpillableAggregateBlockingSinkOperator"><a href="#SpillableAggregateBlockingSinkOperator" class="headerlink" title="SpillableAggregateBlockingSinkOperator"></a>SpillableAggregateBlockingSinkOperator</h4><p>`SpillableAggregateBlockingSinkOperator::_spill_all_data(RuntimeState* state, bool should_spill_hash_table)``</p>
+<h5 id="Aggregator-spill-aggregate-data"><a href="#Aggregator-spill-aggregate-data" class="headerlink" title="Aggregator::spill_aggregate_data"></a>Aggregator::spill_aggregate_data</h5><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Status <span class="title">Aggregator::spill_aggregate_data</span><span class="params">(RuntimeState* state, std::function&lt;StatusOr&lt;ChunkPtr&gt;()&gt; chunk_provider)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">auto</span> io_executor = <span class="keyword">this</span>-&gt;<span class="built_in">spill_channel</span>()-&gt;<span class="built_in">io_executor</span>();</span><br><span class="line">    <span class="keyword">auto</span> spiller = <span class="keyword">this</span>-&gt;<span class="built_in">spiller</span>();</span><br><span class="line">    <span class="keyword">auto</span> spill_channel = <span class="keyword">this</span>-&gt;<span class="built_in">spill_channel</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">while</span> (!spiller-&gt;<span class="built_in">is_full</span>()) &#123;</span><br><span class="line">        <span class="keyword">auto</span> chunk_with_st = <span class="built_in">chunk_provider</span>();</span><br><span class="line">        <span class="keyword">if</span> (chunk_with_st.<span class="built_in">ok</span>()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (!chunk_with_st.<span class="built_in">value</span>()-&gt;<span class="built_in">is_empty</span>()) &#123;</span><br><span class="line">                <span class="built_in">RETURN_IF_ERROR</span>(spiller-&gt;<span class="built_in">spill</span>(state, chunk_with_st.<span class="built_in">value</span>(), *io_executor,</span><br><span class="line">                                               <span class="built_in">TRACKER_WITH_SPILLER_GUARD</span>(state, spiller)));</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (chunk_with_st.<span class="built_in">status</span>().<span class="built_in">is_end_of_file</span>()) &#123;</span><br><span class="line">            <span class="comment">// chunk_provider return eos means provider has output all data from hash_map/hash_set.</span></span><br><span class="line">            <span class="comment">// then we just return OK</span></span><br><span class="line">            <span class="keyword">return</span> Status::<span class="built_in">OK</span>();</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="keyword">return</span> chunk_with_st.<span class="built_in">status</span>();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    spill_channel-&gt;<span class="built_in">add_spill_task</span>(std::<span class="built_in">move</span>(chunk_provider));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Status::<span class="built_in">OK</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<h2 id="Spiller"><a href="#Spiller" class="headerlink" title="Spiller"></a>Spiller</h2><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Status <span class="title">Spiller::spill</span><span class="params">(RuntimeState* state, <span class="keyword">const</span> ChunkPtr&amp; chunk, TaskExecutor&amp;&amp; executor, MemGuard&amp;&amp; guard)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">SCOPED_TIMER</span>(_metrics.append_data_timer);</span><br><span class="line">    <span class="built_in">RETURN_IF_ERROR</span>(<span class="built_in">task_status</span>());</span><br><span class="line">    <span class="built_in">DCHECK</span>(!chunk-&gt;<span class="built_in">is_empty</span>());</span><br><span class="line">    <span class="built_in">DCHECK</span>(!<span class="built_in">is_full</span>());</span><br><span class="line"></span><br><span class="line">    <span class="built_in">COUNTER_UPDATE</span>(_metrics.spill_rows, chunk-&gt;<span class="built_in">num_rows</span>());</span><br><span class="line">    _spilled_append_rows += chunk-&gt;<span class="built_in">num_rows</span>();</span><br><span class="line">    TRACE_SPILL_LOG &lt;&lt; <span class="string">&quot;spilled rows:&quot;</span> &lt;&lt; chunk-&gt;<span class="built_in">num_rows</span>() &lt;&lt; <span class="string">&quot;,cumulative:&quot;</span> &lt;&lt; _spilled_append_rows</span><br><span class="line">                    &lt;&lt; <span class="string">&quot;,spiller:&quot;</span> &lt;&lt; <span class="keyword">this</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (_chunk_builder.<span class="built_in">chunk_schema</span>()-&gt;<span class="built_in">empty</span>()) &#123;</span><br><span class="line">        _chunk_builder.<span class="built_in">chunk_schema</span>()-&gt;<span class="built_in">set_schema</span>(chunk);</span><br><span class="line">        <span class="built_in">RETURN_IF_ERROR</span>(_serde-&gt;<span class="built_in">prepare</span>());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (_opts.init_partition_nums &gt; <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> _writer-&gt;as&lt;PartitionedSpillerWriter*&gt;()-&gt;<span class="built_in">spill</span>(state, chunk, executor, guard);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> _writer-&gt;as&lt;RawSpillerWriter*&gt;()-&gt;<span class="built_in">spill</span>(state, chunk, executor, guard);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">template</span> &lt;<span class="class"><span class="keyword">class</span> <span class="title">TaskExecutor</span>, <span class="keyword">class</span> <span class="title">MemGuard</span>&gt;</span></span><br><span class="line"><span class="function">Status <span class="title">PartitionedSpillerWriter::spill</span><span class="params">(RuntimeState* state, <span class="keyword">const</span> ChunkPtr&amp; chunk, TaskExecutor&amp;&amp; executor,</span></span></span><br><span class="line"><span class="params"><span class="function">                                       MemGuard&amp;&amp; guard)</span> </span>&#123;</span><br><span class="line">    <span class="built_in">DCHECK</span>(!chunk-&gt;<span class="built_in">is_empty</span>());</span><br><span class="line">    <span class="built_in">DCHECK</span>(!<span class="built_in">is_full</span>());</span><br><span class="line"></span><br><span class="line">    <span class="comment">// the last column was hash column</span></span><br><span class="line">    <span class="keyword">auto</span> hash_column = chunk-&gt;<span class="built_in">columns</span>().<span class="built_in">back</span>();</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">SCOPED_TIMER</span>(_spiller-&gt;<span class="built_in">metrics</span>().shuffle_timer);</span><br><span class="line">        std::vector&lt;<span class="keyword">uint32_t</span>&gt; shuffle_result;</span><br><span class="line">        <span class="built_in">shuffle</span>(shuffle_result, down_cast&lt;SpillHashColumn*&gt;(hash_column.<span class="built_in">get</span>()));</span><br><span class="line">        <span class="built_in">process_partition_data</span>(chunk, shuffle_result,</span><br><span class="line">                               [&amp;chunk](SpilledPartition* partition, <span class="keyword">const</span> std::vector&lt;<span class="keyword">uint32_t</span>&gt;&amp; selection,</span><br><span class="line">                                        <span class="keyword">int32_t</span> from, <span class="keyword">int32_t</span> size) &#123;</span><br><span class="line">                                   <span class="keyword">auto</span> mem_table = partition-&gt;spill_writer-&gt;<span class="built_in">mem_table</span>();</span><br><span class="line">                                   (<span class="keyword">void</span>)mem_table-&gt;<span class="built_in">append_selective</span>(*chunk, selection.<span class="built_in">data</span>(), from, size);</span><br><span class="line">                                   partition-&gt;mem_size = mem_table-&gt;<span class="built_in">mem_usage</span>();</span><br><span class="line">                                   partition-&gt;num_rows += size;</span><br><span class="line">                               &#125;);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="built_in">DCHECK_EQ</span>(_spiller-&gt;<span class="built_in">spilled_append_rows</span>(), _partition_rows());</span><br><span class="line"></span><br><span class="line">    <span class="built_in">RETURN_IF_ERROR</span>(<span class="built_in">flush_if_full</span>(state, executor, guard));</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Status::<span class="built_in">OK</span>();</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Status <span class="title">RawSpillerWriter::flush_task</span><span class="params">(RuntimeState* state, <span class="keyword">const</span> MemTablePtr&amp; mem_table)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (state-&gt;<span class="built_in">is_cancelled</span>()) &#123;</span><br><span class="line">        <span class="keyword">return</span> Status::<span class="built_in">OK</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span>&amp; serde = _spiller-&gt;<span class="built_in">serde</span>();</span><br><span class="line">    spill::AcquireBlockOptions opts;</span><br><span class="line">    opts.query_id = state-&gt;<span class="built_in">query_id</span>();</span><br><span class="line">    opts.plan_node_id = <span class="built_in">options</span>().plan_node_id;</span><br><span class="line">    opts.name = <span class="built_in">options</span>().name;</span><br><span class="line">    <span class="built_in">ASSIGN_OR_RETURN</span>(<span class="keyword">auto</span> block, _spiller-&gt;<span class="built_in">block_manager</span>()-&gt;<span class="built_in">acquire_block</span>(opts));</span><br><span class="line">    <span class="built_in">COUNTER_UPDATE</span>(_spiller-&gt;<span class="built_in">metrics</span>().block_count, <span class="number">1</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">// <span class="doctag">TODO:</span> reuse io context</span></span><br><span class="line">    SerdeContext spill_ctx;</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">TRY_CATCH_ALLOC_SCOPE_START</span>()</span><br><span class="line">        <span class="comment">// flush all pending result to spilled files</span></span><br><span class="line">        <span class="keyword">size_t</span> num_rows_flushed = <span class="number">0</span>;</span><br><span class="line">        <span class="built_in">RETURN_IF_ERROR</span>(mem_table-&gt;<span class="built_in">flush</span>([&amp;](<span class="keyword">const</span> <span class="keyword">auto</span>&amp; chunk) &#123;</span><br><span class="line">            num_rows_flushed += chunk-&gt;<span class="built_in">num_rows</span>();</span><br><span class="line">            <span class="built_in">RETURN_IF_ERROR</span>(serde-&gt;<span class="built_in">serialize</span>(spill_ctx, chunk, block));</span><br><span class="line">            <span class="keyword">return</span> Status::<span class="built_in">OK</span>();</span><br><span class="line">        &#125;));</span><br><span class="line">        TRACE_SPILL_LOG &lt;&lt; <span class="string">&quot;spill flush rows:&quot;</span> &lt;&lt; num_rows_flushed &lt;&lt; <span class="string">&quot;,spiller:&quot;</span> &lt;&lt; <span class="keyword">this</span>;</span><br><span class="line">        <span class="built_in">TRY_CATCH_ALLOC_SCOPE_END</span>();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// be careful close method return a not ok status</span></span><br><span class="line">    <span class="comment">// then release the pending memory</span></span><br><span class="line">    <span class="comment">// flush</span></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="built_in">SCOPED_TIMER</span>(_spiller-&gt;<span class="built_in">metrics</span>().write_io_timer);</span><br><span class="line">        <span class="built_in">RETURN_IF_ERROR</span>(block-&gt;<span class="built_in">flush</span>());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="built_in">RETURN_IF_ERROR</span>(_spiller-&gt;<span class="built_in">block_manager</span>()-&gt;<span class="built_in">release_block</span>(block));</span><br><span class="line"></span><br><span class="line">    &#123;</span><br><span class="line">        <span class="function">std::lock_guard&lt;std::mutex&gt; <span class="title">l</span><span class="params">(_mutex)</span></span>;</span><br><span class="line">        _block_group.<span class="built_in">append</span>(std::<span class="built_in">move</span>(block));</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> Status::<span class="built_in">OK</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<hr>
+<h1 id="CH-SPILL"><a href="#CH-SPILL" class="headerlink" title="CH SPILL"></a>CH SPILL</h1><h2 id="Grace-hash-join"><a href="#Grace-hash-join" class="headerlink" title="Grace hash join"></a>Grace hash join</h2><h3 id="write"><a href="#write" class="headerlink" title="write"></a>write</h3><figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">GraceHashJoin::initBuckets</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!buckets.<span class="built_in">empty</span>())</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">auto</span> &amp; settings = context-&gt;<span class="built_in">getSettingsRef</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">size_t</span> initial_num_buckets = <span class="built_in">roundUpToPowerOfTwoOrZero</span>(std::clamp&lt;<span class="keyword">size_t</span>&gt;(settings.grace_hash_join_initial_buckets, <span class="number">1</span>, settings.grace_hash_join_max_buckets));</span><br><span class="line"></span><br><span class="line">    <span class="built_in">addBuckets</span>(initial_num_buckets);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (buckets.<span class="built_in">empty</span>())</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">Exception</span>(ErrorCodes::LOGICAL_ERROR, <span class="string">&quot;No buckets created&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">LOG_TRACE</span>(log, <span class="string">&quot;Initialize &#123;&#125; bucket&#123;&#125;&quot;</span>, buckets.<span class="built_in">size</span>(), buckets.<span class="built_in">size</span>() &gt; <span class="number">1</span> ? <span class="string">&quot;s&quot;</span> : <span class="string">&quot;&quot;</span>);</span><br><span class="line"></span><br><span class="line">    current_bucket = buckets.<span class="built_in">front</span>().<span class="built_in">get</span>();</span><br><span class="line">    current_bucket-&gt;<span class="built_in">startJoining</span>();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; i &lt; bucket_count; ++i)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">auto</span> &amp; left_file = tmp_data-&gt;<span class="built_in">createStream</span>(left_sample_block);</span><br><span class="line">    <span class="keyword">auto</span> &amp; right_file = tmp_data-&gt;<span class="built_in">createStream</span>(<span class="built_in">prepareRightBlock</span>(right_sample_block));</span><br><span class="line">    BucketPtr new_bucket = std::make_shared&lt;FileBucket&gt;(current_size + i, left_file, right_file, log);</span><br><span class="line">    tmp_buckets.<span class="built_in">emplace_back</span>(std::<span class="built_in">move</span>(new_bucket));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> tmp_file = <span class="built_in">createRegularFile</span>(max_file_size);</span><br><span class="line"><span class="function">std::lock_guard <span class="title">lock</span><span class="params">(mutex)</span></span>;</span><br><span class="line">TemporaryFileStreamPtr &amp; tmp_stream = streams.<span class="built_in">emplace_back</span>(std::make_unique&lt;TemporaryFileStream&gt;(std::<span class="built_in">move</span>(tmp_file), header, <span class="keyword">this</span>));</span><br><span class="line"><span class="keyword">return</span> *tmp_stream;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">TemporaryFileOnDiskHolder <span class="title">TemporaryDataOnDisk::createRegularFile</span><span class="params">(<span class="keyword">size_t</span> max_file_size)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    DiskPtr disk;</span><br><span class="line">    <span class="keyword">if</span> (max_file_size &gt; <span class="number">0</span>)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">auto</span> reservation = volume-&gt;<span class="built_in">reserve</span>(max_file_size);</span><br><span class="line">        <span class="keyword">if</span> (!reservation)</span><br><span class="line">            <span class="keyword">throw</span> <span class="built_in">Exception</span>(ErrorCodes::NOT_ENOUGH_SPACE, <span class="string">&quot;Not enough space on temporary disk&quot;</span>);</span><br><span class="line">        disk = reservation-&gt;<span class="built_in">getDisk</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        disk = volume-&gt;<span class="built_in">getDisk</span>();</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> std::make_unique&lt;TemporaryFileOnDisk&gt;(disk, current_metric_scope);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<p>TemporaryFileOnDisk 代表磁盘上一个文件</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line">TemporaryFileOnDisk::<span class="built_in">TemporaryFileOnDisk</span>(<span class="keyword">const</span> DiskPtr &amp; disk_, <span class="keyword">const</span> String &amp; prefix)</span><br><span class="line">    : <span class="built_in">disk</span>(disk_)</span><br><span class="line">    , <span class="built_in">metric_increment</span>(CurrentMetrics::TotalTemporaryFiles)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span> (!disk)</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">Exception</span>(ErrorCodes::LOGICAL_ERROR, <span class="string">&quot;Disk is not specified&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (fs::path <span class="built_in">prefix_path</span>(prefix); prefix_path.<span class="built_in">has_parent_path</span>())</span><br><span class="line">        disk-&gt;<span class="built_in">createDirectories</span>(prefix_path.<span class="built_in">parent_path</span>());</span><br><span class="line"></span><br><span class="line">    ProfileEvents::<span class="built_in">increment</span>(ProfileEvents::ExternalProcessingFilesTotal);</span><br><span class="line"></span><br><span class="line">    <span class="comment">/// A disk can be remote and shared between multiple replicas.</span></span><br><span class="line">    <span class="comment">/// That&#x27;s why we must not use Poco::TemporaryFile::tempName() here (Poco::TemporaryFile::tempName() can return the same names for different processes on different nodes).</span></span><br><span class="line">    relative_path = prefix + <span class="built_in">toString</span>(UUIDHelpers::<span class="built_in">generateV4</span>());</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">TemporaryFileStream::<span class="built_in">TemporaryFileStream</span>(TemporaryFileOnDiskHolder file_, <span class="keyword">const</span> Block &amp; header_, TemporaryDataOnDisk * parent_)</span><br><span class="line">    : <span class="built_in">parent</span>(parent_)</span><br><span class="line">    , <span class="built_in">header</span>(header_)</span><br><span class="line">    , <span class="built_in">file</span>(std::<span class="built_in">move</span>(file_))</span><br><span class="line">    , <span class="built_in">out_writer</span>(std::make_unique&lt;OutputWriter&gt;(std::make_unique&lt;WriteBufferFromFile&gt;(file-&gt;<span class="built_in">getAbsolutePath</span>()), header))</span><br><span class="line">&#123;</span><br><span class="line">    <span class="built_in">LOG_TEST</span>(&amp;Poco::Logger::<span class="built_in">get</span>(<span class="string">&quot;TemporaryFileStream&quot;</span>), <span class="string">&quot;Writing to temporary file &#123;&#125;&quot;</span>, file-&gt;<span class="built_in">getAbsolutePath</span>());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">WriteBufferFromFileDescriptor::nextImpl</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">offset</span>())</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    Stopwatch watch;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">size_t</span> bytes_written = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> (bytes_written != <span class="built_in">offset</span>())</span><br><span class="line">    &#123;</span><br><span class="line">        ProfileEvents::<span class="built_in">increment</span>(ProfileEvents::WriteBufferFromFileDescriptorWrite);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">ssize_t</span> res = <span class="number">0</span>;</span><br><span class="line">        &#123;</span><br><span class="line">            CurrentMetrics::Increment metric_increment&#123;CurrentMetrics::Write&#125;;</span><br><span class="line">            res = ::<span class="built_in">write</span>(fd, working_buffer.<span class="built_in">begin</span>() + bytes_written, <span class="built_in">offset</span>() - bytes_written);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((<span class="number">-1</span> == res || <span class="number">0</span> == res) &amp;&amp; errno != EINTR)</span><br><span class="line">        &#123;</span><br><span class="line">            ProfileEvents::<span class="built_in">increment</span>(ProfileEvents::WriteBufferFromFileDescriptorWriteFailed);</span><br><span class="line"></span><br><span class="line">            <span class="comment">/// Don&#x27;t use getFileName() here because this method can be called from destructor</span></span><br><span class="line">            String error_file_name = file_name;</span><br><span class="line">            <span class="keyword">if</span> (error_file_name.<span class="built_in">empty</span>())</span><br><span class="line">                error_file_name = <span class="string">&quot;(fd = &quot;</span> + <span class="built_in">toString</span>(fd) + <span class="string">&quot;)&quot;</span>;</span><br><span class="line">            <span class="built_in">throwFromErrnoWithPath</span>(<span class="string">&quot;Cannot write to file &quot;</span> + error_file_name, error_file_name,</span><br><span class="line">                                   ErrorCodes::CANNOT_WRITE_TO_FILE_DESCRIPTOR);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (res &gt; <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            bytes_written += res;</span><br><span class="line">            <span class="keyword">if</span> (throttler)</span><br><span class="line">                throttler-&gt;<span class="built_in">add</span>(res, ProfileEvents::LocalWriteThrottlerBytes, ProfileEvents::LocalWriteThrottlerSleepMicroseconds);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ProfileEvents::<span class="built_in">increment</span>(ProfileEvents::DiskWriteElapsedMicroseconds, watch.<span class="built_in">elapsedMicroseconds</span>());</span><br><span class="line">    ProfileEvents::<span class="built_in">increment</span>(ProfileEvents::WriteBufferFromFileDescriptorWriteBytes, bytes_written);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="read"><a href="#read" class="headerlink" title="read"></a>read</h3><h5 id="DelayedJoinedBlocksTransform"><a href="#DelayedJoinedBlocksTransform" class="headerlink" title="DelayedJoinedBlocksTransform"></a>DelayedJoinedBlocksTransform</h5><p>这个方法中会读取起来 blocks</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">DelayedJoinedBlocksTransform::work</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (finished)</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line"></span><br><span class="line">    delayed_blocks = join-&gt;<span class="built_in">getDelayedBlocks</span>();</span><br><span class="line">    finished = finished || delayed_blocks == <span class="literal">nullptr</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><strong>getDelayedBlocks</strong></p>
+<p>真正的 read 数据并且构建右表</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">hash_join = <span class="built_in">makeInMemoryJoin</span>(prev_keys_num);</span><br><span class="line"><span class="keyword">auto</span> right_reader = current_bucket-&gt;<span class="built_in">startJoining</span>();</span><br><span class="line"><span class="keyword">size_t</span> num_rows = <span class="number">0</span>; <span class="comment">/// count rows that were written and rehashed</span></span><br><span class="line"><span class="keyword">while</span> (Block block = right_reader.<span class="built_in">read</span>())</span><br><span class="line">&#123;</span><br><span class="line">    num_rows += block.<span class="built_in">rows</span>();</span><br><span class="line">    <span class="built_in">addBlockToJoinImpl</span>(std::<span class="built_in">move</span>(block));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h5 id="DelayedJoinedBlocksWorkerTransform"><a href="#DelayedJoinedBlocksWorkerTransform" class="headerlink" title="DelayedJoinedBlocksWorkerTransform"></a>DelayedJoinedBlocksWorkerTransform</h5><h2 id="Aggregate"><a href="#Aggregate" class="headerlink" title="Aggregate"></a>Aggregate</h2><h3 id="write-1"><a href="#write-1" class="headerlink" title="write"></a>write</h3><p><code>Aggregator::executeOnBlock/mergeOnBlock</code></p>
+<ol>
+<li>只有two level agg 会spill</li>
+<li>用的是 query-level memory tracker, 有个问题是当 query 的其他算子内存占用的比较高, 会导致 agg 的 spill 更容易发生(当是 two level 的时候), 基本上每个 block 都会执行一次 spill</li>
+</ol>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/** Flush data to disk if too much RAM is consumed.</span></span><br><span class="line"><span class="comment">  * Data can only be flushed to disk if a two-level aggregation structure is used.</span></span><br><span class="line"><span class="comment">  */</span></span><br><span class="line"><span class="keyword">if</span> (params.max_bytes_before_external_group_by</span><br><span class="line">    &amp;&amp; result.<span class="built_in">isTwoLevel</span>()</span><br><span class="line">    &amp;&amp; current_memory_usage &gt; <span class="keyword">static_cast</span>&lt;Int64&gt;(params.max_bytes_before_external_group_by)</span><br><span class="line">    &amp;&amp; worth_convert_to_two_level)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">size_t</span> size = current_memory_usage + params.min_free_disk_space;</span><br><span class="line">    <span class="built_in">writeToTemporaryFile</span>(result, size);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>Aggregator::writeToTemporaryFileImpl</code>, <code>NUM_BUCKETS</code> 是 256</p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (UInt32 bucket = <span class="number">0</span>; bucket &lt; Method::Data::NUM_BUCKETS; ++bucket)</span><br><span class="line">&#123;</span><br><span class="line">    Block block = <span class="built_in">convertOneBucketToBlock</span>(data_variants, method, data_variants.aggregates_pool, <span class="literal">false</span>, bucket);</span><br><span class="line">    out.<span class="built_in">write</span>(block);</span><br><span class="line">    <span class="built_in">update_max_sizes</span>(block);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">size_t</span> <span class="title">TemporaryFileStream::write</span><span class="params">(<span class="keyword">const</span> Block &amp; block)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!out_writer)</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">Exception</span>(ErrorCodes::LOGICAL_ERROR, <span class="string">&quot;Writing has been finished&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="built_in">updateAllocAndCheck</span>();</span><br><span class="line">    <span class="keyword">size_t</span> bytes_written = out_writer-&gt;<span class="built_in">write</span>(block);</span><br><span class="line">    <span class="keyword">return</span> bytes_written;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>NativeWriter</code></p>
+<p>会传入 buffer, spill 传入的都是 <code>WriteBufferFromFile</code>, 一个 <code>WriteBufferFromFileDescriptor </code> 对应一个 fd</p>
+<p><code>NativeWriter::write</code> 只是把 block 序列化到 write buffer 中, 并不会写文件, 在 <code>nextImpl</code> 会调用系统的 write 写文件</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">static void writeData(const ISerialization &amp; serialization, const ColumnPtr &amp; column, WriteBuffer &amp; ostr, UInt64 offset, UInt64 limit)</span><br><span class="line">&#123;</span><br><span class="line">    /** If there are columns-constants - then we materialize them.</span><br><span class="line">      * (Since the data type does not know how to serialize / deserialize constants.)</span><br><span class="line">      */</span><br><span class="line">    ColumnPtr full_column = column-&gt;convertToFullColumnIfConst();</span><br><span class="line"></span><br><span class="line">    ISerialization::SerializeBinaryBulkSettings settings;</span><br><span class="line">    settings.getter = [&amp;ostr](ISerialization::SubstreamPath) -&gt; WriteBuffer * &#123; return &amp;ostr; &#125;;</span><br><span class="line">    settings.position_independent_encoding = false;</span><br><span class="line">    settings.low_cardinality_max_dictionary_size = 0;</span><br><span class="line"></span><br><span class="line">    ISerialization::SerializeBinaryBulkStatePtr state;</span><br><span class="line">    serialization.serializeBinaryBulkStatePrefix(*full_column, settings, state);</span><br><span class="line">    serialization.serializeBinaryBulkWithMultipleStreams(*full_column, offset, limit, settings, state);</span><br><span class="line">    serialization.serializeBinaryBulkStateSuffix(settings, state);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+<p><code>writeToTemporaryFile</code> 调用完 <code>writeToTemporaryFileImpl</code> 之后, 会调用 <code>auto stat = out_stream.finishWriting();</code>, 这里面会真正触发 写文件: <code>NativeWriter::flush()</code></p>
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">WriteBufferFromFileDescriptor::nextImpl</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">size_t</span> bytes_written = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">while</span> (bytes_written != <span class="built_in">offset</span>())</span><br><span class="line">    &#123;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">ssize_t</span> res = <span class="number">0</span>;</span><br><span class="line">        &#123;</span><br><span class="line">            CurrentMetrics::Increment metric_increment&#123;CurrentMetrics::Write&#125;;</span><br><span class="line">            res = ::<span class="built_in">write</span>(fd, working_buffer.<span class="built_in">begin</span>() + bytes_written, <span class="built_in">offset</span>() - bytes_written);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> ((<span class="number">-1</span> == res || <span class="number">0</span> == res) &amp;&amp; errno != EINTR)</span><br><span class="line">        &#123;</span><br><span class="line"></span><br><span class="line">            <span class="comment">/// Don&#x27;t use getFileName() here because this method can be called from destructor</span></span><br><span class="line">            String error_file_name = file_name;</span><br><span class="line">            <span class="keyword">if</span> (error_file_name.<span class="built_in">empty</span>())</span><br><span class="line">                error_file_name = <span class="string">&quot;(fd = &quot;</span> + <span class="built_in">toString</span>(fd) + <span class="string">&quot;)&quot;</span>;</span><br><span class="line">            <span class="built_in">throwFromErrnoWithPath</span>(<span class="string">&quot;Cannot write to file &quot;</span> + error_file_name, error_file_name,</span><br><span class="line">                                   ErrorCodes::CANNOT_WRITE_TO_FILE_DESCRIPTOR);</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (res &gt; <span class="number">0</span>)</span><br><span class="line">        &#123;</span><br><span class="line">            bytes_written += res;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">TemporaryFileStream::Stat <span class="title">TemporaryFileStream::finishWriting</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">isWriteFinished</span>())</span><br><span class="line">        <span class="keyword">return</span> stat;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (out_writer)</span><br><span class="line">    &#123;</span><br><span class="line">        out_writer-&gt;<span class="built_in">finalize</span>();</span><br><span class="line">        <span class="comment">/// The amount of written data can be changed after finalization, some buffers can be flushed</span></span><br><span class="line">        <span class="comment">/// Need to update the stat</span></span><br><span class="line">        <span class="built_in">updateAllocAndCheck</span>();</span><br><span class="line">        out_writer.<span class="built_in">reset</span>();</span><br><span class="line"></span><br><span class="line">        <span class="comment">/// reader will be created at the first read call, not to consume memory before it is needed</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> stat;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="read-1"><a href="#read-1" class="headerlink" title="read"></a>read</h3><p>AggregatingTransform::initGenerate</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">Pipe pipe;</span><br><span class="line">&#123;</span><br><span class="line">    Pipes pipes;</span><br><span class="line"></span><br><span class="line">    for (auto * tmp_stream : tmp_data.getStreams())</span><br><span class="line">        pipes.emplace_back(Pipe(std::make_unique&lt;SourceFromNativeStream&gt;(tmp_stream)));</span><br><span class="line"></span><br><span class="line">    pipe = Pipe::unitePipes(std::move(pipes));</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+<figure class="highlight cpp"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">Block <span class="title">TemporaryFileStream::read</span><span class="params">()</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (!<span class="built_in">isWriteFinished</span>())</span><br><span class="line">        <span class="keyword">throw</span> <span class="built_in">Exception</span>(ErrorCodes::LOGICAL_ERROR, <span class="string">&quot;Writing has been not finished&quot;</span>);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">isEof</span>())</span><br><span class="line">        <span class="keyword">return</span> &#123;&#125;;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!in_reader)</span><br><span class="line">    &#123;</span><br><span class="line">        in_reader = std::make_unique&lt;InputReader&gt;(<span class="built_in">getPath</span>(), header, <span class="built_in">getSize</span>());</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    Block block = in_reader-&gt;<span class="built_in">read</span>();</span><br><span class="line">    <span class="keyword">if</span> (!block)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">/// finalize earlier to release resources, do not wait for the destructor</span></span><br><span class="line">        <span class="keyword">this</span>-&gt;<span class="built_in">release</span>();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> block;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ReadBufferFromFile</p>
+<figure class="highlight plaintext"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line">void NativeReader::readData(const ISerialization &amp; serialization, ColumnPtr &amp; column, ReadBuffer &amp; istr, size_t rows, double avg_value_size_hint)</span><br><span class="line">&#123;</span><br><span class="line">    ISerialization::DeserializeBinaryBulkSettings settings;</span><br><span class="line">    settings.getter = [&amp;](ISerialization::SubstreamPath) -&gt; ReadBuffer * &#123; return &amp;istr; &#125;;</span><br><span class="line">    settings.avg_value_size_hint = avg_value_size_hint;</span><br><span class="line">    settings.position_independent_encoding = false;</span><br><span class="line">    settings.native_format = true;</span><br><span class="line"></span><br><span class="line">    ISerialization::DeserializeBinaryBulkStatePtr state;</span><br><span class="line"></span><br><span class="line">    serialization.deserializeBinaryBulkStatePrefix(settings, state);</span><br><span class="line">    serialization.deserializeBinaryBulkWithMultipleStreams(column, rows, settings, state, nullptr);</span><br><span class="line"></span><br><span class="line">    if (column-&gt;size() != rows)</span><br><span class="line">        throw Exception(ErrorCodes::CANNOT_READ_ALL_DATA,</span><br><span class="line">            &quot;Cannot read all data in NativeReader. Rows read: &#123;&#125;. Rows expected: &#123;&#125;&quot;, column-&gt;size(), rows);</span><br><span class="line">&#125;</span><br><span class="line"></span><br></pre></td></tr></table></figure>
+
+
+
+    </div>
+
+    
+    
+    
+
+      <footer class="post-footer">
+          
+          <div class="post-tags">
+              <a href="/tags/olap/" rel="tag"><i class="fa fa-tag"></i> olap</a>
+          </div>
+
+        
+
+
+        
+    <div class="post-nav">
+      <div class="post-nav-item">
+    <a href="/2024/02/01/presto-spill/" rel="prev" title="presto-spill">
+      <i class="fa fa-chevron-left"></i> presto-spill
+    </a></div>
+      <div class="post-nav-item"></div>
+    </div>
+      </footer>
+    
+  </article>
+  
+  
+  
+
+  </div>
+
+
+          </div>
+          
+
+<script>
+  window.addEventListener('tabs:register', () => {
+    let activeClass = CONFIG.comments.activeClass;
+    if (CONFIG.comments.storage) {
+      activeClass = localStorage.getItem('comments_active') || activeClass;
+    }
+    if (activeClass) {
+      let activeTab = document.querySelector(`a[href="#comment-${activeClass}"]`);
+      if (activeTab) {
+        activeTab.click();
+      }
+    }
+  });
+  if (CONFIG.comments.storage) {
+    window.addEventListener('tabs:click', event => {
+      if (!event.target.matches('.tabs-comment .tab-content .tab-pane')) return;
+      let commentClass = event.target.classList[1];
+      localStorage.setItem('comments_active', commentClass);
+    });
+  }
+</script>
+
+        </div>
+          
+  
+  <div class="toggle sidebar-toggle">
+    <span class="toggle-line toggle-line-first"></span>
+    <span class="toggle-line toggle-line-middle"></span>
+    <span class="toggle-line toggle-line-last"></span>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          Table of Contents
+        </li>
+        <li class="sidebar-nav-overview">
+          Overview
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Starrocks-spill-TBD"><span class="nav-number">1.</span> <span class="nav-text">Starrocks spill(TBD)</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SpillableMemTable"><span class="nav-number">1.1.</span> <span class="nav-text">SpillableMemTable</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SpillerWriter"><span class="nav-number">1.2.</span> <span class="nav-text">SpillerWriter</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SpillableHashJoinProbeOperator"><span class="nav-number">1.3.</span> <span class="nav-text">SpillableHashJoinProbeOperator</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Spiller"><span class="nav-number">1.4.</span> <span class="nav-text">Spiller</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#CH-SPILL"><span class="nav-number">2.</span> <span class="nav-text">CH SPILL</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Grace-hash-join"><span class="nav-number">2.1.</span> <span class="nav-text">Grace hash join</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#write"><span class="nav-number">2.1.1.</span> <span class="nav-text">write</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#read"><span class="nav-number">2.1.2.</span> <span class="nav-text">read</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Aggregate"><span class="nav-number">2.2.</span> <span class="nav-text">Aggregate</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#write-1"><span class="nav-number">2.2.1.</span> <span class="nav-text">write</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#read-1"><span class="nav-number">2.2.2.</span> <span class="nav-text">read</span></a></li></ol></li></ol></li></ol></div>
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image" alt="Tao"
+      src="/images/head.png">
+  <p class="site-author-name" itemprop="name">Tao</p>
+  <div class="site-description" itemprop="description"></div>
+</div>
+<div class="site-state-wrap motion-element">
+  <nav class="site-state">
+      <div class="site-state-item site-state-posts">
+          <a href="/archives">
+          <span class="site-state-item-count">46</span>
+          <span class="site-state-item-name">posts</span>
+        </a>
+      </div>
+      <div class="site-state-item site-state-tags">
+            <a href="/tags/">
+        <span class="site-state-item-count">32</span>
+        <span class="site-state-item-name">tags</span></a>
+      </div>
+  </nav>
+</div>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+        <a href="https://github.com/aaaaaaron" title="GitHub → https:&#x2F;&#x2F;github.com&#x2F;aaaaaaron" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+      <span class="links-of-author-item">
+        <a href="mailto:tao@apache.org" title="E-Mail → mailto:tao@apache.org" rel="noopener" target="_blank"><i class="fa fa-fw fa-envelope"></i>E-Mail</a>
+      </span>
+  </div>
+
+
+
+      </div>
+        <div class="back-to-top motion-element">
+          <i class="fa fa-arrow-up"></i>
+          <span>0%</span>
+        </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer class="footer">
+      <div class="footer-inner">
+        
+
+<div class="copyright">
+  
+  &copy; 2018 – 
+  <span itemprop="copyrightYear">2024</span>
+  <span class="with-love">
+    <i class="fa fa-heart"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Tao</span>
+</div>
+  <div class="powered-by">Powered by <a href="https://hexo.io/" class="theme-link" rel="noopener" target="_blank">Hexo</a>
+  </div>
+  <span class="post-meta-divider">|</span>
+  <div class="theme-info">Theme – <a href="https://theme-next.org/" class="theme-link" rel="noopener" target="_blank">NexT.Gemini</a>
+  </div>
+
+        
+
+
+
+
+
+
+
+
+      </div>
+    </footer>
+  </div>
+
+  
+  <script src="/lib/anime.min.js"></script>
+  <script src="//cdn.jsdelivr.net/npm/medium-zoom@1/dist/medium-zoom.min.js"></script>
+
+<script src="/js/utils.js"></script>
+
+
+<script src="/js/schemes/pisces.js"></script>
+
+
+<script src="/js/next-boot.js"></script>
+
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+</body>
+</html>
